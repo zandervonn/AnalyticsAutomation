@@ -33,27 +33,6 @@ headers = {
 # logging.basicConfig(level=logging.INFO,
 #                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-
-
-# Function to get all order history
-def get_all_orders():
-	orders = []
-	page = 1
-	while True:
-		url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/{version}/orders.json?page={page}&limit=250"
-		response = requests.get(url, headers=headers)
-		if response.status_code == 200:
-			data = response.json()
-			orders.extend(data['orders'])
-			if not data['orders']:
-				break  # No more orders to fetch
-			page += 1
-		else:
-			print(f"Failed to retrieve orders, status code: {response}")
-			break
-	return orders
-
-
 def get_most_recent_order():
 	# Fetch the most recent order by sorting orders by created_at date in descending order and limiting to 1
 	url = f"https://{access.shopify_api_key()}:{access.shopify_password()}@{access.shopify_url()}/admin/api/{version}/shop.json"
@@ -77,28 +56,19 @@ def get_shop_details():
 	else:
 		return f"Failed to retrieve shop details, status code: {response.status_code}"
 
-def saveOrdersToCsvDynamicHeaders(all_orders, path):
-	# Ensure all_orders is a list for consistency
-	if isinstance(all_orders, dict):
-		all_orders = [all_orders]  # Wrap in a list if it's a single order
+def get_test_order():
+	url = f"https://{access.shopify_api_key()}:{access.shopify_password()}@{access.shopify_url()}"
 
-	if not all_orders:
-		print("No orders to save.")
-		return
+	endpoint = "/admin/api/2024-01/orders/5638484230446.json?fields=id,line_items,name,total_price"
 
-	# Assuming all orders have the same keys, use the keys of the first order as headers
-	headers = list(all_orders[0].keys())
+	url = url+endpoint
 
-	with open(path, 'w', newline='', encoding='utf-8') as file:
-		writer = csv.writer(file)
-		writer.writerow(headers)  # Write the headers derived from order keys
+	response = requests.get(url, headers=headers)
+	if response.status_code == 200:
+		return response.json()  # Successfully fetched shop details
+	else:
+		return f"Failed to retrieve shop details, status code: {response.status_code}"
 
-		for order in all_orders:
-			# Write row values in the order of the headers
-			row = [order.get(header, 'N/A') for header in headers]
-			writer.writerow(row)
-
-	print(f"Orders saved to {path}")
 
 def test_connection():
 	# shop_url = "https://{api_key}:{password}@{shopurl}/admin/".format(api_key=access.shopify_api_key(),
@@ -111,9 +81,8 @@ def test_connection():
 	# shop = shopify.Shop.current
 
 	shopify.ShopifyResource.set_site(shop_url)
-	shop = shopify.Shop.current
 
-	orders = shopify.Order.find(id="5638484230446")
+	orders = shopify.Order.find()
 	#orders = shopify.Product.find()
 	if orders:
 		most_recent_order = orders[0]
@@ -180,45 +149,3 @@ def download_shopify_resource(shopify_resource: Type[ShopifyResource]):
 		with gzip.open(str(tmp_filepath), 'wt') as tmp_file:
 			tmp_file.write(json.dumps(data))
 		shutil.move(str(tmp_filepath), str(relative_filepath))
-
-def download_shopify_resource2(shopify_resource: Type[ShopifyResource]):
-	data = []
-	page = 1
-	previous_page = 0
-	max_attempts = 1
-	while True:
-		number_of_attempts = 0
-		while True:
-			try:
-				resource = shopify_resource.find(limit=250, page=page, status="open")
-				if len(resource) > 0 or (previous_page == page):
-					break
-			except:
-				if number_of_attempts < max_attempts:
-					duration = 4 * number_of_attempts + 1
-					logging.info(
-						'Loading shopify data retry #{attempt} in {duration} seconds'.format(attempt=number_of_attempts,
-						                                                                     duration=duration))
-					sleep(duration)
-					number_of_attempts += 1
-				else:
-					raise
-
-			previous_page = page
-		if len(resource) > 0:
-			previous_page = page
-			data.extend(resource)
-			page += 1
-		else:
-			relative_filepath = Path(access.data_dir(),
-			                         '{resource_name}-{version}.json.gz'.format(
-				                         resource_name=shopify_resource.plural,
-				                         version="v1"))
-			# filepath = ensure_data_directory(relative_filepath)
-			with tempfile.TemporaryDirectory() as tmp_dir:
-				tmp_filepath = Path(tmp_dir, relative_filepath)
-				tmp_filepath.parent.mkdir(exist_ok=True, parents=True)
-				with gzip.open(str(tmp_filepath), 'wt') as tmp_ad_performance_file:
-					tmp_ad_performance_file.write(json.dumps([c.to_dict() for c in data]))
-			shutil.move(str(tmp_filepath), str(relative_filepath))
-			break
