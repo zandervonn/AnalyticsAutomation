@@ -59,7 +59,8 @@ def get_shop_details():
 def get_test_order():
 	url = f"https://{access.shopify_api_key()}:{access.shopify_password()}@{access.shopify_url()}"
 
-	endpoint = "/admin/api/2024-01/orders/5638484230446.json?fields=id,line_items,name,total_price"
+	# endpoint = "/admin/api/2024-01/orders/5638484230446.json?fields=id,line_items,name,total_price"
+	endpoint = "/admin/api/2024-01/orders.json?limit=2"
 
 	url = url+endpoint
 
@@ -69,6 +70,57 @@ def get_test_order():
 	else:
 		return f"Failed to retrieve shop details, status code: {response.status_code}"
 
+def get_limited_orders(page_limit):
+	base_url = f"https://{access.shopify_api_key()}:{access.shopify_password()}@{access.shopify_url()}"
+	endpoint = "/admin/api/2024-01/orders.json?limit=2"  # Adjust the limit as needed for testing
+	url = base_url + endpoint
+
+	all_orders = []
+	pages_fetched = 0
+
+	while url and pages_fetched < page_limit:
+		response = requests.get(url)
+		print(url)
+		if response.status_code == 200:
+			orders = response.json().get('orders', [])
+			all_orders.extend(orders)
+			pages_fetched += 1
+
+			# Extracting pagination links from the 'Link' header
+			link_header = response.headers.get('Link', None)
+			next_link = None
+			if link_header:
+				links = link_header.split(',')
+				for link in links:
+					if 'rel="next"' in link:
+						next_link = link.split(';')[0].strip('<> ')
+						break
+
+			url = next_link
+		else:
+			print(f"Failed to retrieve orders, status code: {response.status_code}")
+			break
+
+	return all_orders
+
+def write_orders_to_csv(orders, filename='orders.csv'):
+	# Define the header of the CSV file
+	headers = ['Order ID', 'Order Date', 'Total Price']
+
+	# Open the CSV file for writing
+	with open(filename, mode='w', newline='', encoding='utf-8') as file:
+		writer = csv.writer(file)
+
+		# Write the header
+		writer.writerow(headers)
+
+		# Write the order data
+		for order in orders:
+			order_id = order.get('id')
+			order_date = order.get('created_at')
+			total_price = order.get('total_price')
+			writer.writerow([order_id, order_date, total_price])
+
 
 def test_connection():
 	# shop_url = "https://{api_key}:{password}@{shopurl}/admin/".format(api_key=access.shopify_api_key(),
@@ -76,9 +128,13 @@ def test_connection():
 	#                                                                  shopurl=access.shopify_url())
 	shop_url = f"https://{access.shopify_api_key()}:{access.shopify_password()}@{access.shopify_url()}/admin/api/{version}/shop.json"
 
-	# session = shopify.Session(shop_url, version="2024-01")
-	# shopify.ShopifyResource.activate_session(session)
-	# shop = shopify.Shop.current
+	orders = shopify.Order.find(since_id=0, status='any', limit=2)
+	for order in orders:
+		print("found order")
+	while orders.has_next_page():
+		orders = orders.next_page()
+		for order in orders:
+			print("found order page")
 
 	shopify.ShopifyResource.set_site(shop_url)
 
