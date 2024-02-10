@@ -1,7 +1,7 @@
 from shopifyautomation import *
 
 def main():
-	write_orders_to_csv(get_limited_orders(3))
+	saveOrdersToCsvDynamicHeaders(get_limited_orders(3))
 	#getReq()
 
 
