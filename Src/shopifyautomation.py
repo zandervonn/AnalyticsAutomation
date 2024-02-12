@@ -4,7 +4,7 @@
 import requests
 import csv
 import time
-from Src import access
+from Src.gitignore import access
 import json
 
 def get_limited_orders(page_limit):

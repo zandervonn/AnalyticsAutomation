@@ -5,7 +5,7 @@ def main():
 	# orders = get_limited_orders(3)
 	# save_orders_to_json(orders, 'orders.json')
 
-	orders = load_orders_from_json('orders.json')
+	orders = load_orders_from_json('gitignore/orders.json')
 
 	save_orders_to_csv_dynamic_headers(orders)
 
