@@ -5,6 +5,7 @@ import requests
 import csv
 import time
 from Src import access
+import json
 
 def get_limited_orders(page_limit):
 	shopify_api_key = access.shopify_api_key()
@@ -63,6 +64,16 @@ def get_limited_orders(page_limit):
 
 	return all_orders
 
+def save_orders_to_json(orders, filename='orders.json'):
+	with open(filename, 'w', encoding='utf-8') as f:
+		json.dump(orders, f, ensure_ascii=False, indent=4)
+	print(f"Orders saved to {filename}")
+
+def load_orders_from_json(orders_path):
+	with open(orders_path, 'r', encoding='utf-8') as f:
+		orders = json.load(f)
+	return orders
+
 def write_orders_to_csv(orders, filename='orders.csv'):
 	# Define the header of the CSV file
 	headers = ['Order ID', 'Order Date', 'Total Price']
@@ -81,25 +92,44 @@ def write_orders_to_csv(orders, filename='orders.csv'):
 			total_price = order.get('total_price')
 			writer.writerow([order_id, order_date, total_price])
 
-def saveOrdersToCsvDynamicHeaders(all_orders, path='shopify_orders.csv'):
-	# Ensure all_orders is a list for consistency
+def flatten_dict(d, parent_key='', sep='_'):
+	items = []
+	for k, v in d.items():
+		new_key = f"{parent_key}{sep}{k}" if parent_key else k
+		if isinstance(v, dict):
+			items.extend(flatten_dict(v, new_key, sep=sep).items())
+		elif isinstance(v, list):
+			if v and isinstance(v[0], dict):
+				for i, item in enumerate(v):
+					items.extend(flatten_dict(item, f"{new_key}{sep}{i}", sep=sep).items())
+			else:
+				items.append((new_key, json.dumps(v)))
+		else:
+			items.append((new_key, v))
+	return dict(items)
+
+
+def save_orders_to_csv_dynamic_headers(all_orders, path='shopify_orders.csv'):
 	if isinstance(all_orders, dict):
-		all_orders = [all_orders]  # Wrap in a list if it's a single order
+		all_orders = [all_orders]
 
 	if not all_orders:
 		print("No orders to save.")
 		return
 
-	# Assuming all orders have the same keys, use the keys of the first order as headers
-	headers = list(all_orders[0].keys())
+	# Flatten all orders
+	flattened_orders = [flatten_dict(order) for order in all_orders]
+
+	# Collect all unique headers from the flattened orders
+	headers = set()
+	for order in flattened_orders:
+		headers.update(order.keys())
+	headers = list(headers)
 
 	with open(path, 'w', newline='', encoding='utf-8') as file:
-		writer = csv.writer(file)
-		writer.writerow(headers)  # Write the headers derived from order keys
-
-		for order in all_orders:
-			# Write row values in the order of the headers
-			row = [order.get(header, 'N/A') for header in headers]
-			writer.writerow(row)
+		writer = csv.DictWriter(file, fieldnames=headers)
+		writer.writeheader()
+		for order in flattened_orders:
+			writer.writerow(order)
 
 	print(f"Orders saved to {path}")
