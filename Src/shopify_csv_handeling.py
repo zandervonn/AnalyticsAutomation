@@ -1,8 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import requests
+import json
+import csv
 
 from Src.gitignore import access
+
+
 
 def write_orders_to_csv(orders, filename='orders.csv'):
 	# Define the header of the CSV file
@@ -45,7 +49,38 @@ def saveOrdersToCsvDynamicHeaders(all_orders, path):
 
 	print(f"Orders saved to {path}")
 
+def trim_line_items(line_items):
 
+	# Now you can use this function to trim line_items in your orders data
+	defined_fields = ['id', 'name', 'price']
+
+	# Create a new list to store the trimmed line items
+	trimmed_items = []
+	# Iterate over each line item and keep only the defined fields
+	for item in line_items:
+		trimmed_item = {field: item.get(field, None) for field in defined_fields}
+		trimmed_items.append(trimmed_item)
+	return trimmed_items
+
+def saveOrdersToCsvDynamicHeadersTrimmed(all_orders, path, defined_headers):
+	if not all_orders:
+		print("No orders to save.")
+		return
+
+	with open(path, 'w', newline='', encoding='utf-8') as file:
+		writer = csv.writer(file)
+		writer.writerow(defined_headers)  # Write the headers defined by you
+
+		for order in all_orders:
+			if 'line_items' in order:
+				order['line_items'] = trim_line_items(order['line_items'])
+
+
+			# Write row values in the order of the defined headers
+			row = [json.dumps(order.get(header, 'N/A')) if isinstance(order.get(header, 'N/A'), (list, dict)) else order.get(header, 'N/A') for header in defined_headers]
+			writer.writerow(row)
+
+	print(f"Orders saved to {path}")
 
 def retrieve_shopify_report(report):
 	shopify_api_key = access.shopify_api_key()
@@ -68,10 +103,6 @@ def retrieve_shopify_report(report):
 	else:
 		print(f"Failed to retrieve report: {response.status_code}")
 		print(response.text)
-
-
-import json
-import csv
 
 def json_to_reduced_csv(json_file_path, csv_file_path):
 	# Open and load the JSON data

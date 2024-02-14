@@ -1,22 +1,6 @@
-import pandas as pd
-import numpy as np
 import json
+import numpy as np
 import pandas as pd
-import re
-import ast
-
-shopify_defined_headers = [
-	'checkout_id', 'confirmation_number', 'contact_email', 'created_at',
-	'current_subtotal_price', 'current_total_discounts', 'current_total_price',
-	'current_total_tax', 'discount_codes', 'landing_site', 'name', 'note',
-	'order_number', 'payment_gateway_names', 'total_discounts', 'total_tip_received',
-	'total_weight', 'customer', 'fulfillments', 'line_items'
-]
-
-def keep_defined_headers(df, defined_headers):
-	# Drop columns that are not in the defined headers list
-	df = df[defined_headers]
-	return df
 
 # Define cleaning functions
 def remove_brackets(text):
@@ -31,7 +15,6 @@ def make_lists_normal(text):
 
 def clear_empty_columns(df):
 	return df.replace('', np.nan).dropna(axis=1, how='all')
-
 
 def split_columns(df, column, keys):
 	# Define a new DataFrame to hold the split columns
@@ -65,45 +48,29 @@ def split_columns(df, column, keys):
 
 	return df
 
-def parse_line_item_string(line_item_str):
-	# Handle None or NaN values
-	if pd.isnull(line_item_str):
-		return [], []
+def parse_json(text):
+	try:
+		return json.loads(text)
+	except json.JSONDecodeError as e:
+		print(f"Error decoding JSON: {e}")
+		return None  # or return {}, depending on how you want to handle errors
 
-	# Split the string into list of items
-	items = line_item_str.strip(' ').split('}, {')
+def split_columns_with_json_lists(df, column, keys):
+	# Create new columns for each key
+	for key in keys:
+		df[f"{column}.{key}"] = None
 
-	# Initialize lists to hold extracted names and prices
-	names = []
-	prices = []
+	# Iterate over each row and process the JSON string in the specified column
+	for index, row in df.iterrows():
+		# Parse the JSON string into a list of dictionaries
+		items = parse_json(row[column]) if pd.notna(row[column]) else []
 
-	# Regular expression to match key-value pairs
-	key_value_pattern = re.compile(r'(\w+): ([\w\.\d]+)')
-
-	# Process each item
-	for item in items:
-		# Remove leading/trailing braces for the first and last item in the list
-		item = item.strip('{}')
-
-		# Extract all key-value pairs
-		fields = key_value_pattern.findall(item)
-
-		# Convert to dictionary to access by key
-		item_dict = {kv[0]: kv[1] for kv in fields}
-
-		# Append the values to the respective lists
-		names.append(item_dict.get('name', ''))
-		prices.append(item_dict.get('price', ''))
-
-	# Join the list into a newline-separated string
-	names_str = '\n'.join(names)
-	prices_str = '\n'.join(prices)
-
-	return names_str, prices_str
-
-def extract_line_items(df, column):
-	# Apply the parsing function to the line_items column
-	df['line_items.names'], df['line_items.prices'] = zip(*df[column].apply(parse_line_item_string))
+		# Ensure items is a list of dicts
+		if isinstance(items, list) and all(isinstance(item, dict) for item in items):
+			# Extract values for each key
+			for key in keys:
+				# Join the values with line breaks and assign to the DataFrame
+				df.at[index, f"{column}.{key}"] = "\n".join(str(item.get(key, '')) for item in items)
 
 	# Optionally, drop the original column if no longer needed
 	df.drop(columns=[column], inplace=True)
@@ -113,17 +80,15 @@ def extract_line_items(df, column):
 def cleanCsv(pathIn, pathOut):
 	df = pd.read_csv(pathIn)
 
+	df = split_columns(df, 'discount_codes', ['code', 'amount'])
+	df = split_columns(df, 'customer', ['id', 'email', 'first_name', 'last_name'])
+	df = split_columns_with_json_lists(df, 'line_items', ['id', 'name', 'price'])
+	df = split_columns_with_json_lists(df, 'fulfillments', ['id','created_at'])
+
 	for col in df.columns:
 		if df[col].dtype == object:
 			df[col] = df[col].apply(remove_brackets)
 			df[col] = df[col].apply(make_lists_normal)
-
-	df = keep_defined_headers(df, shopify_defined_headers)
-
-	df = split_columns(df, 'discount_codes', ['code', 'amount'])
-	df = split_columns(df, 'customer', ['id', 'email', 'first_name', 'last_name'])
-	# df = nested_list(df, 'line_items', ['name', 'price'])
-	df = extract_line_items(df, 'line_items')
 
 	df = clear_empty_columns(df)
 	df.to_csv(pathOut, index=False)

@@ -15,7 +15,15 @@ def main_get_orders():
 	orders=load_orders_from_json(FOLDER_PATH+JSON_PATH)
 	save_orders_to_json(orders, FOLDER_PATH+JSON_PATH)
 
-	saveOrdersToCsvDynamicHeaders(orders, FOLDER_PATH+ORDERS_PATH)
+	shopify_defined_headers = [
+		'checkout_id', 'confirmation_number', 'contact_email', 'created_at',
+		'current_subtotal_price', 'current_total_discounts', 'current_total_price',
+		'current_total_tax', 'discount_codes', 'landing_site', 'name', 'note',
+		'order_number', 'payment_gateway_names', 'total_discounts', 'total_tip_received',
+		'total_weight', 'customer', 'fulfillments', 'line_items'
+	]
+
+	saveOrdersToCsvDynamicHeadersTrimmed(orders, FOLDER_PATH+ORDERS_PATH, shopify_defined_headers)
 
 	cleanCsv(FOLDER_PATH+ORDERS_PATH, FOLDER_PATH+ORDERS_CLEANED_PATH)
 
