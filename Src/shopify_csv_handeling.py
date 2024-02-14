@@ -49,7 +49,7 @@ def saveOrdersToCsvDynamicHeaders(all_orders, path):
 
 	print(f"Orders saved to {path}")
 
-def trim_line_items(line_items):
+def trim_columns(line_items):
 
 	# Now you can use this function to trim line_items in your orders data
 	defined_fields = ['id', 'name', 'price']
@@ -73,8 +73,7 @@ def saveOrdersToCsvDynamicHeadersTrimmed(all_orders, path, defined_headers):
 
 		for order in all_orders:
 			if 'line_items' in order:
-				order['line_items'] = trim_line_items(order['line_items'])
-
+				order['line_items'] = trim_columns(order['line_items'])
 
 			# Write row values in the order of the defined headers
 			row = [json.dumps(order.get(header, 'N/A')) if isinstance(order.get(header, 'N/A'), (list, dict)) else order.get(header, 'N/A') for header in defined_headers]

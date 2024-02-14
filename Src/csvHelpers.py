@@ -16,38 +16,6 @@ def make_lists_normal(text):
 def clear_empty_columns(df):
 	return df.replace('', np.nan).dropna(axis=1, how='all')
 
-def split_columns(df, column, keys):
-	# Define a new DataFrame to hold the split columns
-	new_cols = pd.DataFrame(index=df.index)
-
-	# Iterate over each row and process the string in the specified column
-	for index, row in df.iterrows():
-		# Check if the value is a string and not NaN
-		if pd.notna(row[column]):
-			# Remove curly braces and split the string on ','
-			entries = row[column].strip('{}').split(', ')
-			# Create a dictionary from the string
-			entry_dict = {}
-			for entry in entries:
-				# Split the entry on ':' to get key-value pairs
-				key_val_pair = entry.split(': ')
-				if len(key_val_pair) == 2:
-					key, value = key_val_pair
-					entry_dict[key.strip()] = value.strip()
-
-			# Assign the values to the new columns based on keys
-			for key in keys:
-				new_col_name = f"{column}.{key}"
-				new_cols.at[index, new_col_name] = entry_dict.get(key)
-
-	# Concatenate the new columns to the original DataFrame
-	df = pd.concat([df, new_cols], axis=1)
-
-	# Drop the original column if no longer needed
-	df.drop(columns=[column], inplace=True)
-
-	return df
-
 def parse_json(text):
 	try:
 		return json.loads(text)
@@ -55,7 +23,7 @@ def parse_json(text):
 		print(f"Error decoding JSON: {e}")
 		return None  # or return {}, depending on how you want to handle errors
 
-def split_columns_with_json_lists(df, column, keys):
+def split_columns(df, column, keys):
 	# Create new columns for each key
 	for key in keys:
 		df[f"{column}.{key}"] = None
@@ -82,8 +50,8 @@ def cleanCsv(pathIn, pathOut):
 
 	df = split_columns(df, 'discount_codes', ['code', 'amount'])
 	df = split_columns(df, 'customer', ['id', 'email', 'first_name', 'last_name'])
-	df = split_columns_with_json_lists(df, 'line_items', ['id', 'name', 'price'])
-	df = split_columns_with_json_lists(df, 'fulfillments', ['id','created_at'])
+	df = split_columns(df, 'line_items', ['id', 'name', 'price'])
+	df = split_columns(df, 'fulfillments', ['id','created_at'])
 
 	for col in df.columns:
 		if df[col].dtype == object:
