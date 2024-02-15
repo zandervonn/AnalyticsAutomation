@@ -6,8 +6,13 @@ pd.set_option('future.no_silent_downcasting', True)
 # Define cleaning functions
 def remove_brackets(text):
 	if isinstance(text, str):  # Ensure the text is a string
-		return text.replace("(", "").replace(")", "")
+		text = text.replace("(", "").replace(")", "")
 	return text
+
+def clean_string_list_column(df, column_name):
+	if column_name in df.columns:
+		df[column_name] = df[column_name].apply(lambda x: ', '.join(x) if isinstance(x, list) else x)
+	return df
 
 def make_lists_normal(text):
 	if isinstance(text, str):  # Ensure the text is a string
@@ -69,8 +74,10 @@ def clean_df(df, defined_headers):
 	# Clean and normalize object columns
 	for col in df.columns:
 		if df[col].dtype == object:
+			# df[col] = df[col].apply(clean_list_like_strings)
 			df[col] = df[col].apply(remove_brackets)
 			df[col] = df[col].apply(make_lists_normal)
+			df = clean_string_list_column(df, col)
 
 	# Clear empty columns
 	df = clear_empty_columns(df)

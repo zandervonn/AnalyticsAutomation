@@ -13,10 +13,10 @@ ORDERS_REPURCHASE_PATH = "shopify_orders_repurchase.csv"
 
 shopify_defined_subheaders = [
 	'checkout_id', 'confirmation_number', 'contact_email', 'created_at',
-	'current_subtotal_price', 'current_total_discounts', 'current_total_price',
-	'current_total_tax', 'discount_codes.code', 'discount_codes.amount',
-	'landing_site', 'name', 'note', 'order_number', 'payment_gateway_names',
-	'total_discounts', 'total_tip_received', 'total_weight', 'customer.id',
+	'total_line_items_price', 'discount_codes.code', 'discount_codes.amount',
+	'current_subtotal_price', 'total_shipping_price_set.shop_money.amount', 'total_tip_received',
+	'current_total_price', 'current_total_tax',
+	'landing_site', 'name', 'note', 'order_number', 'payment_gateway_names', 'total_weight', 'customer.id',
 	'customer.email', 'customer.first_name', 'customer.last_name', 'line_items.id',
 	'line_items.name', 'line_items.price', 'fulfillments.id', 'fulfillments.created_at'
 ]
@@ -36,6 +36,7 @@ def main_get_and_build_report():
 	# Clean DataFrame
 	cleaned_orders_df = clean_df(orders_df, shopify_defined_subheaders)
 	save_df_to_csv(cleaned_orders_df, FOLDER_PATH + ORDERS_CLEANED_PATH)
+
 
 def main():
 	main_get_and_build_report()
