@@ -63,12 +63,12 @@ def get_orders(page_limit):
 
 	return all_orders
 
-def save_orders_to_json(orders, filename='orders.json'):
+def save_json(orders, filename='orders.json'):
 	with open(filename, 'w', encoding='utf-8') as f:
 		json.dump(orders, f, ensure_ascii=False, indent=4)
 	print(f"Orders saved to {filename}")
 
-def load_orders_from_json(orders_path):
+def load_json(orders_path):
 	with open(orders_path, 'r', encoding='utf-8') as f:
 		orders = json.load(f)
 	return orders

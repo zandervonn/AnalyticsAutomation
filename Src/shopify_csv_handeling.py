@@ -1,134 +1,74 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import requests
 import json
 import csv
 
-from Src.gitignore import access
+from io import StringIO
 
+def clean_json(all_orders, defined_subheaders):
+	# Split the headers into top-level and nested fields
+	top_level_fields = [header for header in defined_subheaders if '.' not in header]
+	nested_fields = {header.split('.')[0]: [] for header in defined_subheaders if '.' in header}
+	for header in defined_subheaders:
+		parts = header.split('.')
+		if len(parts) > 1:
+			nested_fields[parts[0]].append(parts[1])
 
+	# Process each order
+	cleaned_orders = []
+	for order in all_orders:
+		cleaned_order = {}
+		# Keep only the top-level fields
+		for field in top_level_fields:
+			if field in order:
+				cleaned_order[field] = order[field]
 
-def write_orders_to_csv(orders, filename='orders.csv'):
-	# Define the header of the CSV file
-	headers = ['Order ID', 'Order Date', 'Total Price']
+		# Process nested fields
+		for nested_field, subfields in nested_fields.items():
+			if nested_field in order:
+				if isinstance(order[nested_field], list):  # If the nested field is a list of dictionaries
+					cleaned_order[nested_field] = [
+						{subfield: item.get(subfield, None) for subfield in subfields}
+						for item in order[nested_field]
+					]
+				elif isinstance(order[nested_field], dict):  # If the nested field is a single dictionary
+					cleaned_order[nested_field] = {
+						subfield: order[nested_field].get(subfield, None) for subfield in subfields
+					}
 
-	# Open the CSV file for writing
-	with open(filename, mode='w', newline='', encoding='utf-8') as file:
-		writer = csv.writer(file)
+		cleaned_orders.append(cleaned_order)
 
-		# Write the header
-		writer.writerow(headers)
+	return cleaned_orders
 
-		# Write the order data
-		for order in orders:
-			order_id = order.get('id')
-			order_date = order.get('created_at')
-			total_price = order.get('total_price')
-			writer.writerow([order_id, order_date, total_price])
+def json_to_csv(json_data):
+	# Check if the JSON data is empty
+	if not json_data:
+		return ""
 
-def saveOrdersToCsvDynamicHeaders(all_orders, path):
-	# Ensure all_orders is a list for consistency
-	if isinstance(all_orders, dict):
-		all_orders = [all_orders]  # Wrap in a list if it's a single order
+	# Determine the headers from the first item in the JSON data
+	headers = json_data[0].keys()
 
-	if not all_orders:
-		print("No orders to save.")
-		return
+	# Create a StringIO object to write the CSV data
+	output = StringIO()
+	writer = csv.DictWriter(output, fieldnames=headers)
 
-	# Assuming all orders have the same keys, use the keys of the first order as headers
-	headers = list(all_orders[0].keys())
+	# Write the headers and data rows
+	writer.writeheader()
+	for row in json_data:
+		writer.writerow(row)
 
-	with open(path, 'w', newline='', encoding='utf-8') as file:
-		writer = csv.writer(file)
-		writer.writerow(headers)  # Write the headers derived from order keys
+	# Get the CSV string from the StringIO object
+	csv_string = output.getvalue()
+	output.close()
 
-		for order in all_orders:
-			# Write row values in the order of the headers
-			row = [order.get(header, 'N/A') for header in headers]
-			writer.writerow(row)
+	return csv_string
 
-	print(f"Orders saved to {path}")
+def save_df_to_csv(df, file_path):
+	df.to_csv(file_path, index=False)
+	print(f"CSV saved to {file_path}")
 
-def trim_columns(line_items):
-
-	# Now you can use this function to trim line_items in your orders data
-	defined_fields = ['id', 'name', 'price']
-
-	# Create a new list to store the trimmed line items
-	trimmed_items = []
-	# Iterate over each line item and keep only the defined fields
-	for item in line_items:
-		trimmed_item = {field: item.get(field, None) for field in defined_fields}
-		trimmed_items.append(trimmed_item)
-	return trimmed_items
-
-def saveOrdersToCsvDynamicHeadersTrimmed(all_orders, path, defined_headers):
-	if not all_orders:
-		print("No orders to save.")
-		return
-
-	with open(path, 'w', newline='', encoding='utf-8') as file:
-		writer = csv.writer(file)
-		writer.writerow(defined_headers)  # Write the headers defined by you
-
-		for order in all_orders:
-			if 'line_items' in order:
-				order['line_items'] = trim_columns(order['line_items'])
-
-			# Write row values in the order of the defined headers
-			row = [json.dumps(order.get(header, 'N/A')) if isinstance(order.get(header, 'N/A'), (list, dict)) else order.get(header, 'N/A') for header in defined_headers]
-			writer.writerow(row)
-
-	print(f"Orders saved to {path}")
-
-def retrieve_shopify_report(report):
-	shopify_api_key = access.shopify_api_key()
-	shopify_password = access.shopify_password()
-	shopify_url = access.shopify_url()
-	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
-	endpoint = f"reports/{report}.json"
-	url = base_url + endpoint
-	headers = {"Content-Type": "application/json"}
-	query = "SHOW total_sales BY order_id FROM sales SINCE -1m UNTIL today ORDER BY total_sales"
-	data = {
-		"query": query
-	}
-
-	response = requests.get(url)
-
-	if response.status_code == 200:
-		report_data = response.json()  # Extract JSON data from the response
-		print(json.dumps(report_data, indent=4))  # Now you are serializing the JSON data, not the Response object
-	else:
-		print(f"Failed to retrieve report: {response.status_code}")
-		print(response.text)
-
-def json_to_reduced_csv(json_file_path, csv_file_path):
-	# Open and load the JSON data
-	with open(json_file_path, 'r', encoding='utf-8') as json_file:
-		json_data = json.load(json_file)
-
-	with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
-		writer = csv.writer(file)
-		# Write the header row
-		writer.writerow(['Order ID', 'Date', 'Customer', 'Channel', 'total', 'Payment Status', 'Fulfillment status','Items', 'Delivery status', 'Delivery method', 'tags'])
-
-		# Ensure json_data is a list
-		if isinstance(json_data, dict):  # If it's a single order, wrap it in a list
-			json_data = [json_data]
-
-		# Iterate through each order in the JSON data
-		for order in json_data:
-			# Safely extract billing_address and customer details
-			billing_address = order.get('billing_address') or {}
-			customer = order.get('customer') or {}
-
-			writer.writerow([
-				order.get('id', ''),
-				billing_address.get('name', ''),
-				customer.get('id', ''),
-				order.get('created_at', '')
-			])
+def load_csv(path):
+	return pd.read_csv(path)
 
 def analyze_repurchase_trends(csv_file_path):
 

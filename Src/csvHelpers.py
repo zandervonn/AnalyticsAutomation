@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
+pd.set_option('future.no_silent_downcasting', True)
 
 # Define cleaning functions
 def remove_brackets(text):
@@ -14,7 +15,7 @@ def make_lists_normal(text):
 	return text
 
 def clear_empty_columns(df):
-	return df.replace('', np.nan).dropna(axis=1, how='all')
+	return df.replace('', np.nan).dropna(axis=1, how='all').infer_objects()
 
 def parse_json(text):
 	try:
@@ -28,10 +29,15 @@ def split_columns(df, column, keys):
 	for key in keys:
 		df[f"{column}.{key}"] = None
 
-	# Iterate over each row and process the JSON string in the specified column
+	# Iterate over each row and process the data in the specified column
 	for index, row in df.iterrows():
-		# Parse the JSON string into a list of dictionaries
-		items = parse_json(row[column]) if pd.notna(row[column]) else []
+		# Check if the data is already a dictionary or a list of dictionaries
+		if isinstance(row[column], dict):
+			items = [row[column]]  # Wrap the dictionary in a list
+		elif isinstance(row[column], list):
+			items = row[column]
+		else:
+			items = parse_json(row[column]) if pd.notna(row[column]) else []
 
 		# Ensure items is a list of dicts
 		if isinstance(items, list) and all(isinstance(item, dict) for item in items):
@@ -45,20 +51,32 @@ def split_columns(df, column, keys):
 
 	return df
 
-def cleanCsv(pathIn, pathOut):
-	df = pd.read_csv(pathIn)
+def clean_df(df, defined_headers):
+	# Extract main columns and subfields from defined headers
+	split_columns_info = {}
+	for header in defined_headers:
+		if '.' in header:
+			main_column, subfield = header.split('.', 1)
+			if main_column not in split_columns_info:
+				split_columns_info[main_column] = []
+			split_columns_info[main_column].append(subfield)
 
-	df = split_columns(df, 'discount_codes', ['code', 'amount'])
-	df = split_columns(df, 'customer', ['id', 'email', 'first_name', 'last_name'])
-	df = split_columns(df, 'line_items', ['id', 'name', 'price'])
-	df = split_columns(df, 'fulfillments', ['id','created_at'])
+	# Apply splitting to each column that needs to be split
+	for main_column, subfields in split_columns_info.items():
+		if main_column in df.columns:
+			df = split_columns(df, main_column, subfields)
 
+	# Clean and normalize object columns
 	for col in df.columns:
 		if df[col].dtype == object:
 			df[col] = df[col].apply(remove_brackets)
 			df[col] = df[col].apply(make_lists_normal)
 
+	# Clear empty columns
 	df = clear_empty_columns(df)
-	df.to_csv(pathOut, index=False)
 
-	print("cleaned csv")
+	# Keep only the columns defined in defined_headers
+	# Reorder the columns to match the list of defined headers
+	df = df[[header for header in defined_headers if header in df.columns]]
+
+	return df
