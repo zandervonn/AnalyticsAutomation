@@ -1,7 +1,12 @@
-import json
+from Src.helpers.jsonHelpers import *
+import csv
 import numpy as np
 import pandas as pd
+
 pd.set_option('future.no_silent_downcasting', True)
+
+webdriver_path = 'C:\\Users\\Zander\\.wdm\\chromedriver\\72.0.3626.7\\win32\\chromedriver.exe'
+target_url = 'https://google.com'
 
 # Define cleaning functions
 def remove_brackets(text):
@@ -22,14 +27,7 @@ def make_lists_normal(text):
 def clear_empty_columns(df):
 	return df.replace('', np.nan).dropna(axis=1, how='all').infer_objects()
 
-def parse_json(text):
-	try:
-		return json.loads(text)
-	except json.JSONDecodeError as e:
-		print(f"Error decoding JSON: {e}")
-		return None  # or return {}, depending on how you want to handle errors
-
-def split_columns(df, column, keys):
+def split_json_list_columns(df, column, keys):
 	# Create new columns for each key
 	for key in keys:
 		df[f"{column}.{key}"] = None
@@ -69,7 +67,7 @@ def clean_df(df, defined_headers):
 	# Apply splitting to each column that needs to be split
 	for main_column, subfields in split_columns_info.items():
 		if main_column in df.columns:
-			df = split_columns(df, main_column, subfields)
+			df = split_json_list_columns(df, main_column, subfields)
 
 	# Clean and normalize object columns
 	for col in df.columns:
@@ -87,3 +85,32 @@ def clean_df(df, defined_headers):
 	df = df[[header for header in defined_headers if header in df.columns]]
 
 	return df
+
+def csv_sheets_to_excel(csv_files, excel_file):
+	with pd.ExcelWriter(excel_file) as writer:
+		for csv_file in csv_files:
+			df = pd.read_csv(csv_file)
+			# Create a valid Excel sheet name by removing or replacing invalid characters
+			sheet_name = csv_file.split('.')[0]  # Use CSV file name as sheet name
+			sheet_name = sheet_name.replace('\\', '_').replace('/', '_').replace('*', '').replace('?', '').replace(':', '').replace('[', '').replace(']', '')
+			# Shorten the sheet name to the Excel limit of 31 characters if necessary
+			sheet_name = sheet_name[:31]
+			df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+def save_to_csv(data, file_name):
+	df = pd.DataFrame(data[1:], columns=data[0])
+	df.to_csv(file_name, index=False)
+
+def save_df_to_csv(df, file_path):
+	df.to_csv(file_path, index=False)
+	print(f"CSV saved to {file_path}")
+
+def load_csv(path):
+	return pd.read_csv(path)
+
+
+def write_data_to_csv(data, file_path):
+	with open(file_path, mode='w', newline='') as file:
+		writer = csv.writer(file)
+		writer.writerow(data.keys())
+		writer.writerow(data.values())

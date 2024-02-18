@@ -1,8 +1,9 @@
-from shopifyautomation import *
-from shopify_csv_handeling import *
-from csvHelpers import *
-from shopifyUiAutomation import *
-
+from Src.StarshipitAPI import *
+from Src.shopify.shopifyautomation import *
+from Src.shopify.shopify_csv_handeling import *
+from Src.helpers.csvHelpers import *
+from Src.shopify.shopifyUiAutomation import *
+from config import *
 
 shopify_api_key = access.shopify_api_key()
 shopify_password = access.shopify_password()
@@ -16,25 +17,15 @@ ORDERS_PATH = "shopify_orders.csv"
 ORDERS_CLEANED_PATH = "shopify_orders_clean.csv"
 ORDERS_REPURCHASE_PATH = "shopify_orders_repurchase.csv"
 
-shopify_defined_subheaders = [
-	'order_number', 'updated_at', 'confirmation_number', 'contact_email',
-	'total_line_items_price', 'discount_codes.code', 'discount_codes.amount',
-	'current_subtotal_price', 'total_shipping_price_set.shop_money.amount', 'total_tip_received',
-	'current_total_price', 'current_total_tax',
-	'landing_site', 'name', 'note',  'payment_gateway_names', 'total_weight', 'customer.id',
-	'customer.email', 'customer.first_name', 'customer.last_name', 'line_items.id',
-	'line_items.name', 'line_items.price', 'fulfillments.id', 'fulfillments.created_at'
-]
-
 def main_get_and_build_report():
-	existing_orders = load_json(FOLDER_PATH + JSON_PATH)
-	last_update = get_most_recent_updated_at(existing_orders)
-	new_orders_json = get_orders(shopify_api_key, shopify_password, shopify_url, 2)
-	# new_orders_json = get_orders_updated_after(shopify_api_key, shopify_password, shopify_url, last_update)
+	# existing_orders = load_json(FOLDER_PATH + JSON_PATH)
+	# last_update = get_most_recent_updated_at(existing_orders)
+	# new_orders_json = get_orders(shopify_api_key, shopify_password, shopify_url, 2)
+	new_orders_json = get_orders_updated_after(shopify_api_key, shopify_password, shopify_url, "2024-02-09T09:00:00+1300")
 
 	# Update existing orders with new orders
-	updated_orders_json = update_orders(existing_orders, new_orders_json)
-	sorted_orders_json = sort_orders_by_order_number(updated_orders_json)
+	# updated_orders_json = update_orders(existing_orders, new_orders_json)
+	sorted_orders_json = sort_orders_by_order_number(new_orders_json)
 	save_json(sorted_orders_json, FOLDER_PATH + JSON_PATH)
 
 	# Load orders from JSON
@@ -52,9 +43,13 @@ def main_get_and_build_report():
 	cleaned_orders_df = clean_df(orders_df, shopify_defined_subheaders)
 	save_df_to_csv(cleaned_orders_df, FOLDER_PATH + ORDERS_CLEANED_PATH)
 
+def excel_update():
+	csv_files = [FOLDER_PATH + ORDERS_CLEANED_PATH, FOLDER_PATH + "conversions_output.csv", FOLDER_PATH + "sessions_output.csv"]  # List of your CSV files
+	excel_file = FOLDER_PATH+'compiled_data.xlsx'  # Desired Excel file name
+	csv_sheets_to_excel(csv_files, excel_file)
+
 def main():
-	main_get_and_build_report()
-	# get_ui_analytics()
+	get_starshipit_orders()
 
 if __name__ == '__main__':
 	main()

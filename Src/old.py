@@ -1,5 +1,3 @@
-from UIHelpers import *
-
 import time
 import math
 import re
