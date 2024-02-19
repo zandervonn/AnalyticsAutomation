@@ -6,7 +6,7 @@ from dateutil import tz
 
 # -1 is all orders
 # otherwise page limit is * 250 orders
-def fetch_pages(base_url, endpoint, page_limit):
+def fetch_pages(base_url, endpoint, type, page_limit):
 	url = base_url + endpoint
 	all_data = []
 	pages_fetched = 0
@@ -18,7 +18,7 @@ def fetch_pages(base_url, endpoint, page_limit):
 		else:
 			print(f"pages fetched= {pages_fetched}")
 		if response.status_code == 200:
-			data = response.json().get('orders', [])
+			data = response.json().get(type, [])
 			all_data.extend(data)
 			pages_fetched += 1
 
@@ -41,7 +41,7 @@ def fetch_pages(base_url, endpoint, page_limit):
 
 			# Construct next URL using base URL and next_page_info
 			if next_page_info:
-				url = f"{base_url}orders.json?limit=250&page_info={next_page_info}"
+				url = f"{base_url}{type}.json?limit=250&page_info={next_page_info}"
 			else:
 				url = None
 		elif response.status_code == 429:  # Too Many Requests
@@ -58,7 +58,12 @@ def fetch_pages(base_url, endpoint, page_limit):
 def get_shopify_orders(shopify_api_key, shopify_password, shopify_url, page_limit=-1):
 	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
 	endpoint = "orders.json?limit=250&status=any"
-	return fetch_pages(base_url, endpoint, page_limit)
+	return fetch_pages(base_url, endpoint, 'orders', page_limit)
+
+def get_shopify_customers(shopify_api_key, shopify_password, shopify_url, page_limit=-1):
+	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
+	endpoint = "customers.json?limit=250"
+	return fetch_pages(base_url, endpoint, 'customers', page_limit)
 
 def get_shopify_orders_updated_after(shopify_api_key, shopify_password, shopify_url, updated_at_min, page_limit=-1):
 	updated_at_min_utc = convert_to_utc(updated_at_min)

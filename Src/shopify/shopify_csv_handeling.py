@@ -1,40 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import re
+from urllib.parse import urlparse, parse_qs
 
-def clean_json(all_orders, defined_subheaders):
-	# Split the headers into top-level and nested fields
-	top_level_fields = [header for header in defined_subheaders if '.' not in header]
-	nested_fields = {header.split('.')[0]: [] for header in defined_subheaders if '.' in header}
-	for header in defined_subheaders:
-		parts = header.split('.')
-		if len(parts) > 1:
-			nested_fields[parts[0]].append(parts[1])
-
-	# Process each order
-	cleaned_orders = []
-	for order in all_orders:
-		cleaned_order = {}
-		# Keep only the top-level fields
-		for field in top_level_fields:
-			if field in order:
-				cleaned_order[field] = order[field]
-
-		# Process nested fields
-		for nested_field, subfields in nested_fields.items():
-			if nested_field in order:
-				if isinstance(order[nested_field], list):  # If the nested field is a list of dictionaries
-					cleaned_order[nested_field] = [
-						{subfield: item.get(subfield, None) for subfield in subfields}
-						for item in order[nested_field]
-					]
-				elif isinstance(order[nested_field], dict):  # If the nested field is a single dictionary
-					cleaned_order[nested_field] = {
-						subfield: order[nested_field].get(subfield, None) for subfield in subfields
-					}
-
-		cleaned_orders.append(cleaned_order)
-
-	return cleaned_orders
 
 def analyze_repurchase_trends(csv_file_path):
 	# Sample DataFrame
@@ -67,3 +35,44 @@ def analyze_repurchase_trends(csv_file_path):
 		plt.ylabel('Average Days Between Purchases')
 		plt.grid(True)
 		plt.show()
+
+def shopify_clean_df(df):
+	df[['channel', 'campaign']] = df['landing_site'].apply(lambda x: extract_channel_and_campaign(x) if pd.notna(x) else ('other', None)).apply(pd.Series)
+
+	return df
+
+def extract_channel_and_campaign(url):
+	# Default values
+	channel = 'other'
+	campaign = None
+
+	# Parse the URL
+	parsed_url = urlparse(url)
+	query_params = parse_qs(parsed_url.query)
+
+	# Ensure values are strings
+	query_params = {k: [v.decode() if isinstance(v, bytes) else v for v in vals] for k, vals in query_params.items()}
+
+	# Check for known channels
+	if 'utm_source' in query_params:
+		source = query_params['utm_source'][0].lower()
+		if 'google' in source:
+			channel = 'google'
+		elif 'facebook' in source:
+			channel = 'facebook'
+		elif 'insta' in source:
+			channel = 'insta'
+		elif 'klaviyo' in source:
+			channel = 'klaviyo'
+		elif 'tiktok' in source:
+			channel = 'tiktok'
+		elif 'snap' in source:
+			channel = 'snap'
+
+	# Extract campaign data using regex
+	campaign_match = re.search(r'utm_campaign=([^&]*)', url)
+	if campaign_match:
+		campaign = campaign_match.group(1)
+
+	# Return the extracted channel and campaign
+	return channel, campaign

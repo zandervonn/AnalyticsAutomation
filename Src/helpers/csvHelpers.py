@@ -115,3 +115,38 @@ def write_data_to_csv(data, file_path):
 		writer = csv.writer(file)
 		writer.writerow(data.keys())
 		writer.writerow(data.values())
+
+def clean_json(all_orders, defined_subheaders):
+	# Split the headers into top-level and nested fields
+	top_level_fields = [header for header in defined_subheaders if '.' not in header]
+	nested_fields = {header.split('.')[0]: [] for header in defined_subheaders if '.' in header}
+	for header in defined_subheaders:
+		parts = header.split('.')
+		if len(parts) > 1:
+			nested_fields[parts[0]].append(parts[1])
+
+	# Process each order
+	cleaned_orders = []
+	for order in all_orders:
+		cleaned_order = {}
+		# Keep only the top-level fields
+		for field in top_level_fields:
+			if field in order:
+				cleaned_order[field] = order[field]
+
+		# Process nested fields
+		for nested_field, subfields in nested_fields.items():
+			if nested_field in order:
+				if isinstance(order[nested_field], list):  # If the nested field is a list of dictionaries
+					cleaned_order[nested_field] = [
+						{subfield: item.get(subfield, None) for subfield in subfields}
+						for item in order[nested_field]
+					]
+				elif isinstance(order[nested_field], dict):  # If the nested field is a single dictionary
+					cleaned_order[nested_field] = {
+						subfield: order[nested_field].get(subfield, None) for subfield in subfields
+					}
+
+		cleaned_orders.append(cleaned_order)
+
+	return cleaned_orders
