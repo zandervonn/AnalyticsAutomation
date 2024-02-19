@@ -20,6 +20,7 @@ STARSHIPIT_JSON_PATH = "starshipit_orders.json"
 SHOPIFY_CLEAN_JSON_PATH = "shopify_orders_clean.json"
 STARSHIPIT_CLEANED_JSON_PATH = "startshipit_orders_clean.json"
 ORDERS_PATH = "shopify_orders.csv"
+STARSHIPIT_CSV_PATH = "starshipit_orders.csv"
 ORDERS_CLEANED_PATH = "shopify_orders_clean.csv"
 ORDERS_REPURCHASE_PATH = "shopify_orders_repurchase.csv"
 STARSHIPIT_CLEANED_PATH = "starshipit_clean.csv"
@@ -56,19 +57,21 @@ def excel_update():
 	csv_sheets_to_excel(csv_files, excel_file)
 
 def main_get_and_build_starshipit_report():
-	new_json = get_starshipit_orders(starshipit_url, starshipit_api_key, starshipit_password, 2)
-	save_json(new_json, FOLDER_PATH + STARSHIPIT_JSON_PATH)
-	# new_json = load_json(FOLDER_PATH + STARSHIPIT_JSON_PATH)
-	orders_cleaned_json = clean_json(new_json, starshipit_defined_subheaders)
-	save_json(new_json, FOLDER_PATH + STARSHIPIT_CLEANED_JSON_PATH)
-	# print(new_json)
-	df = pd.json_normalize(orders_cleaned_json)
-	# df = json_to_csv(orders_cleaned_json)
+	unshipped_orders = get_unshipped_orders(starshipit_api_key, starshipit_password, 2)
+	shipped_orders = get_shipped_orders(starshipit_api_key, starshipit_password, 2)
+	unmanifested_shipments = get_unmanifested_shipments(starshipit_api_key, starshipit_password, 2)
+	recently_printed_shipments = get_recently_printed_shipments(starshipit_api_key, starshipit_password, 2)
+
+	df = combine_orders_to_df(unshipped_orders, shipped_orders, unmanifested_shipments, recently_printed_shipments)
+
+	save_df_to_csv(df, FOLDER_PATH + STARSHIPIT_CSV_PATH)
+
 	cleaned_df = clean_df(df, starshipit_defined_subheaders)
 	save_df_to_csv(cleaned_df, FOLDER_PATH + STARSHIPIT_CLEANED_PATH)
 
 def main():
-	main_get_and_build_starshipit_report()
+	# main_get_and_build_starshipit_report()
+	main_get_and_build_shopify_report()
 
 if __name__ == '__main__':
 	main()

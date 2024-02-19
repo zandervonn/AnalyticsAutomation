@@ -31,7 +31,10 @@ shopify_defined_subheaders = [
 starshipit_defined_subheaders = [
 	'order_id',
 	'order_date',
+	'shipped_date',
 	'order_number',
+	# 'status',
+	'order_type',
 	'reference',
 	'carrier',
 	'carrier_name',
@@ -82,5 +85,5 @@ starshipit_defined_subheaders = [
 	# 'plt',
 	# 'type',
 	# 'platform',
-	'status'
+
 ]

@@ -1,5 +1,6 @@
 import csv
 import json
+import pandas as pd
 from io import StringIO
 
 
@@ -20,6 +21,32 @@ def load_json(orders_path):
 		orders = json.load(f)
 	return orders
 
+# def json_to_csv(json_data):
+# 	# Check if the JSON data is empty
+# 	if not json_data:
+# 		return ""
+#
+# 	# Parse the JSON string into a Python object
+# 	data = json.loads(json_data)
+#
+# 	# Determine the headers from the first item in the data
+# 	headers = data[0].keys()
+#
+# 	# Create a StringIO object to write the CSV data
+# 	output = StringIO()
+# 	writer = csv.DictWriter(output, fieldnames=headers)
+#
+# 	# Write the headers and data rows
+# 	writer.writeheader()
+# 	for row in data:
+# 		writer.writerow(row)
+#
+# 	# Get the CSV string from the StringIO object
+# 	csv_string = output.getvalue()
+# 	output.close()
+#
+# 	return csv_string
+
 def json_to_csv(json_data):
 	# Check if the JSON data is empty
 	if not json_data:
@@ -28,8 +55,13 @@ def json_to_csv(json_data):
 	# Parse the JSON string into a Python object
 	data = json.loads(json_data)
 
-	# Determine the headers from the first item in the data
-	headers = data[0].keys()
+	# Dynamically determine the headers by collecting all unique keys from the data
+	headers = set()
+	for row in data:
+		headers.update(row.keys())
+
+	# Sort the headers for consistent column ordering
+	headers = sorted(headers)
 
 	# Create a StringIO object to write the CSV data
 	output = StringIO()
@@ -45,3 +77,16 @@ def json_to_csv(json_data):
 	output.close()
 
 	return csv_string
+
+def json_to_df(json_data):
+	# Check if the JSON data is empty
+	if not json_data:
+		return pd.DataFrame()
+
+	# Parse the JSON string into a Python object
+	data = json.loads(json_data)
+
+	# Convert the data to a pandas DataFrame
+	df = pd.DataFrame(data)
+
+	return df

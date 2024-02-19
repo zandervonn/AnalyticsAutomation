@@ -16,7 +16,8 @@ def remove_brackets(text):
 
 def clean_string_list_column(df, column_name):
 	if column_name in df.columns:
-		df[column_name] = df[column_name].apply(lambda x: ', '.join(x) if isinstance(x, list) else x)
+		df[column_name] = df[column_name].apply(
+			lambda x: ', '.join(str(item) for item in x) if isinstance(x, list) else x)
 	return df
 
 def make_lists_normal(text):
