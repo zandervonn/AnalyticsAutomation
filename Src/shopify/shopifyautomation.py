@@ -1,10 +1,6 @@
-# graphql 200 points/second, 1000 total points
-# rest 4 requests/second, 40 or 80 bucket size
-
-import requests
 import time
+import requests
 from Src.gitignore import access
-import json
 from datetime import datetime
 from dateutil import tz
 
@@ -59,28 +55,18 @@ def fetch_pages(base_url, endpoint, page_limit):
 
 	return all_data
 
-def get_orders(shopify_api_key, shopify_password, shopify_url, page_limit=-1):
+def get_shopify_orders(shopify_api_key, shopify_password, shopify_url, page_limit=-1):
 	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
 	endpoint = "orders.json?limit=250&status=any"
 	return fetch_pages(base_url, endpoint, page_limit)
 
-def get_orders_updated_after(shopify_api_key, shopify_password, shopify_url, updated_at_min, page_limit=-1):
+def get_shopify_orders_updated_after(shopify_api_key, shopify_password, shopify_url, updated_at_min, page_limit=-1):
 	updated_at_min_utc = convert_to_utc(updated_at_min)
 	print("Getting orders after: " + updated_at_min)
 	print("Getting orders after utc: " + updated_at_min_utc)
 	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
 	endpoint = f"orders.json?limit=250&status=any&created_at_min={updated_at_min_utc}"
 	return fetch_pages(base_url, endpoint, page_limit)
-
-def save_json(orders, filename='orders.json'):
-	with open(filename, 'w', encoding='utf-8') as f:
-		json.dump(orders, f, ensure_ascii=False, indent=4)
-	print(f"Orders saved to {filename}")
-
-def load_json(orders_path):
-	with open(orders_path, 'r', encoding='utf-8') as f:
-		orders = json.load(f)
-	return orders
 
 def build_shopify_report():
 	shopify_api_key = access.shopify_api_key()
@@ -102,7 +88,7 @@ def build_shopify_report():
 	response = requests.post(url, json=data, headers=headers)
 	print(response.json())
 
-def get_most_recent_updated_at(orders_json):
+def get_shopify_most_recent_updated_at(orders_json):
 	# Extract 'updated_at' values and convert them to datetime objects
 	updated_at_dates = [
 		datetime.strptime(order['updated_at'], "%Y-%m-%dT%H:%M:%S%z")
@@ -117,7 +103,7 @@ def get_most_recent_updated_at(orders_json):
 	else:
 		return None
 
-def update_orders(existing_orders, new_orders):
+def update_shopify_orders(existing_orders, new_orders):
 	# Create a dictionary to hold the existing orders, using the order ID as the key
 	existing_orders_dict = {order['id']: order for order in existing_orders}
 
@@ -136,7 +122,7 @@ def update_orders(existing_orders, new_orders):
 
 	return updated_orders_list
 
-def sort_orders_by_order_number(orders):
+def sort_shopify_orders_by_order_number(orders):
 	return sorted(orders, key=lambda order: int(order['order_number']), reverse=True)
 
 def convert_to_utc(time_str):
