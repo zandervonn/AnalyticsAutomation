@@ -3,16 +3,23 @@ import requests
 
 
 
-def get_meta_page_info(meta_token, page_limit=-1):
-	url = f'https://graph.facebook.com/v14.0/{meta_token}/insights'
+def get_meta_page_info(meta_token, id_number, page_limit=-1):
+	url = f'https://graph.facebook.com/v19.0/{id_number}/insights/'
+	endpoint = "page_total_actions"
+	# endpoint = ""
 	params = {
-		'access_token': meta_token,
-		'fields': 'campaign_name,impressions,clicks',
-		'date_preset': 'last_7_days'
+		# 'name': 'page_total_actions',
+		# 'debug': 'all',
+		# 'date_preset': 'last_7_days',
+		# 'metadata': '1',
+		'access_token': meta_token
 	}
 	# url = base_url + endpoint
-	response = requests.get(url, params=params)
-	print(response)
+	response = requests.get(url+endpoint, params=params)
+	print("Request URL:", response.request.url)
+	print("Request Headers:", response.request.headers)
+	print("Request Body:", response.request.body)
+	print(response.json())
 	return response
 
 

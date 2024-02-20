@@ -80,7 +80,7 @@ def main():
 	# main_get_and_build_starshipit_report()
 	# main_get_and_build_shopify_report()
 	# main_get_and_build_shopify_customer_report()
-	get_meta_page_info(access.meta_access_token(), 1)
+	get_meta_page_info(access.meta_access_token(), access.meta_id(), 1)
 
 if __name__ == '__main__':
 	main()
