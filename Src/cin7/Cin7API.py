@@ -4,7 +4,24 @@
 # recommend only polling most recent data
 
 
-def get_orders(shopify_api_key, shopify_password, shopify_url, page_limit=-1):
-	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
-	endpoint = "orders.json?limit=250&status=any"
-	return fetch_pages(base_url, endpoint, page_limit)
+import requests
+
+def get_cin7_data(api_key):
+	base_url = 'https://api.cin7.com/api/v1/'
+	headers = {
+		'Authorization': api_key
+	}
+	endpoint = f"Products"
+	# Products?fields={fields}&where={where}&order={order}&page={page}&rows={rows}
+	url = f'{base_url}{endpoint}'
+
+	response = requests.get(url, headers=headers)
+	print("Request URL:", response.request.url)
+	print("Request Headers:", response.request.headers)
+	print("Request Body:", response.request.body)
+	print("Response Body:", response.json())
+	if response.status_code == 200:
+		return response.json()
+	else:
+		print(f'Error: {response.status_code}')
+		return None

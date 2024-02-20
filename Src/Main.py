@@ -1,4 +1,5 @@
 from Src.StarshipitAPI import *
+from Src.cin7.Cin7API import *
 from Src.helpers.fileHelpers import *
 from Src.meta.metaAutomation import *
 from Src.shopify.shopifyautomation import *
@@ -80,7 +81,9 @@ def main():
 	# main_get_and_build_starshipit_report()
 	# main_get_and_build_shopify_report()
 	# main_get_and_build_shopify_customer_report()
-	get_meta_page_info(access.meta_access_token(), access.meta_id(), 1)
+	# get_meta_page_info(access.meta_access_token(), access.meta_facebook_id, 1)
+	# get_instagram_metrics(access.meta_access_token(), access.meta_facebook_id())
+	get_cin7_data(access.cin7_api_key())
 
 if __name__ == '__main__':
 	main()
