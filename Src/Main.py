@@ -20,6 +20,10 @@ starshipit_url = access.starshipit_url()
 google_credentials_path = access.google_credentials_path()
 google_property_id = access.google_property_id()
 
+meta_access_token = access.meta_access_token()
+facebook_page_id = access.meta_facebook_id()
+instagram_page_id = access.meta_insta_id()
+
 def main_get_and_build_shopify_order_report():
 	# existing_orders = load_json(FOLDER_PATH + JSON_PATH)
 	# last_update = get_most_recent_updated_at(existing_orders)
@@ -90,10 +94,13 @@ def main():
 	# main_get_and_build_starshipit_report()
 	# main_get_and_build_shopify_report()
 	# main_get_and_build_shopify_customer_report()
-	# get_meta_page_info(access.meta_access_token(), access.meta_facebook_id, 1)
-	# get_instagram_metrics(access.meta_access_token(), access.meta_facebook_id())
+
 	# get_cin7_data(access.cin7_api_key())
-	main_google()
+	# main_google()
+
+	# get_instagram_metrics(new_page_access_token, gelous_page_id)
+	get_meta_page_info(meta_access_token, facebook_page_id, 2)
+	# get_meta_page_info(meta_access_token, instagram_page_id, 2)
 
 if __name__ == '__main__':
 	main()
