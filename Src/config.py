@@ -150,5 +150,45 @@ starshipit_defined_subheaders = [
 	# 'plt',
 	# 'type',
 	# 'platform',
+]
 
+# https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema
+#limit of 10
+google_defined_headers_metrics = [
+	"sessions",
+	"addToCarts",
+	"checkouts",
+	"transactions",
+	"averagePurchaseRevenue",
+	"bounceRate",
+	# "eventsPerSession",
+	# "advertiserAdCostPerClick",
+	# "advertiserAdCostPerConversion",
+	# "engagedSessions",
+	# "firstTimePurchasers",
+	# "grossPurchaseRevenue",
+	# "itemDiscountAmount",
+	# "itemsViewed",
+	# "itemsPurchased",
+	# "organicGoogleSearchAveragePosition",
+	# "organicGoogleSearchClicks",
+	# "promotionClicks",
+	# "transactionsPerPurchaser",
+	# "userEngagementDuration"
+]
+
+# https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema
+# limit of 9
+google_defined_headers_dimensions = [
+	# "date",
+	"dateHour",
+	# "dateHourMinute",
+	# "dayOfWeekName",
+	# "landingPage",
+	# "campaignName",
+	# "browser",
+	# "firstSessionDate",
+	# "sessionSource",
+	# "userAgeBracket",
+	# "userGender"
 ]

@@ -1,5 +1,6 @@
 from Src.StarshipitAPI import *
 from Src.cin7.Cin7API import *
+from Src.google.googleAutomation import *
 from Src.helpers.fileHelpers import *
 from Src.meta.metaAutomation import *
 from Src.shopify.shopifyautomation import *
@@ -15,6 +16,9 @@ shopify_url = access.shopify_url()
 starshipit_api_key = access.starshipit_api_key()
 starshipit_password = access.starshipit_subscription_key()
 starshipit_url = access.starshipit_url()
+
+google_credentials_path = access.google_credentials_path()
+google_property_id = access.google_property_id()
 
 def main_get_and_build_shopify_order_report():
 	# existing_orders = load_json(FOLDER_PATH + JSON_PATH)
@@ -77,13 +81,19 @@ def main_get_and_build_starshipit_report():
 	cleaned_df = clean_df(df, starshipit_defined_subheaders)
 	save_df_to_csv(cleaned_df, path_gen('starshipit', 'orders', 'clean', 'csv'))
 
+def main_google():
+	credentials = get_credentials(google_credentials_path)
+	response = get_google_analytics(credentials, google_property_id, google_defined_headers_dimensions, google_defined_headers_metrics, "7daysAgo", "today")
+	save_df_to_csv(response, path_gen('google', 'sessions', '', 'csv'))
+
 def main():
 	# main_get_and_build_starshipit_report()
 	# main_get_and_build_shopify_report()
 	# main_get_and_build_shopify_customer_report()
 	# get_meta_page_info(access.meta_access_token(), access.meta_facebook_id, 1)
 	# get_instagram_metrics(access.meta_access_token(), access.meta_facebook_id())
-	get_cin7_data(access.cin7_api_key())
+	# get_cin7_data(access.cin7_api_key())
+	main_google()
 
 if __name__ == '__main__':
 	main()
