@@ -52,23 +52,31 @@ def main_get_and_build_shopify_order_report():
 	save_df_to_csv(cleaned_orders_df, path_gen('shopify', 'orders', 'clean', 'csv'))
 
 def main_get_and_build_shopify_customer_report():
-	new_orders_json = get_shopify_customers(shopify_api_key, shopify_password, shopify_url)
-	save_json(new_orders_json, path_gen('shopify', 'customers', '', 'json'))
+	new_customers_json = get_shopify_customers(shopify_api_key, shopify_password, shopify_url, 3)
+	save_json(new_customers_json, path_gen('shopify', 'customers', '', 'json'))
 
 	# Clean the JSON data
-	orders_cleaned_json = clean_json(new_orders_json, shopify_defined_subheaders_customers)
-	save_json(orders_cleaned_json, path_gen('shopify', 'customers', 'clean', 'json'))
+	customers_cleaned_json = clean_json(new_customers_json, shopify_defined_subheaders_customers)
+	save_json(customers_cleaned_json, path_gen('shopify', 'customers', 'clean', 'json'))
 
 	# Convert the JSON data to a DataFrame
-	orders_df = pd.json_normalize(orders_cleaned_json)
+	orders_df = pd.json_normalize(customers_cleaned_json)
 
 	# Clean DataFrame
-	cleaned_orders_df = clean_df(orders_df, shopify_defined_subheaders_customers)
+	cleaned_customers_df = clean_df(orders_df, shopify_defined_subheaders_customers)
 	# cleaned_orders_df = shopify_clean_df(cleaned_orders_df)
-	save_df_to_csv(cleaned_orders_df, path_gen('shopify', 'customers', 'clean', 'csv'))
+	save_df_to_csv(cleaned_customers_df, path_gen('shopify', 'customers', 'clean', 'csv'))
 
 def excel_update():
-	csv_files = [path_gen('shopify', 'orders', 'clean', 'csv'), path_gen('shopify', 'customers', 'clean', 'csv'), path_gen('shopify', 'conversions', 'clean', 'csv')]  # List of your CSV files
+	csv_files = [
+		path_gen('shopify', 'orders', 'clean', 'csv'),
+	    path_gen('shopify', 'customers', 'clean', 'csv'),
+	    # path_gen('shopify', 'conversions', 'clean', 'csv'),
+		path_gen('cin7', 'data', '', 'csv'),
+	    path_gen('starshipit', 'orders', 'clean', 'csv'),
+	    path_gen('google', 'sessions', '', 'csv'),
+	    path_gen('facebook', 'data', '', 'csv')
+		]  # List of your CSV files
 	excel_file = access.FOLDER_PATH + 'compiled_data.xlsx'  # Desired Excel file name
 	csv_sheets_to_excel(csv_files, excel_file)
 
@@ -85,22 +93,31 @@ def main_get_and_build_starshipit_report():
 	cleaned_df = clean_df(df, starshipit_defined_subheaders)
 	save_df_to_csv(cleaned_df, path_gen('starshipit', 'orders', 'clean', 'csv'))
 
-def main_google():
+def get_and_build_google():
 	credentials = get_credentials(google_credentials_path)
 	response = get_google_analytics(credentials, google_property_id, google_defined_headers_dimensions, google_defined_headers_metrics, "7daysAgo", "today")
 	save_df_to_csv(response, path_gen('google', 'sessions', '', 'csv'))
 
+def get_and_build_facebook():
+	facebook_df = get_meta_page_info(meta_access_token, facebook_page_id, 10)
+	save_df_to_csv(facebook_df, path_gen('facebook', 'data', '', 'csv'))
+
+def get_and_build_cin7():
+	data = get_cin7_data(access.cin7_api_key())
+	data = pd.json_normalize(data)
+	save_df_to_csv(data, path_gen('cin7', 'data', '', 'csv'))
+
+
 def main():
 	# main_get_and_build_starshipit_report()
-	# main_get_and_build_shopify_report()
+	# main_get_and_build_shopify_order_report()
 	# main_get_and_build_shopify_customer_report()
+	# get_and_build_cin7()
 
-	# get_cin7_data(access.cin7_api_key())
-	# main_google()
+	get_and_build_google()
+	# get_and_build_facebook()
 
-	# get_instagram_metrics(new_page_access_token, gelous_page_id)
-	get_meta_page_info(meta_access_token, facebook_page_id, 2)
-	# get_meta_page_info(meta_access_token, instagram_page_id, 2)
+	# excel_update()
 
 if __name__ == '__main__':
 	main()

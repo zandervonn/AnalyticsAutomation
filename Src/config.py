@@ -156,11 +156,11 @@ starshipit_defined_subheaders = [
 #limit of 10
 google_defined_headers_metrics = [
 	"sessions",
-	"addToCarts",
-	"checkouts",
-	"transactions",
-	"averagePurchaseRevenue",
-	"bounceRate",
+	# "addToCarts",
+	# "checkouts",
+	# "transactions",
+	# "averagePurchaseRevenue",
+	# "bounceRate",
 	# "eventsPerSession",
 	# "advertiserAdCostPerClick",
 	# "advertiserAdCostPerConversion",
@@ -181,7 +181,7 @@ google_defined_headers_metrics = [
 # limit of 9
 google_defined_headers_dimensions = [
 	# "date",
-	"dateHour",
+	# "dateHour",
 	# "dateHourMinute",
 	# "dayOfWeekName",
 	# "landingPage",
