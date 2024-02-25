@@ -1,10 +1,10 @@
 import os
-from Src.gitignore import access
+from gitignore import access
 
 
 def path_gen(platform, data_type, clean_status, file_format):
 	# Define allowed options for each parameter
-	allowed_platforms = {'shopify', 'cin7', 'starshipit', 'google', 'facebook'}
+	allowed_platforms = {'shopify', 'cin7', 'starshipit', 'google', 'facebook', 'instagram'}
 	allowed_data_types = {'orders', 'customers', 'conversions', 'sessions', 'data'}
 	allowed_clean_statuses = {'clean', ''}
 	allowed_file_formats = {'json', 'csv'}

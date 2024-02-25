@@ -72,7 +72,9 @@ def extract_channel_and_campaign(url):
 	# Extract campaign data using regex
 	campaign_match = re.search(r'utm_campaign=([^&]*)', url)
 	if campaign_match:
-		campaign = campaign_match.group(1)
+		campaign_full = campaign_match.group(1)
+		# Trim everything past the dash if there's a time indicator
+		campaign = campaign_full.split(' - ')[0]
 
 	# Return the extracted channel and campaign
 	return channel, campaign

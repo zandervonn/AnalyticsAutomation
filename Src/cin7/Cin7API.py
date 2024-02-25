@@ -7,19 +7,17 @@
 import requests
 
 def get_cin7_data(api_key):
+	#todo only returning 50, check this is all there should be
+	#todo check that the values coming back look correct
 	base_url = 'https://api.cin7.com/api/v1/'
 	headers = {
-		'Authorization': api_key
+		'Authorization': api_key,
+		'rows': '250'
 	}
 	endpoint = f"Products"
-	# Products?fields={fields}&where={where}&order={order}&page={page}&rows={rows}
 	url = f'{base_url}{endpoint}'
 
 	response = requests.get(url, headers=headers)
-	print("Request URL:", response.request.url)
-	print("Request Headers:", response.request.headers)
-	print("Request Body:", response.request.body)
-	print("Response Body:", response.json())
 	if response.status_code == 200:
 		return response.json()
 	else:

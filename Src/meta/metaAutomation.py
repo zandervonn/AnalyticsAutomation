@@ -1,75 +1,47 @@
-import time
 import requests
 import pandas as pd
 
-
-def get_meta_page_info(meta_token, id_number, page_limit):
+def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
 	url = f'https://graph.facebook.com/v19.0/{id_number}/insights'
-	#https://developers.facebook.com/docs/graph-api/reference/v19.0/insights
-	metrics = [
-		# 'page_total_actions',
-		# 'page_engaged_users',
-		# 'page_impressions_organic_v2',
-		'page_fan_removes_unique',
-		# 'page_fans_by_like_source'
-		# 'page_impressions',
-		# 'page_views_total',
-		# 'page_fan_adds_unique'
-
-	]
 	params = {
 		'access_token': meta_token,
 		'metric': ','.join(metrics),
-		'period': 'week',
-		# 'date_preset': 'last_week'
+		'period': 'day',
+		'since': since,
+		'until': until
 	}
 
-	# Initialize an empty DataFrame
-	df = pd.DataFrame()
-	page_count = 1
-	# Loop through pages
-	while True and (page_count < page_limit or page_limit == -1):
+	df = pd.DataFrame()  # Initialize an empty DataFrame
+	page_count = 0
+
+	while True:
 		response = requests.get(url, params=params)
 		data = response.json()
-		print("Getting page", page_count)
-		print("Page body: ", data)
+
+		# Check if the response contains 'data'
+		if 'data' not in data:
+			if 'error' in data:
+				# Log the error and break or raise an exception
+				error_message = data['error'].get('message', 'No error message provided')
+				raise Exception(f"Error fetching Meta insights: {error_message}")
+			else:
+				# If there's no 'data' or 'error', it could be another issue
+				raise Exception("Unknown error occurred when fetching Meta insights")
 
 		# Extract data and append to DataFrame
 		for item in data['data']:
+			for value in item['values']:
+				df = df.append({
+					'metric': item['name'],
+					'end_time': value['end_time'],
+					'value': value['value']
+				}, ignore_index=True)
 
-			df = df.append(pd.json_normalize(item['values']), ignore_index=True)
-
-		# Check for next page
-		if 'paging' in data and 'next' in data['paging']:
-			url = data['paging']['next']
-			page_count += 1
-		else:
-			break
+		# Implement paging logic if necessary
+		# if 'paging' in data and 'next' in data['paging']:
+		#     url = data['paging']['next']
+		#     page_count += 1
+		# else:
+		break
 
 	return df
-
-def get_instagram_metrics(meta_token, id_number):
-	url = f'https://graph.facebook.com/v19.0/{id_number}/insights'
-	metrics = [
-		# 'profile_likes'
-		# 'reach',
-		# 'follower_count',
-		# 'email_contacts',
-		"page_impressions_unique"
-		# 'phone_call_clicks',
-		# 'text_message_clicks',
-		# 'get_directions_clicks',
-		# 'website_clicks',
-		# 'profile_views'
-	]
-	params = {
-		'access_token': meta_token,
-		'metric': ','.join(metrics),
-		'period': 'week'
-	}
-	response = requests.get(url, params=params)
-	print("Request URL:", response.request.url)
-	print("Request Headers:", response.request.headers)
-	print("Request Body:", response.request.body)
-	print("Response Body:", response.json())
-	return response.json()

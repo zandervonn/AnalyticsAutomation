@@ -1,3 +1,4 @@
+#todo split into different config text files
 shopify_defined_subheaders_orders = [
 	'order_number',
 	'updated_at',
@@ -181,7 +182,7 @@ google_defined_headers_metrics = [
 # limit of 9
 google_defined_headers_dimensions = [
 	# "date",
-	# "dateHour",
+	"dateHour",
 	# "dateHourMinute",
 	# "dayOfWeekName",
 	# "landingPage",
@@ -191,4 +192,103 @@ google_defined_headers_dimensions = [
 	# "sessionSource",
 	# "userAgeBracket",
 	# "userGender"
+]
+
+cin7_defined_subheaders = [
+	'id',
+	'status',
+	'createdDate',
+	'modifiedDate',
+	# 'styleCode',
+	'name',
+	# 'tags',
+	'brand',
+	'category',
+	'subCategory',
+	# 'channels',
+	'weight',
+	# 'height',
+	# 'width',
+	# 'length',
+	# 'volume',
+	'stockControl',
+	'orderType',
+	'productType',
+	# 'optionLabel1',
+	'salesAccount',
+	# 'productOptions.id',
+	'productOptions.status',
+	'productOptions.productId',
+	# 'productOptions.code',
+	# 'productOptions.barcode',
+	# 'productOptions.option1',
+	'productOptions.optionWeight',
+	'productOptions.retailPrice',
+	# 'productOptions.wholesalePrice',
+	# 'productOptions.vipPrice',
+	# 'productOptions.specialPrice',
+	'productOptions.stockAvailable',
+	'productOptions.stockOnHand',
+	# 'productOptions.priceColumns.retailNZD',
+	# 'productOptions.priceColumns.vipnzd',
+	# 'productOptions.priceColumns.wholesaleNZD',
+	# 'productOptions.priceColumns.priceAUD',
+	# 'productOptions.priceColumns.priceUSD',
+	'productOptions.priceColumns.costNZD',
+	# 'productOptions.priceColumns.costUSD',
+	# 'productOptions.priceColumns.costAUD',
+	# 'productOptions.priceColumns.specialPrice'
+]
+
+facebook_insights_headers = [
+	# 'page_total_actions',
+	# 'page_engaged_users',
+	# 'page_impressions_organic_v2',
+	'page_fan_removes_unique',
+	# 'page_fans_by_like_source'
+	# 'page_impressions',
+	# 'page_views_total',
+	# 'page_fan_adds_unique'
+
+	# "accounts_engaged",
+	# "total_interactions",
+	# "likes",
+	# "comments",
+	# "shares",
+	# "saves",
+	# "replies",
+	# "engaged_audience_demographics",
+	# "reached_audience_demographics",
+	# "follower_demographics",
+	# "follows_and_unfollows",
+	# "profile_links_taps"
+]
+
+instagram_insights_headers = [
+	"impressions",
+	# "reach",
+	# "follower_count",
+	# "email_contacts",
+	# "phone_call_clicks",
+	# "text_message_clicks",
+	# "get_directions_clicks",
+	# "website_clicks",
+	# "profile_views",
+	# "audience_gender_age",
+	# "audience_locale",
+	# "audience_country",
+	# "audience_city",
+	# "online_followers",
+	# "accounts_engaged",
+	# "total_interactions",
+	# "likes",
+	# "comments",
+	# "shares",
+	# "saves",
+	# "replies",
+	# "engaged_audience_demographics",
+	# "reached_audience_demographics",
+	# "follower_demographics",
+	# "follows_and_unfollows",
+	# "profile_links_taps"
 ]

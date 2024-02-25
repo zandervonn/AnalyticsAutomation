@@ -19,8 +19,8 @@ def get_credentials(client_secret_path):
 	scopes = ["https://www.googleapis.com/auth/analytics.readonly"]
 
 	# Search for valid credentials
-	if os.path.exists('token.json'):
-		creds = Credentials.from_authorized_user_file('token.json', scopes)
+	if os.path.exists('C:\\Users\\Zander\\IdeaProjects\\Automation-Gel\\gitignore\\google\\token.json'):
+		creds = Credentials.from_authorized_user_file('C:\\Users\\Zander\\IdeaProjects\\Automation-Gel\\gitignore\\google\\token.json', scopes)
 
 	# If there are no (valid) credentials available, let the user log in.
 	if not creds or not creds.valid:
@@ -37,7 +37,7 @@ def get_credentials(client_secret_path):
 			else:
 				appflow.run_console()
 		# Save the credentials for the next run
-		with open('token.json', 'w') as token:
+		with open('C:\\Users\\Zander\\IdeaProjects\\Automation-Gel\\gitignore\\google\\token.json', 'w') as token:
 			token.write(creds.to_json())
 	return creds
 
@@ -53,6 +53,7 @@ def build_dataframe(response):
 	return pd.DataFrame(data)
 
 def get_google_analytics(credentials, property_id, dimensions, metrics, start_date, end_date):
+	#todo check that the values coming back look correct, not lining up with analytics
 	client = BetaAnalyticsDataClient(credentials=credentials)
 
 	# noinspection PyTypeChecker
@@ -61,7 +62,7 @@ def get_google_analytics(credentials, property_id, dimensions, metrics, start_da
 		dimensions=[Dimension(name=dim) for dim in dimensions],
 		metrics=[Metric(name=metric) for metric in metrics],
 		date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-		order_bys=[OrderBy(dimension=OrderBy.DimensionOrderBy(dimension_name="dateHour"))]
+		order_bys=[OrderBy(dimension=OrderBy.DimensionOrderBy(dimension_name=dimensions[0]))] if dimensions else []
 	)
 	response = client.run_report(request)
 	return build_dataframe(response)

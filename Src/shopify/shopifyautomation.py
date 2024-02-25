@@ -1,6 +1,6 @@
 import time
 import requests
-from Src.gitignore import access
+from gitignore import access
 from datetime import datetime
 from dateutil import tz
 
@@ -67,11 +67,9 @@ def get_shopify_customers(shopify_api_key, shopify_password, shopify_url, page_l
 
 def get_shopify_orders_updated_after(shopify_api_key, shopify_password, shopify_url, updated_at_min, page_limit=-1):
 	updated_at_min_utc = convert_to_utc(updated_at_min)
-	print("Getting orders after: " + updated_at_min)
-	print("Getting orders after utc: " + updated_at_min_utc)
 	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
 	endpoint = f"orders.json?limit=250&status=any&created_at_min={updated_at_min_utc}"
-	return fetch_pages(base_url, endpoint, page_limit)
+	return fetch_pages(base_url, endpoint, 'orders', page_limit)
 
 def build_shopify_report():
 	shopify_api_key = access.shopify_api_key()
@@ -130,10 +128,12 @@ def update_shopify_orders(existing_orders, new_orders):
 def sort_shopify_orders_by_order_number(orders):
 	return sorted(orders, key=lambda order: int(order['order_number']), reverse=True)
 
-def convert_to_utc(time_str):
-	timezone_str = "Pacific/Auckland"
+def convert_to_utc(time_str, timezone_str="Pacific/Auckland"):
+	# Set the default format for date string and adjust if time is included
+	time_format = "%Y-%m-%d" if 'T' not in time_str else "%Y-%m-%dT%H:%M:%S"
+
 	# Parse the time string into a datetime object
-	local_time = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S%z")
+	local_time = datetime.strptime(time_str, time_format)
 
 	# Set the timezone to the specified timezone
 	local_timezone = tz.gettz(timezone_str)
@@ -142,7 +142,7 @@ def convert_to_utc(time_str):
 	# Convert the time to UTC
 	utc_time = local_time.astimezone(tz.tzutc())
 
-	# Format the UTC time as a string
-	utc_time_str = utc_time.strftime("%Y-%m-%dT%H:%M:%S%z")
+	# Format the UTC time as a string, add 'T00:00:00' if only date is provided
+	utc_time_str = utc_time.strftime("%Y-%m-%dT%H:%M:%S%z" if 'T' in time_str else "%Y-%m-%dT00:00:00%z")
 
 	return utc_time_str

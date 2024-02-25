@@ -1,3 +1,5 @@
+import os
+
 from Src.helpers.jsonHelpers import *
 import csv
 import numpy as np
@@ -90,9 +92,12 @@ def clean_df(df, defined_headers):
 def csv_sheets_to_excel(csv_files, excel_file):
 	with pd.ExcelWriter(excel_file) as writer:
 		for csv_file in csv_files:
-			df = pd.read_csv(csv_file)
-			# Create a valid Excel sheet name by removing or replacing invalid characters
-			sheet_name = csv_file.split('.')[0]  # Use CSV file name as sheet name
+			try:
+				df = pd.read_csv(csv_file)
+			except pd.errors.EmptyDataError:
+				df = pd.DataFrame()  # Create an empty DataFrame if the CSV is empty
+			# Use only the file name for the sheet name, removing invalid characters
+			sheet_name = os.path.basename(csv_file).split('.')[0]
 			sheet_name = sheet_name.replace('\\', '_').replace('/', '_').replace('*', '').replace('?', '').replace(':', '').replace('[', '').replace(']', '')
 			# Shorten the sheet name to the Excel limit of 31 characters if necessary
 			sheet_name = sheet_name[:31]

@@ -49,13 +49,13 @@ def get_ui_analytics():
 		set_report_and_timeframe(driver, report_name='Online store sessions', date_range='Last 30 days')
 		time.sleep(5)
 		data = extract_table_data(driver)
-		save_to_csv(data, '../gitignore/shopify/sessions_output.csv')
+		save_to_csv(data, '../../gitignore/shopify/sessions_output.csv')
 		time.sleep(5)
 		open_page(driver, 'https://admin.shopify.com/store/gelous/dashboards')
 		set_report_and_timeframe(driver, report_name='Online store conversion rate', date_range='Last 30 days')
 		time.sleep(5)
 		data = extract_table_data(driver)
-		save_to_csv(data, '../gitignore/shopify/conversions_output.csv')
+		save_to_csv(data, '../../gitignore/shopify/conversions_output.csv')
 
 	finally:
 		close(driver)

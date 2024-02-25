@@ -18,7 +18,7 @@ def get_orders_after_date(orders, date):
 	filtered_orders = [order for order in orders if datetime.strptime(order['order_date'][:10], '%Y-%m-%d') > date_threshold]
 	return filtered_orders
 
-def get_starshipit_orders(starshipit_url, starshipit_api_key, starshipit_subscription_key, pages=-1, order_type='', status=None):
+def get_starshipit_orders(starshipit_url, starshipit_api_key, starshipit_subscription_key, pages=-1, order_type='', status=None, since_order_date=None, since_last_updated=None):
 	headers = {
 		'Content-Type': 'application/json',
 		'StarShipIT-Api-Key': starshipit_api_key,
@@ -29,6 +29,10 @@ def get_starshipit_orders(starshipit_url, starshipit_api_key, starshipit_subscri
 	}
 	if status:
 		params['status'] = status
+	if since_order_date:
+		params['since_order_date'] = since_order_date
+	if since_last_updated:
+		params['since_last_updated'] = since_last_updated
 
 	orders = get_starshipit_paginated_data(starshipit_url, headers, params, pages)
 	for order in orders:
@@ -62,25 +66,22 @@ def robust_json_to_df(json_data):
 
 	return df
 
-def get_unshipped_orders(api_key, subscription_key, pages=-1):
-	print("getting unshipped")
+# Now update each of the specific order retrieval functions to accept the date parameters:
+def get_unshipped_orders(api_key, subscription_key, pages=-1, since_order_date=None, since_last_updated=None):
 	url = 'https://api.starshipit.com/api/orders/unshipped/'
-	return get_starshipit_orders(url, api_key, subscription_key, pages, order_type='Unshipped')
+	return get_starshipit_orders(url, api_key, subscription_key, pages, 'Unshipped', None, since_order_date, since_last_updated)
 
-def get_shipped_orders(api_key, subscription_key, pages=-1):
-	print("getting shiiped")
+def get_shipped_orders(api_key, subscription_key, pages=-1, since_order_date=None, since_last_updated=None):
 	url = 'https://api.starshipit.com/api/orders/shipped/'
-	return get_starshipit_orders(url, api_key, subscription_key, pages, order_type='Shipped')
+	return get_starshipit_orders(url, api_key, subscription_key, pages, 'Shipped', None, since_order_date, since_last_updated)
 
-def get_unmanifested_shipments(api_key, subscription_key, pages=-1):
-	print("getting unmanafested")
+def get_unmanifested_shipments(api_key, subscription_key, pages=-1, since_order_date=None, since_last_updated=None):
 	url = 'https://api.starshipit.com/api/orders/shipments/'
-	return get_starshipit_orders(url, api_key, subscription_key, pages, order_type='Unmanifested', status='unmanifested')
+	return get_starshipit_orders(url, api_key, subscription_key, pages, 'Unmanifested', 'unmanifested', since_order_date, since_last_updated)
 
-def get_recently_printed_shipments(api_key, subscription_key, pages=-1):
-	print("getting printed")
+def get_recently_printed_shipments(api_key, subscription_key, pages=-1, since_order_date=None, since_last_updated=None):
 	url = 'https://api.starshipit.com/api/orders/shipments/'
-	return get_starshipit_orders(url, api_key, subscription_key, pages, order_type='Recently Printed', status='recently_printed')
+	return get_starshipit_orders(url, api_key, subscription_key, pages, 'Recently Printed', 'recently_printed', since_order_date, since_last_updated)
 
 def get_starshipit_paginated_data(url, headers, params, max_pages=None):
 	rate_limit_delay = 1  # API limit is 2 per second
