@@ -37,7 +37,7 @@ def split_json_list_columns(df, column, keys):
 
 	# Iterate over each row and process the data in the specified column
 	for index, row in df.iterrows():
-		# Check if the data is already a dictionary or a list of dictionaries
+		# Check if the data is a dictionary or a list of dictionaries
 		if isinstance(row[column], dict):
 			items = [row[column]]  # Wrap the dictionary in a list
 		elif isinstance(row[column], list):

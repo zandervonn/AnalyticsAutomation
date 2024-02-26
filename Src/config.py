@@ -156,7 +156,35 @@ starshipit_defined_subheaders = [
 # https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema
 #limit of 10
 google_defined_headers_metrics = [
-	"sessions",
+	# activeUsers
+	# addToCarts
+	# advertiserAdClicks
+	# advertiserAdCost
+	# advertiserAdCostPerClick
+	# advertiserAdCostPerConversion
+	# advertiserAdImpressions
+	# averagePurchaseRevenue
+	# averagePurchaseRevenuePerPayingUser
+	# averagePurchaseRevenuePerUser
+	# averageRevenuePerUser
+	# averageSessionDuration
+	# cartToViewRate
+	# checkouts
+	# conversions
+	# newUsers
+	# organicGoogleSearchAveragePosition
+	# organicGoogleSearchClickThroughRate
+	# organicGoogleSearchClicks
+	# organicGoogleSearchImpressions
+	# returnOnAdSpend
+	# totalRevenue
+	# totalUsers
+	# transactions
+	# userConversionRate
+	# userEngagementDuration
+
+
+	# "sessions",
 	# "addToCarts",
 	# "checkouts",
 	# "transactions",
@@ -181,17 +209,29 @@ google_defined_headers_metrics = [
 # https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema
 # limit of 9
 google_defined_headers_dimensions = [
+	# "adFormat",
+	# "adSourceName",
+	# "brandingInterest",
+	# "campaignName",
+	# "City",
+	# "Country",
+	# "deviceCategory",
+	# "googleAdsAdGroupName",
+	# "googleAdsAdNetworkType",
+	# "googleAdsCampaignName",
+	# "googleAdsKeyword",
+	# "pageReferrer",
+	# "platform",
+	# "Region",
+	# "Source",
+	# "userAgeBracket",
+	# "userGender",
+
 	# "date",
-	"dateHour",
+	# "dateHour",
 	# "dateHourMinute",
 	# "dayOfWeekName",
-	# "landingPage",
-	# "campaignName",
-	# "browser",
-	# "firstSessionDate",
-	# "sessionSource",
-	# "userAgeBracket",
-	# "userGender"
+	# "sessionSource"
 ]
 
 cin7_defined_subheaders = [
@@ -240,28 +280,75 @@ cin7_defined_subheaders = [
 	# 'productOptions.priceColumns.specialPrice'
 ]
 
+#insights?pretty=0&since=1707379200&until=1707897600&metric=post_engaged_users&period=day
 facebook_insights_headers = [
+	"page_total_actions", # empty
+	"page_get_directions_clicks_logged_in_unique", #empty
+	"page_engaged_users",
+	"page_post_engagements",
+	"page_consumptions",
+	"page_consumptions_by_consumption_type.link clicks",
+	"page_consumptions_by_consumption_type.other clicks",
+	"page_consumptions_by_consumption_type.photo view",
+	"page_consumptions_by_consumption_type.video play",
+	"page_negative_feedback_by_type.hide clicks",
+	"page_negative_feedback_by_type.hide all clicks",
+	"page_negative_feedback_by_type.report spam clicks",
+	"page_negative_feedback_by_type.unlike page clicks",
+	"page_positive_feedback_by_type.claim",
+	"page_positive_feedback_by_type.comment",
+	"page_positive_feedback_by_type.like",
+	"page_positive_feedback_by_type.link",
+	"page_positive_feedback_by_type.other",
+	"page_positive_feedback_by_type.rsvp",
+	"page_impressions", # 44k
+	"page_impressions_paid",
+	"page_impressions_organic_v2", # 1.5k
+	"page_impressions_by_story_type.checkin",
+	"page_impressions_by_story_type.coupon",
+	"page_impressions_by_story_type.event",
+	"page_impressions_by_story_type.fan",
+	"page_impressions_by_story_type.mention",
+	"page_impressions_by_story_type.page post",
+	"page_impressions_by_story_type.question",
+	"page_impressions_by_story_type.user post",
+	"page_impressions_by_story_type.other",
+	"page_impressions_by_city_unique",
+	"page_impressions_by_country_unique",
+	"page_impressions_by_age_gender_unique",
+	"page_posts_impressions",
+	"page_posts_impressions_paid",
+	"page_posts_impressions_organic",
+	"post_engaged_users", # empty
+	"post_negative_feedback_by_type.hide clicks", # empty
+	"post_negative_feedback_by_type.hide all clicks", # empty
+	"post_negative_feedback_by_type.report spam clicks", # empty
+	"post_negative_feedback_by_type.unlike page clicks",  # empty
+	"post_clicks", #empty
+	"page_fans",
+	"page_fans_city",
+	"page_fan_removes", #empty
+	"page_fans_by_like_source.News Feed",
+	"page_fans_by_like_source.Page Suggestions",
+	"page_fans_by_like_source.Restored Likes from Reactivated Accounts",
+	"page_fans_by_like_source.Search,Your Page",
+
+	# page_video_views
+	# page_video_views_paid
+	# page_video_views_organic
+	# page_video_complete_views_30s
+	# page_video_complete_views_30s_paid
+	# page_video_complete_views_30s_organic
+	# "page_views_total" # working
+	# "page_content_activity_by_action_type_unique" # working, curly list
 	# 'page_total_actions',
 	# 'page_engaged_users',
 	# 'page_impressions_organic_v2',
-	'page_fan_removes_unique',
+	# 'page_fan_removes_unique',
 	# 'page_fans_by_like_source'
 	# 'page_impressions',
 	# 'page_views_total',
 	# 'page_fan_adds_unique'
-
-	# "accounts_engaged",
-	# "total_interactions",
-	# "likes",
-	# "comments",
-	# "shares",
-	# "saves",
-	# "replies",
-	# "engaged_audience_demographics",
-	# "reached_audience_demographics",
-	# "follower_demographics",
-	# "follows_and_unfollows",
-	# "profile_links_taps"
 ]
 
 instagram_insights_headers = [

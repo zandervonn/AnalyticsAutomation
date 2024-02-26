@@ -2,13 +2,16 @@ import requests
 import pandas as pd
 
 def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
+	#todo, clean up age metrics
 	url = f'https://graph.facebook.com/v19.0/{id_number}/insights'
+	# Extract base metric names for the API request
+	base_metrics = set(metric.split('.')[0] for metric in metrics)
 	params = {
 		'access_token': meta_token,
-		'metric': ','.join(metrics),
+		'metric': ','.join(base_metrics),
 		'period': 'day',
 		'since': since,
-		'until': until
+		'until': until,
 	}
 
 	df = pd.DataFrame()  # Initialize an empty DataFrame
@@ -44,4 +47,11 @@ def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
 		# else:
 		break
 
-	return df
+	# Pivot the DataFrame
+	df_pivot = df.pivot(index='end_time', columns='metric', values='value').reset_index()
+	return df_pivot
+
+
+# /posts to get posts
+# get a list of posts
+# for each post get the metrics

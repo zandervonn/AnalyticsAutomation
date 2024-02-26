@@ -51,6 +51,8 @@ def get_and_build_facebook():
 	since, until = get_dates("today", "weeks", 1)
 	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(), facebook_insights_headers, since, until, -1)
 	save_df_to_csv(facebook_df, path_gen('facebook', 'data', '', 'csv'))
+	clean_facebook_df = clean_df(facebook_df, facebook_insights_headers)
+	save_df_to_csv(clean_facebook_df, path_gen('facebook', 'data', 'clean', 'csv'))
 
 def get_and_build_instagram():
 	since, until = get_dates("today", "weeks", 1)
@@ -82,7 +84,7 @@ def main():
 
 	# main_get_and_build_starshipit_report()
 	# main_get_and_build_shopify_order_report()
-	main_get_and_build_shopify_customer_report()
+	# main_get_and_build_shopify_customer_report()
 	# get_and_build_cin7()
 	# get_and_build_instagram()
 	get_and_build_facebook()
