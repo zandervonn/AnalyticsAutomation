@@ -20,7 +20,6 @@ def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
 	while True:
 		response = requests.get(url, params=params)
 		data = response.json()
-
 		# Check if the response contains 'data'
 		if 'data' not in data:
 			if 'error' in data:

@@ -353,19 +353,16 @@ facebook_insights_headers = [
 
 instagram_insights_headers = [
 	"impressions",
-	# "reach",
-	# "follower_count",
-	# "email_contacts",
-	# "phone_call_clicks",
-	# "text_message_clicks",
-	# "get_directions_clicks",
-	# "website_clicks",
-	# "profile_views",
-	# "audience_gender_age",
-	# "audience_locale",
-	# "audience_country",
-	# "audience_city",
-	# "online_followers",
+	"reach",
+	"follower_count",
+	"email_contacts",
+	"phone_call_clicks",
+	"text_message_clicks",
+	"get_directions_clicks",
+	"website_clicks",
+	"profile_views",
+
+	# should be specified with parameter metric_type=total_value, still empty
 	# "accounts_engaged",
 	# "total_interactions",
 	# "likes",
@@ -373,9 +370,12 @@ instagram_insights_headers = [
 	# "shares",
 	# "saves",
 	# "replies",
+	# "follows_and_unfollows",
+	# "profile_links_taps"
+
+	# lifetime
+	# require timeframe parameter to be specified
 	# "engaged_audience_demographics",
 	# "reached_audience_demographics",
 	# "follower_demographics",
-	# "follows_and_unfollows",
-	# "profile_links_taps"
 ]

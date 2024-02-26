@@ -57,7 +57,8 @@ def get_and_build_facebook():
 def get_and_build_instagram():
 	since, until = get_dates("today", "weeks", 1)
 	insta_df = get_meta_insights(meta_access_token(), meta_insta_id(), instagram_insights_headers, since, until, -1)
-	save_df_to_csv(insta_df, path_gen('instagram', 'data', '', 'csv'))
+	clean_insta_df = clean_df(insta_df, instagram_insights_headers)
+	save_df_to_csv(clean_insta_df, path_gen('instagram', 'data', 'clean', 'csv'))
 
 def get_and_build_cin7():
 	data = get_cin7_data(cin7_api_key())
@@ -87,8 +88,8 @@ def main():
 	# main_get_and_build_shopify_customer_report()
 	# get_and_build_cin7()
 	# get_and_build_instagram()
-	get_and_build_facebook()
-	# get_and_build_google()
+	# get_and_build_facebook()
+	get_and_build_google()
 
 	excel_update()
 
