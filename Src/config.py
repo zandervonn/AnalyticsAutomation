@@ -153,86 +153,8 @@ starshipit_defined_subheaders = [
 	# 'platform',
 ]
 
-# https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema
-#limit of 10
-google_defined_headers_metrics = [
-	# activeUsers
-	# addToCarts
-	# advertiserAdClicks
-	# advertiserAdCost
-	# advertiserAdCostPerClick
-	# advertiserAdCostPerConversion
-	# advertiserAdImpressions
-	# averagePurchaseRevenue
-	# averagePurchaseRevenuePerPayingUser
-	# averagePurchaseRevenuePerUser
-	# averageRevenuePerUser
-	# averageSessionDuration
-	# cartToViewRate
-	# checkouts
-	# conversions
-	# newUsers
-	# organicGoogleSearchAveragePosition
-	# organicGoogleSearchClickThroughRate
-	# organicGoogleSearchClicks
-	# organicGoogleSearchImpressions
-	# returnOnAdSpend
-	# totalRevenue
-	# totalUsers
-	# transactions
-	# userConversionRate
-	# userEngagementDuration
 
 
-	# "sessions",
-	# "addToCarts",
-	# "checkouts",
-	# "transactions",
-	# "averagePurchaseRevenue",
-	# "bounceRate",
-	# "eventsPerSession",
-	# "advertiserAdCostPerClick",
-	# "advertiserAdCostPerConversion",
-	# "engagedSessions",
-	# "firstTimePurchasers",
-	# "grossPurchaseRevenue",
-	# "itemDiscountAmount",
-	# "itemsViewed",
-	# "itemsPurchased",
-	# "organicGoogleSearchAveragePosition",
-	# "organicGoogleSearchClicks",
-	# "promotionClicks",
-	# "transactionsPerPurchaser",
-	# "userEngagementDuration"
-]
-
-# https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema
-# limit of 9
-google_defined_headers_dimensions = [
-	# "adFormat",
-	# "adSourceName",
-	# "brandingInterest",
-	# "campaignName",
-	# "City",
-	# "Country",
-	# "deviceCategory",
-	# "googleAdsAdGroupName",
-	# "googleAdsAdNetworkType",
-	# "googleAdsCampaignName",
-	# "googleAdsKeyword",
-	# "pageReferrer",
-	# "platform",
-	# "Region",
-	# "Source",
-	# "userAgeBracket",
-	# "userGender",
-
-	# "date",
-	# "dateHour",
-	# "dateHourMinute",
-	# "dayOfWeekName",
-	# "sessionSource"
-]
 
 cin7_defined_subheaders = [
 	'id',
@@ -378,4 +300,65 @@ instagram_insights_headers = [
 	# "engaged_audience_demographics",
 	# "reached_audience_demographics",
 	# "follower_demographics",
+]
+
+
+# https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema
+#limit of 10
+google_defined_headers_metrics = [
+	# "activeUsers", # date
+	# "addToCarts", # date
+	# "advertiserAdClicks",
+	# "advertiserAdCost",
+	# "advertiserAdCostPerClick",
+	# "advertiserAdCostPerConversion",
+	# "advertiserAdImpressions",
+	# "averagePurchaseRevenue",
+	# "averagePurchaseRevenuePerPayingUser",
+	# "averagePurchaseRevenuePerUser",
+	# "averageRevenuePerUser",
+	# "averageSessionDuration",
+	# "cartToViewRate",
+	# "checkouts", # date
+	# "conversions", # date
+	# "newUsers", # date
+	# "organicGoogleSearchAveragePosition",
+	# "organicGoogleSearchClickThroughRate",
+	# "organicGoogleSearchClicks",
+	# "organicGoogleSearchImpressions",
+	# "returnOnAdSpend",
+	# "totalRevenue", # date
+	# "totalUsers", # date
+	# "transactions", # date
+	# "userConversionRate",
+	# "userEngagementDuration",
+	# "sessions",
+	# "bounceRate",
+]
+
+# https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema
+# limit of 9
+google_defined_headers_dimensions = [
+	# "adFormat",
+	# "adSourceName",
+	# "brandingInterest",
+	# "campaignName",
+	# "City",
+	# "Country",
+	# "deviceCategory",
+	# "googleAdsAdGroupName",
+	# "googleAdsAdNetworkType",
+	# "googleAdsCampaignName",
+	# "googleAdsKeyword",
+	# "pageReferrer",
+	# "platform",
+	# "Region",
+	# "Source",
+	# "userAgeBracket",
+	# "userGender",
+	# "date",
+	# "dateHour",
+	# "dateHourMinute",
+	# "dayOfWeekName",
+	# "sessionSource"
 ]

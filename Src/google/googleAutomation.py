@@ -1,3 +1,4 @@
+
 from google.auth.transport.requests import Request
 from google_auth_oauthlib import flow
 from google.oauth2.credentials import Credentials
@@ -12,15 +13,14 @@ from google.analytics.data_v1beta.types import (
 import os
 import pandas as pd
 
-
-def get_credentials(client_secret_path):
+def get_credentials(client_secret_path, token_path):
 
 	creds = None
 	scopes = ["https://www.googleapis.com/auth/analytics.readonly"]
 
 	# Search for valid credentials
-	if os.path.exists('C:\\Users\\Zander\\IdeaProjects\\Automation-Gel\\gitignore\\google\\token.json'):
-		creds = Credentials.from_authorized_user_file('C:\\Users\\Zander\\IdeaProjects\\Automation-Gel\\gitignore\\google\\token.json', scopes)
+	if os.path.exists(token_path):
+		creds = Credentials.from_authorized_user_file(token_path, scopes)
 
 	# If there are no (valid) credentials available, let the user log in.
 	if not creds or not creds.valid:
@@ -37,7 +37,7 @@ def get_credentials(client_secret_path):
 			else:
 				appflow.run_console()
 		# Save the credentials for the next run
-		with open('C:\\Users\\Zander\\IdeaProjects\\Automation-Gel\\gitignore\\google\\token.json', 'w') as token:
+		with open(token_path, 'w') as token:
 			token.write(creds.to_json())
 	return creds
 
@@ -54,6 +54,7 @@ def build_dataframe(response):
 
 def get_google_analytics(credentials, property_id, dimensions, metrics, start_date, end_date):
 	#todo check that the values coming back look correct, not lining up with analytics
+	#todo clean the date cloumn
 	client = BetaAnalyticsDataClient(credentials=credentials)
 
 	# noinspection PyTypeChecker
@@ -67,4 +68,39 @@ def get_google_analytics(credentials, property_id, dimensions, metrics, start_da
 	response = client.run_report(request)
 	return build_dataframe(response)
 
+import requests
 
+import requests
+import json
+
+def check_compatibility(credentials, property_id, metrics, dimensions):
+	url = f"https://analyticsdata.googleapis.com/v1beta/properties/{property_id}:checkCompatibility"
+	headers = {
+		"Authorization": f"Bearer {credentials.token}",
+		"Content-Type": "application/json"
+	}
+	payload = {
+		"dimensions": [{"name": dim} for dim in dimensions],
+		"metrics": [{"name": metric} for metric in metrics]
+	}
+	response = requests.post(url, headers=headers, data=json.dumps(payload))
+	return response.json()
+
+import requests
+import json
+
+def check_compatibility(credentials, property_id, metrics, dimensions):
+	url = f"https://analyticsdata.googleapis.com/v1beta/properties/{property_id}:checkCompatibility"
+	headers = {
+		"Authorization": f"Bearer {credentials.token}",
+		"Content-Type": "application/json"
+	}
+	payload = {
+		"dimensions": [{"name": dim} for dim in dimensions],
+		"metrics": [{"name": metric} for metric in metrics]
+	}
+	response = requests.post(url, headers=headers, data=json.dumps(payload))
+
+	# Convert response content to JSON and print
+	response_json = response.json()
+	print(json.dumps(response_json, indent=4))
