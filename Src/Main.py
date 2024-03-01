@@ -1,4 +1,4 @@
-from Src.StarshipitAPI import *
+from Src.starshipit.StarshipitAPI import *
 from Src.cin7.Cin7API import *
 from Src.google.googleAutomation import *
 from Src.helpers.fileHelpers import *
@@ -14,11 +14,9 @@ since, until = get_dates("today", "weeks", 1)
 
 def main_get_and_build_shopify_order_report():
 	new_orders_json = get_shopify_orders_updated_after(shopify_api_key(), shopify_password(), shopify_url(), since)
-	#sorted_orders_json = sort_shopify_orders_by_order_number(new_orders_json)
-	orders_cleaned_json = clean_json(new_orders_json, shopify_defined_subheaders_orders)
-	orders_df = pd.json_normalize(orders_cleaned_json)
-	cleaned_orders_df = clean_df(orders_df, shopify_defined_subheaders_orders)
-	cleaned_orders_df = shopify_clean_df(cleaned_orders_df)
+	orders_df = pd.json_normalize(new_orders_json)
+	cleaned_orders_df = shopify_clean_df(orders_df)
+	cleaned_orders_df = clean_df(cleaned_orders_df, shopify_defined_subheaders_orders)
 	save_df_to_csv(cleaned_orders_df, path_gen('shopify', 'orders', 'clean', 'csv'))
 
 def main_get_and_build_shopify_customer_report():
@@ -30,6 +28,35 @@ def main_get_and_build_shopify_customer_report():
 	orders_df = pd.json_normalize(customers_cleaned_json)
 	cleaned_customers_df = clean_df(orders_df, shopify_defined_subheaders_customers)
 	save_df_to_csv(cleaned_customers_df, path_gen('shopify', 'customers', 'clean', 'csv'))
+
+def main_update_shopify_customer_report():
+	#todo only getting 750 customers
+
+	# Load existing customer report
+	old_customers_df = load_csv(path_gen('shopify', 'customers', 'clean', 'csv'))
+
+	# Get the most recent 'updated_at' from the old report
+	most_recent_updated_at = get_shopify_most_recent_updated_at(old_customers_df)
+
+	print(most_recent_updated_at)
+
+	# Fetch updated customers
+	if most_recent_updated_at:
+		new_customers_json = get_shopify_customers_updated_after(shopify_api_key(), shopify_password(), shopify_url(), most_recent_updated_at)
+	else:
+		# Fetch all customers if there's no previous report
+		new_customers_json = get_shopify_customers(shopify_api_key(), shopify_password(), shopify_url())
+
+	# Clean new customer data
+	new_customers_cleaned_json = clean_json(new_customers_json, shopify_defined_subheaders_customers)
+	new_customers_df = pd.json_normalize(new_customers_cleaned_json)
+
+	# Update the old customer report by merging and cleaning
+	updated_customers_df = update_shopify_customers(old_customers_df, new_customers_df)
+	updated_customers_df = clean_df(updated_customers_df, shopify_defined_subheaders_customers)
+
+	# Save the updated report
+	save_df_to_csv(updated_customers_df, path_gen('shopify', 'customers', 'clean', 'csv'))
 
 def main_get_and_build_starshipit_report():
 	unshipped_orders = get_unshipped_orders(starshipit_api_key(), starshipit_subscription_key(), 2, since, until)
@@ -43,8 +70,7 @@ def main_get_and_build_starshipit_report():
 
 def get_and_build_google():
 	credentials = get_credentials(google_credentials_path(), google_token_path())
-	response = get_google_analytics(credentials, google_property_id(), google_defined_headers_dimensions, google_defined_headers_metrics, since, until)
-	save_df_to_csv(response, path_gen('google', 'sessions', '', 'csv'))
+	get_google_analytics_sheets(credentials, google_property_id(), since, until,path_gen('google', 'data', '', 'xlsx'), google_defined_headers_dimensions, google_defined_headers_metrics)
 
 def get_and_build_facebook():
 	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  facebook_insights_headers, since, until, -1)
@@ -80,16 +106,18 @@ def excel_update():
 	csv_sheets_to_excel(csv_files, excel_file)
 
 def main():
-	main_get_and_build_starshipit_report()
-	main_get_and_build_shopify_order_report()
+	# main_get_and_build_starshipit_report()
+	# main_get_and_build_shopify_order_report()
 	main_get_and_build_shopify_customer_report()
-	get_and_build_cin7()
-	get_and_build_instagram()
-	get_and_build_facebook()
-	get_and_build_google()
+	# main_update_shopify_customer_report()
+	# get_and_build_cin7()
+	# get_and_build_instagram()
+	# get_and_build_facebook()
 	excel_update()
+
+	# get_and_build_google()
 
 if __name__ == '__main__':
 	main()
 
-# todo make seperate sheets for raw data and calcualtons?
+# todo make a marketign data, Product data, Warehouse data sheet (email on the 27th)

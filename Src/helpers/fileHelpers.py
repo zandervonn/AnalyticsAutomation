@@ -7,7 +7,7 @@ def path_gen(platform, data_type, clean_status, file_format):
 	allowed_platforms = {'shopify', 'cin7', 'starshipit', 'google', 'facebook', 'instagram'}
 	allowed_data_types = {'orders', 'customers', 'conversions', 'sessions', 'data'}
 	allowed_clean_statuses = {'clean', ''}
-	allowed_file_formats = {'json', 'csv'}
+	allowed_file_formats = {'json', 'csv', 'xlsx'}
 
 	# Check that the provided arguments are valid
 	if platform not in allowed_platforms:

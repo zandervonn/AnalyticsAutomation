@@ -4,11 +4,13 @@ from Src.helpers.jsonHelpers import *
 import csv
 import numpy as np
 import pandas as pd
-
-# pd.set_option('future.no_silent_downcasting', True)
+from dateutil import parser
+import pytz
 
 webdriver_path = 'C:\\Users\\Zander\\.wdm\\chromedriver\\72.0.3626.7\\win32\\chromedriver.exe'
 target_url = 'https://google.com'
+
+#todo handle numbers/decimal columns better
 
 # Define cleaning functions
 def remove_brackets(text):
@@ -29,6 +31,11 @@ def make_lists_normal(text):
 
 def clear_empty_columns(df):
 	return df.replace('', np.nan).dropna(axis=1, how='all').infer_objects()
+
+def standardize_time_format(df, column_name, output_format='%d/%m/%y %I:%M%p'):
+	if column_name in df.columns:
+		df[column_name] = df[column_name].apply(lambda x: parser.parse(x).astimezone(pytz.timezone('UTC')).strftime(output_format))
+	return df
 
 def split_json_list_columns(df, column, keys):
 	# Create new columns for each key
@@ -54,38 +61,6 @@ def split_json_list_columns(df, column, keys):
 
 	# Optionally, drop the original column if no longer needed
 	df.drop(columns=[column], inplace=True)
-
-	return df
-
-def clean_df(df, defined_headers):
-	# Extract main columns and subfields from defined headers
-	split_columns_info = {}
-	for header in defined_headers:
-		if '.' in header:
-			main_column, subfield = header.split('.', 1)
-			if main_column not in split_columns_info:
-				split_columns_info[main_column] = []
-			split_columns_info[main_column].append(subfield)
-
-	# Apply splitting to each column that needs to be split
-	for main_column, subfields in split_columns_info.items():
-		if main_column in df.columns:
-			df = split_json_list_columns(df, main_column, subfields)
-
-	# Clean and normalize object columns
-	for col in df.columns:
-		if df[col].dtype == object:
-			# df[col] = df[col].apply(clean_list_like_strings)
-			df[col] = df[col].apply(remove_brackets)
-			df[col] = df[col].apply(make_lists_normal)
-			df = clean_string_list_column(df, col)
-
-	# Clear empty columns
-	df = clear_empty_columns(df)
-
-	# Keep only the columns defined in defined_headers
-	# Reorder the columns to match the list of defined headers
-	df = df[[header for header in defined_headers if header in df.columns]]
 
 	return df
 
@@ -121,37 +96,38 @@ def write_data_to_csv(data, file_path):
 		writer.writerow(data.keys())
 		writer.writerow(data.values())
 
-def clean_json(all_orders, defined_subheaders):
-	# Split the headers into top-level and nested fields
-	top_level_fields = [header for header in defined_subheaders if '.' not in header]
-	nested_fields = {header.split('.')[0]: [] for header in defined_subheaders if '.' in header}
-	for header in defined_subheaders:
-		parts = header.split('.')
-		if len(parts) > 1:
-			nested_fields[parts[0]].append(parts[1])
+def clean_df(df, defined_headers):
+	# Extract main columns and subfields from defined headers
+	split_columns_info = {}
+	for header in defined_headers:
+		if '.' in header:
+			main_column, subfield = header.split('.', 1)
+			if main_column not in split_columns_info:
+				split_columns_info[main_column] = []
+			split_columns_info[main_column].append(subfield)
 
-	# Process each order
-	cleaned_orders = []
-	for order in all_orders:
-		cleaned_order = {}
-		# Keep only the top-level fields
-		for field in top_level_fields:
-			if field in order:
-				cleaned_order[field] = order[field]
+	# Apply splitting to each column that needs to be split
+	for main_column, subfields in split_columns_info.items():
+		if main_column in df.columns:
+			df = split_json_list_columns(df, main_column, subfields)
 
-		# Process nested fields
-		for nested_field, subfields in nested_fields.items():
-			if nested_field in order:
-				if isinstance(order[nested_field], list):  # If the nested field is a list of dictionaries
-					cleaned_order[nested_field] = [
-						{subfield: item.get(subfield, None) for subfield in subfields}
-						for item in order[nested_field]
-					]
-				elif isinstance(order[nested_field], dict):  # If the nested field is a single dictionary
-					cleaned_order[nested_field] = {
-						subfield: order[nested_field].get(subfield, None) for subfield in subfields
-					}
+	# Clean and normalize object columns
+	for col in df.columns:
+		if df[col].dtype == object:
+			# df[col] = df[col].apply(clean_list_like_strings)
+			df[col] = df[col].apply(remove_brackets)
+			df[col] = df[col].apply(make_lists_normal)
+			df = clean_string_list_column(df, col)
 
-		cleaned_orders.append(cleaned_order)
+		# Clean columns containing 'date'
+		if 'date' in col.lower():
+			df = standardize_time_format(df, col)
 
-	return cleaned_orders
+	# Clear empty columns
+	df = clear_empty_columns(df)
+
+	# Keep only the columns defined in defined_headers
+	# Reorder the columns to match the list of defined headers
+	df = df[[header for header in defined_headers if header in df.columns]]
+
+	return df

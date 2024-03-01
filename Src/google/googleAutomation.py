@@ -1,17 +1,12 @@
-
-from google.auth.transport.requests import Request
-from google_auth_oauthlib import flow
-from google.oauth2.credentials import Credentials
-from google.analytics.data import BetaAnalyticsDataClient
-from google.analytics.data_v1beta.types import (
-	DateRange,
-	Dimension,
-	Metric,
-	OrderBy,
-	RunReportRequest
-)
 import os
 import pandas as pd
+from google.auth.transport.requests import Request
+from google_auth_oauthlib import flow
+from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+from google.analytics.data_v1beta import BetaAnalyticsDataClient
+from google.analytics.data_v1beta.types import RunReportRequest, Dimension, Metric, DateRange, OrderBy
+
 
 def get_credentials(client_secret_path, token_path):
 
@@ -25,6 +20,7 @@ def get_credentials(client_secret_path, token_path):
 	# If there are no (valid) credentials available, let the user log in.
 	if not creds or not creds.valid:
 		if creds and creds.expired and creds.refresh_token:
+			# todo fix if token cannot be refreshed, delete token and go through 2fa
 			creds.refresh(Request())
 		else:
 			appflow = flow.InstalledAppFlow.from_client_secrets_file(
@@ -68,39 +64,45 @@ def get_google_analytics(credentials, property_id, dimensions, metrics, start_da
 	response = client.run_report(request)
 	return build_dataframe(response)
 
-import requests
+def get_google_analytics_sheets(credentials, property_id, start_date, end_date, output_path, dimensions, metrics):
+	# Load compatibility CSV
+	compatibility_df = pd.read_csv('google/compatible_pairs.csv')
 
-import requests
-import json
+	# Initialize the Analytics Data API client
+	client = BetaAnalyticsDataClient(credentials=credentials)
 
-def check_compatibility(credentials, property_id, metrics, dimensions):
-	url = f"https://analyticsdata.googleapis.com/v1beta/properties/{property_id}:checkCompatibility"
-	headers = {
-		"Authorization": f"Bearer {credentials.token}",
-		"Content-Type": "application/json"
-	}
-	payload = {
-		"dimensions": [{"name": dim} for dim in dimensions],
-		"metrics": [{"name": metric} for metric in metrics]
-	}
-	response = requests.post(url, headers=headers, data=json.dumps(payload))
-	return response.json()
+	# Create a writer to save data to Excel
+	writer = pd.ExcelWriter(output_path)
 
-import requests
-import json
+	# Iterate over each dimension in the Google-defined list
+	for dimension in dimensions:
+		# Filter the compatibility DataFrame for the current dimension
+		compatible_metrics = compatibility_df[compatibility_df['Dimension'] == dimension]['Metric'].tolist()
 
-def check_compatibility(credentials, property_id, metrics, dimensions):
-	url = f"https://analyticsdata.googleapis.com/v1beta/properties/{property_id}:checkCompatibility"
-	headers = {
-		"Authorization": f"Bearer {credentials.token}",
-		"Content-Type": "application/json"
-	}
-	payload = {
-		"dimensions": [{"name": dim} for dim in dimensions],
-		"metrics": [{"name": metric} for metric in metrics]
-	}
-	response = requests.post(url, headers=headers, data=json.dumps(payload))
+		# Keep only metrics that are in the Google-defined list
+		compatible_metrics = [metric for metric in compatible_metrics if metric in metrics]
 
-	# Convert response content to JSON and print
-	response_json = response.json()
-	print(json.dumps(response_json, indent=4))
+		# Split metrics into chunks of 10 due to API limitation
+		metric_chunks = [compatible_metrics[i:i + 10] for i in range(0, len(compatible_metrics), 10)]
+
+		# Initialize an empty DataFrame to store results
+		results_df = pd.DataFrame()
+
+		# Fetch data for each chunk of metrics
+		for metrics in metric_chunks:
+			request = RunReportRequest(
+				property=f"properties/{property_id}",
+				dimensions=[Dimension(name=dimension)],
+				metrics=[Metric(name=metric) for metric in metrics],
+				date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+				order_bys=[OrderBy(dimension=OrderBy.DimensionOrderBy(dimension_name=dimension))]
+			)
+			response = client.run_report(request)
+			chunk_df = build_dataframe(response)
+			results_df = pd.concat([results_df, chunk_df], axis=1)
+
+		# Save the results to the Excel file, one sheet per dimension
+		results_df.to_excel(writer, sheet_name=dimension, index=False)
+
+	# Close the writer and save the Excel file
+	writer.close()

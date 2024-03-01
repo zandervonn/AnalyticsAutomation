@@ -2,8 +2,9 @@ import requests
 import pandas as pd
 
 def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
-	#todo, clean up age metrics
-	# todo add date coloumn
+	# todo, clean up age metrics
+	# todo pagination
+	# todo get posts and get stats for the post
 	url = f'https://graph.facebook.com/v19.0/{id_number}/insights'
 	# Extract base metric names for the API request
 	base_metrics = set(metric.split('.')[0] for metric in metrics)
@@ -34,11 +35,12 @@ def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
 		# Extract data and append to DataFrame
 		for item in data['data']:
 			for value in item['values']:
-				df = df.append({
-					'metric': item['name'],
-					'end_time': value['end_time'],
-					'value': value['value']
-				}, ignore_index=True)
+				new_row = pd.DataFrame({
+					'metric': [item['name']],
+					'end_time': [value['end_time']],
+					'value': [value['value']]
+				})
+				df = pd.concat([df, new_row], ignore_index=True)
 
 		# Implement paging logic if necessary
 		# if 'paging' in data and 'next' in data['paging']:
@@ -50,8 +52,3 @@ def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
 	# Pivot the DataFrame
 	df_pivot = df.pivot(index='end_time', columns='metric', values='value').reset_index()
 	return df_pivot
-
-
-# /posts to get posts
-# get a list of posts
-# for each post get the metrics

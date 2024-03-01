@@ -1,4 +1,6 @@
 import time
+
+import pandas as pd
 import requests
 from gitignore import access
 from datetime import datetime
@@ -70,6 +72,36 @@ def get_shopify_orders_updated_after(shopify_api_key, shopify_password, shopify_
 	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
 	endpoint = f"orders.json?limit=250&status=any&created_at_min={updated_at_min_utc}"
 	return fetch_pages(base_url, endpoint, 'orders', page_limit)
+
+def get_shopify_most_recent_updated_at(customers_df):
+	"""Extracts the most recent 'updated_at' from a DataFrame, handling potential missing values"""
+	if 'updated_at' in customers_df:
+		updated_at_dates = pd.to_datetime(customers_df['updated_at'])
+		most_recent_date = updated_at_dates.max()
+		return most_recent_date.strftime("%Y-%m-%dT%H:%M:%S%z")
+	else:
+		return None  # No 'updated_at' column
+
+def get_shopify_customers_updated_after(shopify_api_key, shopify_password, shopify_url, updated_at_min, page_limit=-1):
+	"""Fetches Shopify customers updated after a specified timestamp"""
+	updated_at_min_utc = convert_to_utc(updated_at_min)
+	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
+	endpoint = f"customers.json?limit=250&updated_at_min={updated_at_min_utc}"
+	return fetch_pages(base_url, endpoint, 'customers', page_limit)
+
+def update_shopify_customers(existing_customers_df, new_customers_df):
+	"""Updates an existing DataFrame of Shopify customers with new customer data."""
+	# Convert DataFrames to dictionaries for easier updates
+	existing_customers_dict = existing_customers_df.set_index('id').to_dict('index')
+	new_customers_dict = new_customers_df.set_index('id').to_dict('index')
+
+	# Update or add entries
+	existing_customers_dict.update(new_customers_dict)
+
+	# Convert back to DataFrame, reset index, and return
+	updated_df = pd.DataFrame.from_dict(existing_customers_dict, orient='index').reset_index()
+	updated_df.rename(columns={'index': 'id'}, inplace=True)
+	return updated_df
 
 def build_shopify_report():
 	shopify_api_key = access.shopify_api_key()
