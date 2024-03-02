@@ -205,8 +205,6 @@ cin7_defined_subheaders = [
 
 #insights?pretty=0&since=1707379200&until=1707897600&metric=post_engaged_users&period=day
 facebook_insights_headers = [
-	"page_total_actions", # empty
-	"page_get_directions_clicks_logged_in_unique", #empty
 	"page_engaged_users",
 	"page_post_engagements",
 	"page_consumptions",
@@ -236,25 +234,29 @@ facebook_insights_headers = [
 	"page_impressions_by_story_type.question",
 	"page_impressions_by_story_type.user post",
 	"page_impressions_by_story_type.other",
-	"page_impressions_by_city_unique",
-	"page_impressions_by_country_unique",
-	"page_impressions_by_age_gender_unique",
 	"page_posts_impressions",
 	"page_posts_impressions_paid",
 	"page_posts_impressions_organic",
-	"post_engaged_users", # empty
-	"post_negative_feedback_by_type.hide clicks", # empty
-	"post_negative_feedback_by_type.hide all clicks", # empty
-	"post_negative_feedback_by_type.report spam clicks", # empty
-	"post_negative_feedback_by_type.unlike page clicks",  # empty
-	"post_clicks", #empty
 	"page_fans",
-	"page_fans_city",
-	"page_fan_removes", #empty
+	"page_fan_removes",
 	"page_fans_by_like_source.News Feed",
 	"page_fans_by_like_source.Page Suggestions",
 	"page_fans_by_like_source.Restored Likes from Reactivated Accounts",
 	"page_fans_by_like_source.Search,Your Page",
+
+	"page_impressions_by_city_unique",
+	"page_impressions_by_country_unique",
+	"page_impressions_by_age_gender_unique",
+	"page_fans_city",
+
+	# "page_total_actions", # empty
+	# "page_get_directions_clicks_logged_in_unique", #empty
+	# "post_engaged_users", # empty
+	# "post_negative_feedback_by_type.hide clicks", # empty
+	# "post_negative_feedback_by_type.hide all clicks", # empty
+	# "post_negative_feedback_by_type.report spam clicks", # empty
+	# "post_negative_feedback_by_type.unlike page clicks",  # empty
+	# "post_clicks", #empty
 
 	# page_video_views
 	# page_video_views_paid
@@ -273,6 +275,13 @@ facebook_insights_headers = [
 	# 'page_views_total',
 	# 'page_fan_adds_unique'
 ]
+
+facebook_insights_pages = {
+	"page_impressions_by_city_unique",
+	"page_impressions_by_country_unique",
+	"page_impressions_by_age_gender_unique",
+	"page_fans_city",
+}
 
 instagram_insights_headers = [
 	"impressions",

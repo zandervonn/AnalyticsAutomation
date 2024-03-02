@@ -30,7 +30,7 @@ def main_get_and_build_shopify_customer_report():
 	save_df_to_csv(cleaned_customers_df, path_gen('shopify', 'customers', 'clean', 'csv'))
 
 def main_update_shopify_customer_report():
-	#todo only getting 750 customers
+	#todo trying to load full data
 
 	# Load existing customer report
 	old_customers_df = load_csv(path_gen('shopify', 'customers', 'clean', 'csv'))
@@ -70,13 +70,13 @@ def main_get_and_build_starshipit_report():
 
 def get_and_build_google():
 	credentials = get_credentials(google_credentials_path(), google_token_path())
-	get_google_analytics_sheets(credentials, google_property_id(), since, until,path_gen('google', 'data', '', 'xlsx'), google_defined_headers_dimensions, google_defined_headers_metrics)
+	get_google_analytics_sheets(credentials, google_property_id(), since, until, path_gen('google'), google_defined_headers_dimensions, google_defined_headers_metrics)
 
 def get_and_build_facebook():
 	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  facebook_insights_headers, since, until, -1)
 	save_df_to_csv(facebook_df, path_gen('facebook', 'data', '', 'csv'))
 	clean_facebook_df = clean_df(facebook_df, ["end_time"]+facebook_insights_headers)
-	save_df_to_csv(clean_facebook_df, path_gen('facebook', 'data', 'clean', 'csv'))
+	split_insights_to_sheets(clean_facebook_df, facebook_insights_pages, path_gen('facebook'))
 
 def get_and_build_instagram():
 	insta_df = get_meta_insights(meta_access_token(), meta_insta_id(),instagram_insights_headers, since, until, -1)
@@ -98,24 +98,23 @@ def excel_update():
 		# path_gen('shopify', 'conversions', 'clean', 'csv'),
 		path_gen('cin7', 'data', '', 'csv'),
 		path_gen('starshipit', 'orders', 'clean', 'csv'),
-		path_gen('google', 'sessions', '', 'csv'),
-		path_gen('facebook', 'data', 'clean', 'csv'),
+		# path_gen('google', 'sessions', '', 'csv'),
+		# path_gen('facebook', 'data', 'clean', 'csv'),
 		path_gen('instagram', 'data', 'clean', 'csv')
 	]
-	excel_file = FOLDER_PATH + 'compiled_data.xlsx'  # Desired Excel file name
-	csv_sheets_to_excel(csv_files, excel_file)
+	csv_sheets_to_excel(csv_files, path_gen('compiled'))
 
 def main():
 	# main_get_and_build_starshipit_report()
 	# main_get_and_build_shopify_order_report()
-	main_get_and_build_shopify_customer_report()
 	# main_update_shopify_customer_report()
 	# get_and_build_cin7()
 	# get_and_build_instagram()
-	# get_and_build_facebook()
-	excel_update()
 
-	# get_and_build_google()
+	# excel_update()
+
+	# get_and_build_facebook()
+	get_and_build_google()
 
 if __name__ == '__main__':
 	main()

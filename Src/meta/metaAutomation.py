@@ -52,3 +52,29 @@ def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
 	# Pivot the DataFrame
 	df_pivot = df.pivot(index='end_time', columns='metric', values='value').reset_index()
 	return df_pivot
+
+def split_insights_to_sheets(df, insights_pages, output_file):
+	# Create a writer to save data to Excel
+	writer = pd.ExcelWriter(output_file, engine='openpyxl')
+
+	# Save the original DataFrame with list data removed
+	filtered_df = df.drop(columns=insights_pages)
+	filtered_df.to_excel(writer, sheet_name='Summary', index=False)
+
+	# Iterate over each insight page and create a separate sheet
+	for page in insights_pages:
+		if page in df.columns:
+			# Extract the list data and corresponding end_time values
+			page_data = df[['end_time', page]].dropna()
+			list_data = page_data[page].tolist()
+			end_time_data = page_data['end_time'].tolist()
+
+			# Convert the list data to a DataFrame and add the end_time column
+			expanded_df = pd.DataFrame(list_data)
+			expanded_df.insert(0, 'end_time', end_time_data)
+
+			# Save the expanded DataFrame to a new sheet
+			expanded_df.to_excel(writer, sheet_name=page, index=False)
+
+	# Close the writer and save the Excel file
+	writer.close()
