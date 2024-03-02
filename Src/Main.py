@@ -70,13 +70,16 @@ def main_get_and_build_starshipit_report():
 
 def get_and_build_google():
 	credentials = get_credentials(google_credentials_path(), google_token_path())
-	get_google_analytics_sheets(credentials, google_property_id(), since, until, path_gen('google'), google_defined_headers_dimensions, google_defined_headers_metrics)
+	google_dfs = get_google_analytics_sheets(credentials, google_property_id(), since, until, google_defined_headers_dimensions, google_defined_headers_metrics)
+	clean_google_dfs = clean_dfs(google_dfs, google_defined_headers_dimensions+google_defined_headers_metrics)
+	save_df_to_excel(clean_google_dfs, path_gen('google'))
 
 def get_and_build_facebook():
 	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  facebook_insights_headers, since, until, -1)
 	save_df_to_csv(facebook_df, path_gen('facebook', 'data', '', 'csv'))
 	clean_facebook_df = clean_df(facebook_df, ["end_time"]+facebook_insights_headers)
-	split_insights_to_sheets(clean_facebook_df, facebook_insights_pages, path_gen('facebook'))
+	split_facebook_df = split_insights_to_sheets(clean_facebook_df, facebook_insights_pages)
+	save_df_to_excel(split_facebook_df, path_gen('facebook'))
 
 def get_and_build_instagram():
 	insta_df = get_meta_insights(meta_access_token(), meta_insta_id(),instagram_insights_headers, since, until, -1)
@@ -95,12 +98,11 @@ def excel_update():
 	csv_files = [
 		path_gen('shopify', 'orders', 'clean', 'csv'),
 		path_gen('shopify', 'customers', 'clean', 'csv'),
-		# path_gen('shopify', 'conversions', 'clean', 'csv'),
 		path_gen('cin7', 'data', '', 'csv'),
 		path_gen('starshipit', 'orders', 'clean', 'csv'),
+		path_gen('instagram', 'data', 'clean', 'csv'),
 		# path_gen('google', 'sessions', '', 'csv'),
 		# path_gen('facebook', 'data', 'clean', 'csv'),
-		path_gen('instagram', 'data', 'clean', 'csv')
 	]
 	csv_sheets_to_excel(csv_files, path_gen('compiled'))
 
@@ -113,8 +115,11 @@ def main():
 
 	# excel_update()
 
-	# get_and_build_facebook()
+	get_and_build_facebook()
 	get_and_build_google()
+
+	#todo confirm working
+	update_files("gitignore/Output", "gitignore/custom")
 
 if __name__ == '__main__':
 	main()

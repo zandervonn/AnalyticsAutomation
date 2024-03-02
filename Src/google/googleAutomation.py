@@ -49,8 +49,6 @@ def build_dataframe(response):
 	return pd.DataFrame(data)
 
 def get_google_analytics(credentials, property_id, dimensions, metrics, start_date, end_date):
-	#todo check that the values coming back look correct, not lining up with analytics
-	#todo clean the date cloumn
 	client = BetaAnalyticsDataClient(credentials=credentials)
 
 	# noinspection PyTypeChecker
@@ -64,15 +62,15 @@ def get_google_analytics(credentials, property_id, dimensions, metrics, start_da
 	response = client.run_report(request)
 	return build_dataframe(response)
 
-def get_google_analytics_sheets(credentials, property_id, start_date, end_date, output_path, dimensions, metrics):
+def get_google_analytics_sheets(credentials, property_id, start_date, end_date, dimensions, metrics):
 	# Load compatibility CSV
 	compatibility_df = pd.read_csv('google/compatible_pairs.csv')
 
 	# Initialize the Analytics Data API client
 	client = BetaAnalyticsDataClient(credentials=credentials)
 
-	# Create a writer to save data to Excel
-	writer = pd.ExcelWriter(output_path)
+	# Dictionary to store the DataFrames for each dimension
+	dfs = {}
 
 	# Iterate over each dimension in the Google-defined list
 	for dimension in dimensions:
@@ -101,8 +99,7 @@ def get_google_analytics_sheets(credentials, property_id, start_date, end_date, 
 			chunk_df = build_dataframe(response)
 			results_df = pd.concat([results_df, chunk_df], axis=1)
 
-		# Save the results to the Excel file, one sheet per dimension
-		results_df.to_excel(writer, sheet_name=dimension, index=False)
+		# Add the results DataFrame to the dictionary
+		dfs[dimension] = results_df
 
-	# Close the writer and save the Excel file
-	writer.close()
+	return dfs

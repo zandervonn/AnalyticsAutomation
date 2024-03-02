@@ -2,7 +2,6 @@ import requests
 import pandas as pd
 
 def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
-	# todo, clean up age metrics
 	# todo pagination
 	# todo get posts and get stats for the post
 	url = f'https://graph.facebook.com/v19.0/{id_number}/insights'
@@ -53,15 +52,15 @@ def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
 	df_pivot = df.pivot(index='end_time', columns='metric', values='value').reset_index()
 	return df_pivot
 
-def split_insights_to_sheets(df, insights_pages, output_file):
-	# Create a writer to save data to Excel
-	writer = pd.ExcelWriter(output_file, engine='openpyxl')
+def split_insights_to_sheets(df, insights_pages):
+	# Dictionary to store the DataFrames
+	dfs = {}
 
 	# Save the original DataFrame with list data removed
 	filtered_df = df.drop(columns=insights_pages)
-	filtered_df.to_excel(writer, sheet_name='Summary', index=False)
+	dfs['Summary'] = filtered_df
 
-	# Iterate over each insight page and create a separate sheet
+	# Iterate over each insight page and create a separate DataFrame
 	for page in insights_pages:
 		if page in df.columns:
 			# Extract the list data and corresponding end_time values
@@ -73,8 +72,7 @@ def split_insights_to_sheets(df, insights_pages, output_file):
 			expanded_df = pd.DataFrame(list_data)
 			expanded_df.insert(0, 'end_time', end_time_data)
 
-			# Save the expanded DataFrame to a new sheet
-			expanded_df.to_excel(writer, sheet_name=page, index=False)
+			# Add the expanded DataFrame to the dictionary
+			dfs[page] = expanded_df
 
-	# Close the writer and save the Excel file
-	writer.close()
+	return dfs
