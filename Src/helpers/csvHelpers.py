@@ -10,40 +10,6 @@ import pytz
 webdriver_path = 'C:\\Users\\Zander\\.wdm\\chromedriver\\72.0.3626.7\\win32\\chromedriver.exe'
 target_url = 'https://google.com'
 
-# Define cleaning functions
-def remove_brackets(text):
-	if isinstance(text, str):  # Ensure the text is a string
-		text = text.replace("(", "").replace(")", "")
-	return text
-
-def clean_string_list_column(df, column_name):
-	if column_name in df.columns:
-		df.loc[:, column_name] = df[column_name].apply(
-			lambda x: ', '.join(str(item) for item in x) if isinstance(x, list) else x)
-	return df
-
-
-def make_lists_normal(text):
-	if isinstance(text, str):  # Ensure the text is a string
-		return text.replace("[", "").replace("]", "").replace("'", "")
-	return text
-
-def clear_empty_columns(df):
-	df = df.map(lambda x: np.nan if x == '' else x)
-	df = df.dropna(axis=1, how='all')
-	return df.convert_dtypes()
-
-def round_numeric_columns(df):
-	for col in df.columns:
-		if df[col].dtype == object:
-			try:
-				# Attempt to convert the column to float and round to 2 decimal places
-				df[col] = df[col].apply(lambda x: round(float(x), 2) if isinstance(x, (int, float, str)) else x)
-			except ValueError:
-				# If conversion fails, leave the column as is
-				pass
-	return df
-
 def standardize_time_format(df, column_name, output_format='%d/%m/%y %I:%M%p'):
 	if column_name in df.columns:
 		def safe_parse_date(x):
@@ -129,56 +95,6 @@ def write_data_to_csv(data, file_path):
 		writer = csv.writer(file)
 		writer.writerow(data.keys())
 		writer.writerow(data.values())
-
-def clean_df(df, defined_headers):
-	# Remove any duplicate columns
-	df = df.loc[:, ~df.columns.duplicated()]
-
-	# Extract main columns and subfields from defined headers
-	split_columns_info = {}
-	for header in defined_headers:
-		if '.' in header:
-			main_column, subfield = header.split('.', 1)
-			if main_column not in split_columns_info:
-				split_columns_info[main_column] = []
-			split_columns_info[main_column].append(subfield)
-
-	# Apply splitting to each column that needs to be split
-	for main_column, subfields in split_columns_info.items():
-		if main_column in df.columns:
-			df = split_json_list_columns(df, main_column, subfields)
-
-	# Clean and normalize object columns
-	for col in df.columns:
-		if df[col].dtype == object:
-			df.loc[:, col] = df[col].apply(remove_brackets)
-			df.loc[:, col] = df[col].apply(make_lists_normal)
-			df = clean_string_list_column(df, col)
-		elif np.issubdtype(df[col].dtype, np.number):
-			# Round numeric columns to 2 decimal places
-			df.loc[:, col] = df[col].round(2)
-
-	# Clean columns containing 'date'
-	for col in df.columns:
-		if 'date' in col.lower():
-			df = standardize_time_format(df, col)
-
-	# Clear empty columns
-	df = clear_empty_columns(df)
-	df = round_numeric_columns(df)
-
-	# Keep only the columns defined in defined_headers
-	# Reorder the columns to match the list of defined headers
-	df = df[[header for header in defined_headers if header in df.columns]]
-
-	return df
-
-def clean_dfs(df_dict, headers):
-	clean_dfs = {}
-	for dimension, df in df_dict.items():
-		cleaned_df = clean_df(df, headers)
-		clean_dfs[dimension] = cleaned_df
-	return clean_dfs
 
 def update_files(raw_folder, update_folder):
 	# Get all Excel files in the raw folder
