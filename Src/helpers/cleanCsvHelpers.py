@@ -41,7 +41,7 @@ def standardize_time_format(df, column_name, output_format='%d/%m/%y %I:%M%p'):
 			try:
 				return parser.parse(x).astimezone(pytz.timezone('UTC')).strftime(output_format)
 			except (ValueError, TypeError):
-				return None
+				return x  # keep the original value in case of parsing errors
 
 		df[column_name] = df[column_name].apply(safe_parse_date)
 	return df

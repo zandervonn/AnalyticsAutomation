@@ -2,7 +2,6 @@ import os
 import pandas as pd
 from google.auth.transport.requests import Request
 from google_auth_oauthlib import flow
-from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest, Dimension, Metric, DateRange, OrderBy
@@ -74,6 +73,7 @@ def get_google_analytics_sheets(credentials, property_id, start_date, end_date, 
 
 	# Iterate over each dimension in the Google-defined list
 	for dimension in dimensions:
+		print("Getting google sheet for: ", dimension)
 		# Filter the compatibility DataFrame for the current dimension
 		compatible_metrics = compatibility_df[compatibility_df['Dimension'] == dimension]['Metric'].tolist()
 

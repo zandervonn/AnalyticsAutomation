@@ -6,9 +6,8 @@ from gitignore import access
 from datetime import datetime
 from dateutil import tz
 
-# -1 is all orders
-# otherwise page limit is * 250 orders
-def fetch_pages(base_url, endpoint, type, page_limit):
+
+def fetch_pages(base_url, endpoint, type, page_limit=-1):
 	url = base_url + endpoint
 	all_data = []
 	pages_fetched = 0
@@ -18,7 +17,7 @@ def fetch_pages(base_url, endpoint, type, page_limit):
 		if pages_fetched == 0:
 			print(response)
 		else:
-			print(f"pages fetched= {pages_fetched}")
+			print(f"Rows fetched= {pages_fetched * 250}")
 		if response.status_code == 200:
 			data = response.json().get(type, [])
 			all_data.extend(data)
@@ -73,14 +72,20 @@ def get_shopify_orders_updated_after(shopify_api_key, shopify_password, shopify_
 	endpoint = f"orders.json?limit=250&status=any&created_at_min={updated_at_min_utc}"
 	return fetch_pages(base_url, endpoint, 'orders', page_limit)
 
-def get_shopify_most_recent_updated_at(customers_df):
-	"""Extracts the most recent 'updated_at' from a DataFrame, handling potential missing values"""
-	if 'updated_at' in customers_df:
-		updated_at_dates = pd.to_datetime(customers_df['updated_at'])
-		most_recent_date = updated_at_dates.max()
+def get_shopify_most_recent_updated_at(orders_json):
+	# Extract 'updated_at' values and convert them to datetime objects
+	updated_at_dates = [
+		datetime.strptime(order['updated_at'], "%Y-%m-%dT%H:%M:%S%z")
+		for order in orders_json
+		if 'updated_at' in order
+	]
+
+	# Find the most recent date
+	if updated_at_dates:
+		most_recent_date = max(updated_at_dates)
 		return most_recent_date.strftime("%Y-%m-%dT%H:%M:%S%z")
 	else:
-		return None  # No 'updated_at' column
+		return None
 
 def get_shopify_customers_updated_after(shopify_api_key, shopify_password, shopify_url, updated_at_min, page_limit=-1):
 	"""Fetches Shopify customers updated after a specified timestamp"""
@@ -123,21 +128,7 @@ def build_shopify_report():
 	response = requests.post(url, json=data, headers=headers)
 	print(response.json())
 
-# todo remove dulicate
-def get_shopify_most_recent_updated_at(orders_json):
-	# Extract 'updated_at' values and convert them to datetime objects
-	updated_at_dates = [
-		datetime.strptime(order['updated_at'], "%Y-%m-%dT%H:%M:%S%z")
-		for order in orders_json
-		if 'updated_at' in order
-	]
 
-	# Find the most recent date
-	if updated_at_dates:
-		most_recent_date = max(updated_at_dates)
-		return most_recent_date.strftime("%Y-%m-%dT%H:%M:%S%z")
-	else:
-		return None
 
 def update_shopify_orders(existing_orders, new_orders):
 	# Create a dictionary to hold the existing orders, using the order ID as the key

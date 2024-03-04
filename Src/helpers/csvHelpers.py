@@ -1,25 +1,6 @@
 import os
 from Src.helpers.jsonHelpers import *
-from dateutil import parser
-import numpy as np
-import pandas as pd
 
-# todo move
-import pytz
-
-webdriver_path = 'C:\\Users\\Zander\\.wdm\\chromedriver\\72.0.3626.7\\win32\\chromedriver.exe'
-target_url = 'https://google.com'
-
-def standardize_time_format(df, column_name, output_format='%d/%m/%y %I:%M%p'):
-	if column_name in df.columns:
-		def safe_parse_date(x):
-			try:
-				return parser.parse(x).astimezone(pytz.timezone('UTC')).strftime(output_format)
-			except (ValueError, TypeError):
-				return None  # or return x if you want to keep the original value in case of parsing errors
-
-		df[column_name] = df[column_name].apply(safe_parse_date)
-	return df
 
 def split_json_list_columns(df, column, keys):
 	# Create new columns for each key
@@ -61,10 +42,12 @@ def csv_sheets_to_excel(csv_files, excel_file):
 			# Shorten the sheet name to the Excel limit of 31 characters if necessary
 			sheet_name = sheet_name[:31]
 			df.to_excel(writer, sheet_name=sheet_name, index=False)
+	print(f"CSV saved to {excel_file}")
 
 def save_to_csv(data, file_name):
 	df = pd.DataFrame(data[1:], columns=data[0])
 	df.to_csv(file_name, index=False)
+	print(f"CSV saved to {file_name}")
 
 def save_df_to_csv(df, file_path):
 	df.to_csv(file_path, index=False)
@@ -96,39 +79,47 @@ def write_data_to_csv(data, file_path):
 		writer.writerow(data.keys())
 		writer.writerow(data.values())
 
+def get_excel_files_from_folder(folder):
+	excel_files = []
+	for root, _, files in os.walk(folder):
+		for file in files:
+			if file.endswith('.xlsx'):
+				excel_files.append(os.path.join(root, file))
+	return excel_files
+
+def load_excel_files_into_dict(file_list):
+	data_dict = {}
+	for file in file_list:
+		data_dict[os.path.basename(file)] = pd.read_excel(file, sheet_name=None)
+	return data_dict
+
+def update_columns(df, raw_data):
+	for col in df.columns:
+		period_count = col.count('.')
+		if period_count >= 2:
+			parts = col.split('.', 2)
+			file, sheet, name = parts if period_count == 2 else parts[:2] + ['.'.join(parts[2:])]
+			if file in raw_data and sheet in raw_data[file] and name in raw_data[file][sheet].columns:
+				df[col] = raw_data[file][sheet][name]
+	return df
+
 def update_files(raw_folder, update_folder):
-	# Get all Excel files in the raw folder
-	raw_files = [os.path.join(raw_folder, f) for f in os.listdir(raw_folder) if f.endswith('.xlsx')]
+	print("Updating files...")
 
-	# Load all raw files into a dictionary of DataFrames
-	raw_data = {}
-	for raw_file in raw_files:
-		raw_data[os.path.basename(raw_file)] = pd.read_excel(raw_file, sheet_name=None)
+	raw_files = get_excel_files_from_folder(raw_folder)
+	update_files = get_excel_files_from_folder(update_folder)
 
-	# Get all Excel files in the update folder
-	update_files = [os.path.join(update_folder, f) for f in os.listdir(update_folder) if f.endswith('.xlsx')]
+	print("Number of output files found:", len(raw_files))
+	print("Number of custom files found:", len(update_files))
 
-	# Iterate through the files to update
+	raw_data = load_excel_files_into_dict(raw_files)
+
 	for update_file in update_files:
-		# Load the file to be updated
-		writer = pd.ExcelWriter(update_file, engine='openpyxl', mode='a', if_sheet_exists='replace')
-		book = writer.book
-		for sheet_name in book.sheetnames:
-			# Load the sheet
-			df = pd.read_excel(update_file, sheet_name=sheet_name)
+		with pd.ExcelWriter(update_file, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
+			book = writer.book
+			for sheet_name in book.sheetnames:
+				df = pd.read_excel(update_file, sheet_name=sheet_name)
+				updated_df = update_columns(df, raw_data)
+				updated_df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-			# Iterate through the columns in the file to update
-			for col in df.columns:
-				# Parse the column header to find the corresponding raw file and column
-				file, sheet, name = col.split('.')
-				if file in raw_data and sheet in raw_data[file]:
-					raw_sheet_df = raw_data[file][sheet]
-					if name in raw_sheet_df.columns:
-						# Update the column with data from the raw file
-						df[col] = raw_sheet_df[name]
-
-			# Save the updated DataFrame back to the Excel file
-			df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-		# Close the writer to save changes
-		writer.close()
+	print("Files updated successfully.")
