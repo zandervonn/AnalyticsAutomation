@@ -5,30 +5,23 @@ def path_gen(*args):
 	# Define allowed options for each parameter
 	allowed_platforms = {'shopify', 'cin7', 'starshipit', 'google', 'facebook', 'instagram', 'compiled'}
 	allowed_data_types = {'orders', 'customers', 'conversions', 'sessions', 'data'}
-	allowed_clean_statuses = {'clean', ''}
 	allowed_file_formats = {'json', 'csv', 'xlsx'}
 
-	if len(args) == 4:
-		platform, data_type, clean_status, file_format = args
+	if len(args) == 3:
+		platform, data_type, file_format = args
 
 		# Check that the provided arguments are valid
 		if platform not in allowed_platforms:
 			raise ValueError(f"Invalid platform: {platform}. Allowed options: {allowed_platforms}")
 		if data_type not in allowed_data_types:
 			raise ValueError(f"Invalid data type: {data_type}. Allowed options: {allowed_data_types}")
-		if clean_status not in allowed_clean_statuses:
-			raise ValueError(f"Invalid clean status: {clean_status}. Allowed options: {allowed_clean_statuses}")
 		if file_format not in allowed_file_formats:
 			raise ValueError(f"Invalid file format: {file_format}. Allowed options: {allowed_file_formats}")
 
 		# Create the subfolder path based on the platform and data type
 		subfolder_path = os.path.join(access.FOLDER_PATH, platform, data_type)
 
-		# Construct the file name
-		file_name = ""
-		if clean_status:
-			file_name += f"{clean_status}_"
-		file_name += f"{platform}_{data_type}.{file_format}"
+		file_name = f"{platform}_{data_type}.{file_format}"
 
 	elif len(args) == 1:
 		platform, = args

@@ -88,6 +88,7 @@ def get_google_analytics_sheets(credentials, property_id, start_date, end_date, 
 
 		# Fetch data for each chunk of metrics
 		for metrics in metric_chunks:
+			# noinspection PyTypeChecker
 			request = RunReportRequest(
 				property=f"properties/{property_id}",
 				dimensions=[Dimension(name=dimension)],

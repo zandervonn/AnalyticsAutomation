@@ -53,7 +53,7 @@ def fetch_pages(base_url, endpoint, type, page_limit):
 			print(f"Failed to retrieve data, status code: {response.status_code}")
 			break
 
-	print(f"Total orders retrieved: {len(all_data)}")
+	print(f"Total lines retrieved: {len(all_data)}")
 
 	return all_data
 
@@ -123,6 +123,7 @@ def build_shopify_report():
 	response = requests.post(url, json=data, headers=headers)
 	print(response.json())
 
+# todo remove dulicate
 def get_shopify_most_recent_updated_at(orders_json):
 	# Extract 'updated_at' values and convert them to datetime objects
 	updated_at_dates = [

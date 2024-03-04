@@ -1,10 +1,10 @@
 import os
-
 from Src.helpers.jsonHelpers import *
-import csv
+from dateutil import parser
 import numpy as np
 import pandas as pd
-from dateutil import parser
+
+# todo move
 import pytz
 
 webdriver_path = 'C:\\Users\\Zander\\.wdm\\chromedriver\\72.0.3626.7\\win32\\chromedriver.exe'
@@ -29,14 +29,16 @@ def make_lists_normal(text):
 	return text
 
 def clear_empty_columns(df):
-	return df.replace('', np.nan).dropna(axis=1, how='all').infer_objects()
+	df = df.map(lambda x: np.nan if x == '' else x)
+	df = df.dropna(axis=1, how='all')
+	return df.convert_dtypes()
 
 def round_numeric_columns(df):
 	for col in df.columns:
 		if df[col].dtype == object:
 			try:
 				# Attempt to convert the column to float and round to 2 decimal places
-				df[col] = df[col].astype(float).round(2)
+				df[col] = df[col].apply(lambda x: round(float(x), 2) if isinstance(x, (int, float, str)) else x)
 			except ValueError:
 				# If conversion fails, leave the column as is
 				pass
@@ -128,7 +130,6 @@ def write_data_to_csv(data, file_path):
 		writer.writerow(data.keys())
 		writer.writerow(data.values())
 
-# todo fix new lines being removed in shopify
 def clean_df(df, defined_headers):
 	# Remove any duplicate columns
 	df = df.loc[:, ~df.columns.duplicated()]
