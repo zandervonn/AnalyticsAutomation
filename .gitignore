@@ -1,2 +1,4 @@
 /gitignore
-
+/dist
+/build
+/main.spec

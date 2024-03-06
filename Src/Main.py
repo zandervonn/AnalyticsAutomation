@@ -13,19 +13,19 @@ from config import *
 
 since, until = get_dates("today", "weeks", 1)
 
-def main_get_and_build_timeframe_shopify_order_report():
+def main_get_and_build_all_shopify_order_report():
 	print("Getting Shopify orders")
-	new_orders_json = get_shopify_orders_updated_after(shopify_api_key(), shopify_password(), shopify_url(), since)
+	new_orders_json = get_shopify_orders(shopify_api_key(), shopify_password(), shopify_url())
+	new_orders_json = clean_json(new_orders_json, shopify_defined_subheaders_orders)
 	orders_df = pd.json_normalize(new_orders_json)
-	cleaned_orders_df = shopify_clean_df(orders_df)
+	cleaned_orders_df = shopify_orders_clean_df(orders_df)
 	cleaned_orders_df = clean_df(cleaned_orders_df, shopify_defined_subheaders_orders)
 	save_df_to_csv(cleaned_orders_df, path_gen('shopify', 'orders', 'csv'))
 
-def main_get_and_build_timeframe_shopify_customer_report():
-	#todo get average order value old vs new customer
+def main_get_and_build_all_shopify_customer_report():
 	#todo get just the number of current users
 	print("Getting Shopify customers")
-	new_customers_json = get_shopify_customers_updated_after(shopify_api_key(), shopify_password(), shopify_url(), since)
+	new_customers_json = get_shopify_customers(shopify_api_key(), shopify_password(), shopify_url())
 	customers_cleaned_json = clean_json(new_customers_json, shopify_defined_subheaders_customers)
 	orders_df = pd.json_normalize(customers_cleaned_json)
 	cleaned_customers_df = clean_df(orders_df, shopify_defined_subheaders_customers)
@@ -33,24 +33,16 @@ def main_get_and_build_timeframe_shopify_customer_report():
 	save_df_to_csv(cleaned_customers_df, path_gen('shopify', 'customers', 'csv'))
 
 def main_update_shopify_customer_report():
+	print("Getting Shopify customers")
 	shopify_customer_path = path_gen('shopify', 'customers', 'csv')
 
-	print("Getting Shopify customers")
-
-	# Read the timestamp of the last run
-	last_run_timestamp = get_last_run_timestamp()
-	print(f"Last run timestamp: {last_run_timestamp}")
-
 	# Get new report
-	new_customers_json = get_shopify_customers_updated_after(shopify_api_key(), shopify_password(), shopify_url(), last_run_timestamp)
-
-	# Clean new customer data
+	new_customers_json = get_shopify_customers_updated_after(shopify_api_key(), shopify_password(), shopify_url(), get_last_run_timestamp())
 	new_customers_df = pd.json_normalize(new_customers_json)
 	cleaned_new_customers_df = clean_df(new_customers_df, shopify_defined_subheaders_customers)
 
 	# Load the old customer report
 	old_customers_df = load_csv(shopify_customer_path)
-
 
 	# Update the old customer report by merging and cleaning
 	updated_customers_df = update_dataframe(old_customers_df, cleaned_new_customers_df, 'id')
@@ -60,23 +52,12 @@ def main_update_shopify_customer_report():
 	# Save the updated report
 	save_df_to_csv(updated_customers_df, shopify_customer_path)
 
-	# Update the last run timestamp
-	timestamp = set_last_run_timestamp()
-	print(f"Updated last run timestamp to: {timestamp}")
-
 def main_update_shopify_order_report():
+	print("Getting Shopify orders")
 	shopify_order_path = path_gen('shopify', 'orders', 'csv')
 
-	print("Getting Shopify orders")
-
-	# Read the timestamp of the last run
-	last_run_timestamp = get_last_run_timestamp()
-	print(f"Last run timestamp: {last_run_timestamp}")
-
-	# Get new report
-	new_orders_json = get_shopify_orders_updated_after(shopify_api_key(), shopify_password(), shopify_url(), last_run_timestamp)
-
-	# Clean new order data
+	# get new order data
+	new_orders_json = get_shopify_orders_updated_after(shopify_api_key(), shopify_password(), shopify_url(), get_last_run_timestamp())
 	new_orders_df = pd.json_normalize(new_orders_json)
 	cleaned_new_orders_df = shopify_orders_clean_df(new_orders_df)
 	cleaned_new_orders_df = clean_df(cleaned_new_orders_df, shopify_defined_subheaders_orders)
@@ -89,10 +70,6 @@ def main_update_shopify_order_report():
 
 	# Save the updated report
 	save_df_to_csv(updated_orders_df, shopify_order_path)
-
-	# Update the last run timestamp
-	timestamp = set_last_run_timestamp()
-	print(f"Updated last run timestamp to: {timestamp}")
 
 def main_get_and_build_starshipit_report():
 	print("Getting Starshipit")
@@ -146,12 +123,12 @@ def excel_update():
 	csv_sheets_to_excel(csv_files, path_gen('compiled'))
 
 def main():
-	# main_get_and_build_timeframe_shopify_customer_report()
-	# main_get_and_build_timeframe_shopify_order_report()
+	main_update_shopify_customer_report()
+	# main_update_shopify_order_report()
 	#
-	# main_get_and_build_starshipit_report()
-	# get_and_build_cin7()
-	# get_and_build_instagram()
+	main_get_and_build_starshipit_report()
+	get_and_build_cin7()
+	get_and_build_instagram()
 	#
 	# excel_update()
 	#
@@ -160,9 +137,7 @@ def main():
 
 	# update_files(os.path.join(access.FOLDER_PATH, 'output'), os.path.join(access.FOLDER_PATH, 'custom'))
 
-
-	main_update_shopify_customer_report()
-	# main_update_shopify_order_report()
+	# set_last_run_timestamp()
 
 if __name__ == '__main__':
 	main()

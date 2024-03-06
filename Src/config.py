@@ -1,5 +1,6 @@
 #todo split into different config text files
 shopify_defined_subheaders_orders = [
+	'id',
 	'order_number',
 	'updated_at',
 	# 'contact_email',
@@ -33,7 +34,7 @@ shopify_defined_subheaders_orders = [
 shopify_defined_subheaders_customers = [
 	'id', # leave on, needed for processing
 	# 'email',
-	# 'created_at',
+	'created_at',
 	'updated_at',
 	# 'first_name',
 	# 'last_name',

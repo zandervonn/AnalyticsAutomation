@@ -91,10 +91,22 @@ def get_excel_files_from_folder(folder):
 				excel_files.append(os.path.join(root, file))
 	return excel_files
 
+def get_excel_files(folder):
+	excel_files = []
+	for root, _, files in os.walk(folder):
+		for file in files:
+			if file.endswith('.xlsx'):
+				file_path = os.path.join(root, file)
+				excel_files.append(file_path)
+				print(f"Found Excel file: {file_path}")
+	return excel_files
+
 def load_excel_files_into_dict(file_list):
 	data_dict = {}
 	for file in file_list:
-		data_dict[os.path.basename(file)] = pd.read_excel(file, sheet_name=None)
+		file_name = os.path.basename(file)
+		data_dict[file_name] = pd.read_excel(file, sheet_name=None)
+		print(f"Loading file into dictionary: {file} (basename: {file_name})")
 	return data_dict
 
 def update_columns(df, raw_data):
@@ -103,15 +115,28 @@ def update_columns(df, raw_data):
 		if period_count >= 2:
 			parts = col.split('.', 2)
 			file, sheet, name = parts if period_count == 2 else parts[:2] + ['.'.join(parts[2:])]
-			if file in raw_data and sheet in raw_data[file] and name in raw_data[file][sheet].columns:
-				df[col] = raw_data[file][sheet][name]
+			file += '.xlsx'  # Add the .xlsx extension to the file name
+			print(f"Checking column: {col}")
+			if file in raw_data:
+				print(f"Found file '{file}' in raw data.")
+				if sheet in raw_data[file]:
+					print(f"Found sheet '{sheet}' in file '{file}'.")
+					if name in raw_data[file][sheet].columns:
+						print(f"Found column '{name}' in sheet '{sheet}' of file '{file}'. Updating...")
+						df[col] = raw_data[file][sheet][name]
+					else:
+						print(f"Column '{name}' not found in sheet '{sheet}' of file '{file}'.")
+				else:
+					print(f"Sheet '{sheet}' not found in file '{file}'.")
+			else:
+				print(f"File '{file}' not found in raw data.")
 	return df
 
 def update_files(raw_folder, update_folder):
 	print("Updating files...")
 
-	raw_files = get_excel_files_from_folder(raw_folder)
-	update_files = get_excel_files_from_folder(update_folder)
+	raw_files = get_excel_files(raw_folder)
+	update_files = get_excel_files(update_folder)
 
 	print("Number of output files found:", len(raw_files))
 	print("Number of custom files found:", len(update_files))
