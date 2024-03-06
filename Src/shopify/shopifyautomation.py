@@ -4,7 +4,7 @@ import pandas as pd
 import requests
 from gitignore import access
 from datetime import datetime
-from dateutil import tz
+from dateutil import tz, parser
 
 
 def fetch_pages(base_url, endpoint, type, page_limit=-1):
@@ -67,46 +67,38 @@ def get_shopify_customers(shopify_api_key, shopify_password, shopify_url, page_l
 	return fetch_pages(base_url, endpoint, 'customers', page_limit)
 
 def get_shopify_orders_updated_after(shopify_api_key, shopify_password, shopify_url, updated_at_min, page_limit=-1):
-	updated_at_min_utc = convert_to_utc(updated_at_min)
+	# Convert datetime object to string
+	updated_at_min_str = updated_at_min.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+	updated_at_min_utc = convert_to_shopify_format_utc(updated_at_min_str, "%Y-%m-%dT%H:%M:%S%z")
 	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
-	endpoint = f"orders.json?limit=250&status=any&created_at_min={updated_at_min_utc}"
+	endpoint = f"orders.json?limit=250&status=any&processed_at_min={updated_at_min_utc}"
 	return fetch_pages(base_url, endpoint, 'orders', page_limit)
 
-def get_shopify_most_recent_updated_at(orders_json):
+def get_shopify_customers_updated_after(shopify_api_key, shopify_password, shopify_url, updated_at_min, page_limit=-1):
+	# Convert datetime object to string
+	updated_at_min_str = updated_at_min.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+	updated_at_min_utc = convert_to_shopify_format_utc(updated_at_min_str, "%Y-%m-%dT%H:%M:%S%z")
+	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
+	endpoint = f"customers.json?limit=250&updated_at_min={updated_at_min_utc}"
+	return fetch_pages(base_url, endpoint, 'customers', page_limit)
+
+
+def get_shopify_most_recent_updated_at(df, input_format):
 	# Extract 'updated_at' values and convert them to datetime objects
 	updated_at_dates = [
-		datetime.strptime(order['updated_at'], "%Y-%m-%dT%H:%M:%S%z")
-		for order in orders_json
+		datetime.strptime(order['updated_at'], input_format)
+		for index, order in df.iterrows()
 		if 'updated_at' in order
 	]
 
 	# Find the most recent date
 	if updated_at_dates:
 		most_recent_date = max(updated_at_dates)
-		return most_recent_date.strftime("%Y-%m-%dT%H:%M:%S%z")
+		return most_recent_date.strftime(input_format)
 	else:
 		return None
-
-def get_shopify_customers_updated_after(shopify_api_key, shopify_password, shopify_url, updated_at_min, page_limit=-1):
-	"""Fetches Shopify customers updated after a specified timestamp"""
-	updated_at_min_utc = convert_to_utc(updated_at_min)
-	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
-	endpoint = f"customers.json?limit=250&updated_at_min={updated_at_min_utc}"
-	return fetch_pages(base_url, endpoint, 'customers', page_limit)
-
-def update_shopify_customers(existing_customers_df, new_customers_df):
-	"""Updates an existing DataFrame of Shopify customers with new customer data."""
-	# Convert DataFrames to dictionaries for easier updates
-	existing_customers_dict = existing_customers_df.set_index('id').to_dict('index')
-	new_customers_dict = new_customers_df.set_index('id').to_dict('index')
-
-	# Update or add entries
-	existing_customers_dict.update(new_customers_dict)
-
-	# Convert back to DataFrame, reset index, and return
-	updated_df = pd.DataFrame.from_dict(existing_customers_dict, orient='index').reset_index()
-	updated_df.rename(columns={'index': 'id'}, inplace=True)
-	return updated_df
 
 def build_shopify_report():
 	shopify_api_key = access.shopify_api_key()
@@ -129,44 +121,52 @@ def build_shopify_report():
 	print(response.json())
 
 
+def update_dataframe(old_df, new_df, id_column):
+	# Set the index to the id column for easy merging
+	old_df.set_index(id_column, inplace=True)
+	new_df.set_index(id_column, inplace=True)
 
-def update_shopify_orders(existing_orders, new_orders):
-	# Create a dictionary to hold the existing orders, using the order ID as the key
-	existing_orders_dict = {order['id']: order for order in existing_orders}
+	# Update the old DataFrame with the new DataFrame
+	updated_df = old_df.combine_first(new_df)
 
-	# List to hold the new orders that are not in the existing orders
-	new_orders_to_prepend = []
+	# Reset the index to bring the id column back as a regular column
+	updated_df.reset_index(inplace=True)
 
-	# Update existing orders or add new orders to the prepend list
-	for order in new_orders:
-		if order['id'] in existing_orders_dict:
-			existing_orders_dict[order['id']] = order
-		else:
-			new_orders_to_prepend.append(order)
+	# Sort the DataFrame based on the id column to maintain the original order
+	updated_df.sort_values(by=id_column, inplace=True)
 
-	# Prepend the new orders to the existing orders list
-	updated_orders_list = new_orders_to_prepend + list(existing_orders_dict.values())
+	return updated_df
 
-	return updated_orders_list
 
 def sort_shopify_orders_by_order_number(orders):
 	return sorted(orders, key=lambda order: int(order['order_number']), reverse=True)
 
-def convert_to_utc(time_str, timezone_str="Pacific/Auckland"):
-	# Set the default format for date string and adjust if time is included
-	time_format = "%Y-%m-%d" if 'T' not in time_str else "%Y-%m-%dT%H:%M:%S"
+def convert_to_shopify_format_utc(time_str, timezone_str="Pacific/Auckland"):
+	# Define the allowed formats
+	allowed_formats = ['%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M:%S%z', '%Y-%m-%d %H:%M:%S%z', '%Y-%m-%d %H:%M:%S']
 
-	# Parse the time string into a datetime object
-	local_time = datetime.strptime(time_str, time_format)
+	# Check if the input matches one of the allowed formats
+	for fmt in allowed_formats:
+		try:
+			local_time = datetime.strptime(time_str, fmt)
+			break
+		except ValueError:
+			continue
+	else:
+		raise ValueError(f"Time string '{time_str}' does not match the allowed formats.")
 
-	# Set the timezone to the specified timezone
-	local_timezone = tz.gettz(timezone_str)
-	local_time = local_time.replace(tzinfo=local_timezone)
+	# Set the timezone to the specified timezone if it's not already set
+	if local_time.tzinfo is None:
+		local_timezone = tz.gettz(timezone_str)
+		local_time = local_time.replace(tzinfo=local_timezone)
 
 	# Convert the time to UTC
 	utc_time = local_time.astimezone(tz.tzutc())
 
-	# Format the UTC time as a string, add 'T00:00:00' if only date is provided
-	utc_time_str = utc_time.strftime("%Y-%m-%dT%H:%M:%S%z" if 'T' in time_str else "%Y-%m-%dT00:00:00%z")
+	# Format the UTC time in the Shopify format
+	shopify_format = "%Y-%m-%dT%H:%M:%SZ"
+	shopify_time_str = utc_time.strftime(shopify_format)
 
-	return utc_time_str
+	print("shopify time: ", shopify_time_str)
+
+	return shopify_time_str

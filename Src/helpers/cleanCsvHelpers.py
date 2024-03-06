@@ -29,13 +29,22 @@ def clear_empty_columns(df):
 def round_numeric_columns(df):
 	for col in df.columns:
 		if df[col].dtype == object:
-			try:
-				df[col] = pd.to_numeric(df[col], errors='coerce').round(2)
-			except (ValueError, TypeError):
-				pass
+			# Check if the column contains only numeric values
+			is_numeric_column = all(
+				all(item.replace('.', '', 1).isdigit() for item in line.split('\n') if item)
+				for cell in df[col] if isinstance(cell, str)
+				for line in cell.split('\n')
+			)
+			if is_numeric_column:
+				try:
+					df[col] = df[col].apply(lambda x: '\n'.join(str(round(float(line), 2)) for line in x.split('\n') if line) if isinstance(x, str) else x)
+				except (ValueError, TypeError):
+					pass
+		elif df[col].dtype == float:
+			df[col] = df[col].round(2)
 	return df
 
-def standardize_time_format(df, column_name, output_format='%d/%m/%y %I:%M%p'):
+def standardize_time_format(df, column_name, output_format='%Y-%m-%dT%H:%M:%S'):
 	if column_name in df.columns:
 		def safe_parse_date(x):
 			try:
@@ -83,20 +92,25 @@ def normalize_object_columns(df):
 			df = clean_string_list_column(df, col)
 	return df
 
-def clean_date_columns(df):
-	for col in df.columns:
-		if 'date' in col.lower():
-			df = standardize_time_format(df, col)
-	return df
-
 def reorder_columns(df, defined_headers):
 	return df[[header for header in defined_headers if header in df.columns]]
+
+def sort_by_date_column(df, date_column, date_format='%Y-%m-%dT%H:%M:%S%z'):
+	# Find the first date column in the DataFrame
+	if date_column:
+		# Convert the date column to datetime for sorting
+		df[date_column] = pd.to_datetime(df[date_column], format=date_format, errors='coerce')
+		# Sort by the date column from highest to lowest
+		df = df.sort_values(by=date_column, ascending=False)
+	return df
+
+def sort_by_value_column(df, column_name, ascending=False):
+	return df.sort_values(by=column_name, ascending=ascending)
 
 def clean_df(df, defined_headers):
 	split_columns_info = extract_split_columns_info(defined_headers)
 	df = apply_splitting(df, split_columns_info)
 	df = normalize_object_columns(df)
-	df = clean_date_columns(df)
 	df = clear_empty_columns(df)
 	df = round_numeric_columns(df)
 	df = reorder_columns(df, defined_headers)

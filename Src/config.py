@@ -33,8 +33,8 @@ shopify_defined_subheaders_orders = [
 shopify_defined_subheaders_customers = [
 	'id', # leave on, needed for processing
 	# 'email',
-	'created_at',
-	# 'updated_at',
+	# 'created_at',
+	'updated_at',
 	# 'first_name',
 	# 'last_name',
 	'orders_count',

@@ -71,7 +71,11 @@ def save_df_to_excel(df_or_dict, filename):
 
 
 def load_csv(path):
-	return pd.read_csv(path)
+	try:
+		return pd.read_csv(path)
+	except Exception as e:
+		print(f"Warning: Failed to load {path}. Error: {e}")
+		return pd.DataFrame()
 
 def write_data_to_csv(data, file_path):
 	with open(file_path, mode='w', newline='') as file:
