@@ -9,7 +9,7 @@ from Src.shopify.shopifyautomation import *
 from Src.shopify.shopify_csv_handeling import *
 from Src.shopify.shopifyUiAutomation import *
 from gitignore.access import *
-from config import *
+from Src.config import *
 
 since, until = get_dates("today", "weeks", 1)
 
