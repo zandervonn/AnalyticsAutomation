@@ -72,12 +72,12 @@ def main_update_shopify_order_report():
 	save_df_to_csv(updated_orders_df, shopify_order_path)
 
 def main_get_and_build_starshipit_report():
+	#todo not getting all data
+	#todo trimming too many coloumns
+	#todo do i need all 4 categories
 	print("Getting Starshipit")
-	unshipped_orders = get_unshipped_orders(starshipit_api_key(), starshipit_subscription_key(), 2, since, until)
-	shipped_orders = get_shipped_orders(starshipit_api_key(), starshipit_subscription_key(), 2, since, until)
-	unmanifested_shipments = get_unmanifested_shipments(starshipit_api_key(), starshipit_subscription_key(), 2, since, until)
-	recently_printed_shipments = get_recently_printed_shipments(starshipit_api_key(), starshipit_subscription_key(), 2, since, until)
-	df = combine_orders_to_df(unshipped_orders, shipped_orders, unmanifested_shipments, recently_printed_shipments)
+	df = get_all_starshipit_data(starshipit_api_key(), starshipit_subscription_key(), -1, since)
+	# save_df_to_csv(df, path_gen('starshipit', 'orders', 'csv'))
 	cleaned_df = clean_df(df, starshipit_defined_subheaders)
 	save_df_to_csv(cleaned_df, path_gen('starshipit', 'orders', 'csv'))
 
@@ -85,12 +85,13 @@ def get_and_build_google():
 	print("Getting Google")
 	credentials = get_credentials(google_credentials_path(), google_token_path())
 	google_dfs = get_google_analytics_sheets(credentials, google_property_id(), since, until, google_defined_headers_dimensions, google_defined_headers_metrics)
-	clean_google_dfs = clean_dfs(google_dfs, google_defined_headers_dimensions+google_defined_headers_metrics)
-	save_df_to_excel(clean_google_dfs, path_gen('google'))
+	google_dfs = clean_dfs(google_dfs, google_defined_headers_dimensions+google_defined_headers_metrics)
+	google_dfs = clean_google_dfs(google_dfs)
+	save_df_to_excel(google_dfs, path_gen('google'))
 
 def get_and_build_facebook():
 	print("Getting Facebook")
-	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  facebook_insights_headers, since, until, -1)
+	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  facebook_insights_headers, since, until)
 	save_df_to_csv(facebook_df, path_gen('facebook', 'data', 'csv'))
 	clean_facebook_df = clean_df(facebook_df, ["end_time"]+facebook_insights_headers)
 	split_facebook_df = split_insights_to_sheets(clean_facebook_df, facebook_insights_pages)
@@ -98,7 +99,7 @@ def get_and_build_facebook():
 
 def get_and_build_instagram():
 	print("Getting Instagram")
-	insta_df = get_meta_insights(meta_access_token(), meta_insta_id(),instagram_insights_headers, since, until, -1)
+	insta_df = get_meta_insights(meta_access_token(), meta_insta_id(),instagram_insights_headers, since, until)
 	clean_insta_df = clean_df(insta_df,  ["end_time"]+instagram_insights_headers)
 	save_df_to_csv(clean_insta_df, path_gen('instagram', 'data', 'csv'))
 
@@ -123,12 +124,12 @@ def excel_update():
 	csv_sheets_to_excel(csv_files, path_gen('compiled'))
 
 def main():
-	main_update_shopify_customer_report()
+	# main_update_shopify_customer_report()
 	# main_update_shopify_order_report()
 	#
 	main_get_and_build_starshipit_report()
-	get_and_build_cin7()
-	get_and_build_instagram()
+	# get_and_build_cin7()
+	# get_and_build_instagram()
 	#
 	# excel_update()
 	#

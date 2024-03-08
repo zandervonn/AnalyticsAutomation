@@ -69,6 +69,8 @@ def save_df_to_excel(df_or_dict, filename):
 		else:
 			raise TypeError("Input must be a DataFrame or a dictionary of DataFrames.")
 
+	print(f"Excel saved to {filename}")
+
 
 def load_csv(path):
 	try:

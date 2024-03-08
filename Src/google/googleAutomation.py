@@ -1,10 +1,14 @@
 import os
+from datetime import datetime
+
 import pandas as pd
 from google.auth.transport.requests import Request
 from google_auth_oauthlib import flow
 from google.oauth2.credentials import Credentials
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest, Dimension, Metric, DateRange, OrderBy
+
+from Src.helpers.cleanCsvHelpers import clean_and_convert_date_column
 
 
 def get_credentials(client_secret_path, token_path):
@@ -19,7 +23,6 @@ def get_credentials(client_secret_path, token_path):
 	# If there are no (valid) credentials available, let the user log in.
 	if not creds or not creds.valid:
 		if creds and creds.expired and creds.refresh_token:
-			# todo fix if token cannot be refreshed, delete token and go through 2fa
 			creds.refresh(Request())
 		else:
 			appflow = flow.InstalledAppFlow.from_client_secrets_file(
@@ -28,7 +31,9 @@ def get_credentials(client_secret_path, token_path):
 			)
 			launch_browser = True
 			if launch_browser:
-				creds = appflow.run_local_server()
+				# Modify the authorization URL to include 'prompt=consent'
+				authorization_url, _ = appflow.authorization_url(prompt='consent')
+				creds = appflow.run_local_server(authorization_url=authorization_url)
 			else:
 				appflow.run_console()
 		# Save the credentials for the next run
@@ -64,6 +69,9 @@ def get_google_analytics(credentials, property_id, dimensions, metrics, start_da
 def get_google_analytics_sheets(credentials, property_id, start_date, end_date, dimensions, metrics):
 	# Load compatibility CSV
 	compatibility_df = pd.read_csv('google/compatible_pairs.csv')
+
+	start_date = convert_to_google_date_format(start_date)
+	end_date = convert_to_google_date_format(end_date)
 
 	# Initialize the Analytics Data API client
 	client = BetaAnalyticsDataClient(credentials=credentials)
@@ -104,3 +112,18 @@ def get_google_analytics_sheets(credentials, property_id, start_date, end_date, 
 		dfs[dimension] = results_df
 
 	return dfs
+
+def convert_to_google_date_format(date_str):
+	# Parse the date string to a datetime object
+	date_obj = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S")
+	# Format the date to YYYY-MM-DD
+	return date_obj.strftime("%Y-%m-%d")
+
+
+def clean_google_dfs(google_dfs):
+	cleaned_google_dfs = {}
+	for dimension, df in google_dfs.items():
+		df = clean_and_convert_date_column(df, 'dateHour', '%Y%m%d%H', '%Y-%m-%d %H:%M')
+		df = clean_and_convert_date_column(df, 'date', '%Y%m%d', '%Y-%m-%d')
+		cleaned_google_dfs[dimension] = df
+	return cleaned_google_dfs

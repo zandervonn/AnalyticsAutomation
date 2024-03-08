@@ -4,6 +4,8 @@ import os
 import Src.Main
 import sys
 
+#todo add ui for config
+
 class TextRedirector:
 	def __init__(self, widget):
 		self.widget = widget

@@ -4,6 +4,8 @@ import pandas as pd
 from io import StringIO
 
 def parse_json(text):
+	if isinstance(text, dict):
+		return text  # Return the dictionary directly if the input is already a dictionary
 	try:
 		return json.loads(text)
 	except json.JSONDecodeError as e:

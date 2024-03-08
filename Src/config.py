@@ -97,11 +97,11 @@ shopify_defined_subheaders_customers = [
 
 
 starshipit_defined_subheaders = [
-	# 'order_id',
+	'order_id', # for clarity
 	'order_date',
 	'shipped_date',
 	# 'order_number',
-	# 'status',
+	'status',
 	'order_type',
 	# 'reference',
 	'carrier',
@@ -330,10 +330,10 @@ google_defined_headers_metrics = [
 	"checkouts",
 	"conversions",
 	"newUsers",
-	# "organicGoogleSearchAveragePosition", # todo figure out why these dnt work anymore
-	# "organicGoogleSearchClickThroughRate",
-	# "organicGoogleSearchClicks",
-	# "organicGoogleSearchImpressions",
+	"organicGoogleSearchAveragePosition", # todo dont work when dimensions start at date
+	"organicGoogleSearchClickThroughRate",
+	"organicGoogleSearchClicks",
+	"organicGoogleSearchImpressions",
 	"returnOnAdSpend",
 	"totalRevenue",
 	"totalUsers",

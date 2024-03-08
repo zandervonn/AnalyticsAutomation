@@ -1,9 +1,10 @@
 import requests
 import pandas as pd
 
-def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
-	# todo pagination
-	# todo get posts and get stats for the post
+# todo test pagination
+# todo get posts and get stats for the post
+def get_meta_insights(meta_token, id_number, metrics, since, until):
+	page_limit = 250
 	url = f'https://graph.facebook.com/v19.0/{id_number}/insights'
 	# Extract base metric names for the API request
 	base_metrics = set(metric.split('.')[0] for metric in metrics)
@@ -16,7 +17,6 @@ def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
 	}
 
 	df = pd.DataFrame()  # Initialize an empty DataFrame
-	page_count = 0
 
 	while True:
 		response = requests.get(url, params=params)
@@ -41,12 +41,13 @@ def get_meta_insights(meta_token, id_number, metrics, since, until, page_limit):
 				})
 				df = pd.concat([df, new_row], ignore_index=True)
 
-		# Implement paging logic if necessary
-		# if 'paging' in data and 'next' in data['paging']:
-		#     url = data['paging']['next']
-		#     page_count += 1
-		# else:
-		break
+		# Check if the number of items returned is less than the page limit
+		if len(data['data']) < page_limit:
+			break
+		else:
+			# Update the 'since' parameter for the next request
+			last_end_time = df['end_time'].iloc[-1]
+			params['since'] = last_end_time
 
 	# Pivot the DataFrame
 	df_pivot = df.pivot(index='end_time', columns='metric', values='value').reset_index()
