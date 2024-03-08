@@ -89,6 +89,7 @@ def get_and_build_google():
 	google_dfs = clean_google_dfs(google_dfs)
 	save_df_to_excel(google_dfs, path_gen('google'))
 
+#todo facebook cant get more than 2 weeks of data
 def get_and_build_facebook():
 	print("Getting Facebook")
 	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  facebook_insights_headers, since, until)
@@ -127,13 +128,13 @@ def main():
 	# main_update_shopify_customer_report()
 	# main_update_shopify_order_report()
 	#
-	main_get_and_build_starshipit_report()
+	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7()
 	# get_and_build_instagram()
 	#
 	# excel_update()
 	#
-	# get_and_build_facebook()
+	get_and_build_facebook()
 	# get_and_build_google()
 
 	# update_files(os.path.join(access.FOLDER_PATH, 'output'), os.path.join(access.FOLDER_PATH, 'custom'))
