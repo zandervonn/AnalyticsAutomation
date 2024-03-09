@@ -88,6 +88,11 @@ def get_google_analytics_sheets(credentials, property_id, start_date, end_date, 
 		# Keep only metrics that are in the Google-defined list
 		compatible_metrics = [metric for metric in compatible_metrics if metric in metrics]
 
+		# Skip the request if there are no compatible metrics for this dimension
+		if not compatible_metrics:
+			print(f"No compatible metrics for dimension: {dimension}")
+			continue
+
 		# Split metrics into chunks of 10 due to API limitation
 		metric_chunks = [compatible_metrics[i:i + 10] for i in range(0, len(compatible_metrics), 10)]
 
@@ -95,18 +100,26 @@ def get_google_analytics_sheets(credentials, property_id, start_date, end_date, 
 		results_df = pd.DataFrame()
 
 		# Fetch data for each chunk of metrics
-		for metrics in metric_chunks:
-			# noinspection PyTypeChecker
-			request = RunReportRequest(
-				property=f"properties/{property_id}",
-				dimensions=[Dimension(name=dimension)],
-				metrics=[Metric(name=metric) for metric in metrics],
-				date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
-				order_bys=[OrderBy(dimension=OrderBy.DimensionOrderBy(dimension_name=dimension))]
-			)
-			response = client.run_report(request)
-			chunk_df = build_dataframe(response)
-			results_df = pd.concat([results_df, chunk_df], axis=1)
+		for metric_chunk in metric_chunks:
+			try:
+				# noinspection PyTypeChecker
+				request = RunReportRequest(
+					property=f"properties/{property_id}",
+					dimensions=[Dimension(name=dimension)],
+					metrics=[Metric(name=metric) for metric in metric_chunk],
+					date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+					order_bys=[OrderBy(dimension=OrderBy.DimensionOrderBy(dimension_name=dimension))]
+				)
+				response = client.run_report(request)
+				chunk_df = build_dataframe(response)
+
+				if results_df.empty:
+					results_df = chunk_df
+				else:
+					# Merge the chunk_df with the results_df on the dimension column
+					results_df = results_df.merge(chunk_df, on=dimension, how='outer')
+			except Exception as e:
+				print(f"Warning: Failed to fetch data for dimension '{dimension}' and metrics '{metric_chunk}'. Error: {e}")
 
 		# Add the results DataFrame to the dictionary
 		dfs[dimension] = results_df

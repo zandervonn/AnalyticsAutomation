@@ -57,7 +57,10 @@ def save_df_to_excel(df_or_dict, filename):
 	with pd.ExcelWriter(filename, engine='openpyxl') as writer:
 		if isinstance(df_or_dict, pd.DataFrame):
 			# If a single DataFrame is provided, save it to the first sheet
-			df_or_dict.to_excel(writer, sheet_name='Sheet1', index=False)
+			if not df_or_dict.empty:
+				df_or_dict.to_excel(writer, sheet_name='Sheet1', index=False)
+			else:
+				print("The input DataFrame is empty. No Excel file created.")
 		elif isinstance(df_or_dict, dict):
 			# If a dictionary of DataFrames is provided, save each DataFrame to a separate sheet
 			for sheet_name, df in df_or_dict.items():

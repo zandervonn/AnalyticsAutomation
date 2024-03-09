@@ -61,16 +61,6 @@ def round_numeric_columns(df):
 	for col in float_columns:
 		df[col] = df[col].round(2)
 
-	# Convert columns with only trailing zeros after decimal to int
-	for col in df.columns:
-		if df[col].dtype == 'object':
-			if all(
-					(item.replace('.', '', 1).isdigit() and (item.endswith('.0') or '.' not in item))
-					for cell in df[col] if isinstance(cell, str)
-					for item in cell.split('\n') if item
-			):
-				df[col] = df[col].apply(lambda x: '\n'.join(str(int(float(item))) if '.' in item else item for item in x.split('\n') if item) if isinstance(x, str) else x)
-
 	return df
 
 def standardize_time_format(df, column_name, output_format='%Y-%m-%dT%H:%M:%S'):
@@ -162,4 +152,5 @@ def clean_dfs(df_input, headers):
 			clean_dfs.append(cleaned_df)
 	else:
 		raise TypeError("Input must be either a list or a dictionary of DataFrames")
+
 	return clean_dfs

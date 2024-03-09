@@ -143,12 +143,12 @@ def main():
 	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7()
 	# get_and_build_instagram()
-	get_and_build_facebook_posts()
+	# get_and_build_facebook_posts()
 	#
 	# excel_update()
 	#
 
-	# get_and_build_google()
+	get_and_build_google()
 
 	# update_files(os.path.join(access.FOLDER_PATH, 'output'), os.path.join(access.FOLDER_PATH, 'custom'))
 

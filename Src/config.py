@@ -332,10 +332,6 @@ google_defined_headers_metrics = [
 	"checkouts",
 	"conversions",
 	"newUsers",
-	"organicGoogleSearchAveragePosition", # todo dont work when dimensions start at date
-	"organicGoogleSearchClickThroughRate",
-	"organicGoogleSearchClicks",
-	"organicGoogleSearchImpressions",
 	"returnOnAdSpend",
 	"totalRevenue",
 	"totalUsers",
@@ -344,6 +340,10 @@ google_defined_headers_metrics = [
 	"userEngagementDuration",
 	"sessions",
 	"bounceRate",
+	# "organicGoogleSearchAveragePosition", #todo fix problematic
+	# "organicGoogleSearchClickThroughRate",
+	# "organicGoogleSearchClicks",
+	# "organicGoogleSearchImpressions",
 ]
 
 google_defined_headers_dimensions = [
@@ -366,7 +366,6 @@ google_defined_headers_dimensions = [
 	"userGender",
 	"date",
 	"dateHour",
-	# "dateHourMinute",
 	"dayOfWeekName",
 	"sessionSource"
 ]
