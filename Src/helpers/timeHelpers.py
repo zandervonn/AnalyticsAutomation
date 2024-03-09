@@ -1,5 +1,9 @@
 from datetime import datetime, timedelta, timezone
 
+from Src.helpers.fileHelpers import find_path_upwards
+
+LAST_RUN_FILE_PATH = find_path_upwards(r"config\config.txt")
+
 def get_dates(from_date, last, num):
 	# Determine the base date
 	if from_date == 'today':
@@ -20,8 +24,6 @@ def get_dates(from_date, last, num):
 	until = base_date.strftime('%Y-%m-%dT%H:%M:%S')
 
 	return since, until
-
-LAST_RUN_FILE_PATH = r"C:\Users\Zander\IdeaProjects\Automation-Gel\Src\config"
 
 def get_last_run_timestamp():
 	try:

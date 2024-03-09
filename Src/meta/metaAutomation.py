@@ -3,8 +3,6 @@ from datetime import datetime, timedelta
 import requests
 import pandas as pd
 
-from Src.config import facebook_insights_posts_headers
-
 def get_meta_insights(meta_token, id_number, metrics, since, until):
 	page_limit = 250
 	base_url = f'https://graph.facebook.com/v19.0/{id_number}/insights'

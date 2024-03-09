@@ -46,3 +46,25 @@ def path_gen(*args):
 	file_path = os.path.join(subfolder_path, file_name)
 
 	return file_path
+
+def find_path_upwards(target_relative_path, start_path=None):
+	"""
+	Searches for a target relative path upwards from the start path until the root is reached.
+
+	:param target_relative_path: The relative path to search for.
+	:param start_path: The starting directory for the search. If None, uses the directory of the current file.
+	:return: The absolute path to the target if found, None otherwise.
+	"""
+	if start_path is None:
+		start_path = os.path.dirname(__file__)
+
+	current_path = os.path.abspath(start_path)
+	root_path = os.path.abspath(os.sep)
+
+	while current_path != root_path:
+		potential_target_path = os.path.join(current_path, target_relative_path)
+		if os.path.exists(potential_target_path):
+			return potential_target_path
+		current_path = os.path.dirname(current_path)
+
+	return None

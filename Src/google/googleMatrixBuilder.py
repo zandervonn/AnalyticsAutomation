@@ -19,6 +19,7 @@ def get_compatible_metrics(credentials, property_id, dimensions, metrics, output
 			for j, metric in enumerate(metrics):
 				print(f"Checking compatibility: Dimension {i + 1}/{len(dimensions)}, Metric {j + 1}/{len(metrics)}")
 				try:
+					# noinspection PyTypeChecker
 					request = RunReportRequest(
 						property=f"properties/{property_id}",
 						dimensions=[{"name": dimension}],

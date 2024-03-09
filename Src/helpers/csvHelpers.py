@@ -1,4 +1,6 @@
 import os
+
+from Src.helpers.fileHelpers import find_path_upwards
 from Src.helpers.jsonHelpers import *
 
 
@@ -157,3 +159,12 @@ def update_files(raw_folder, update_folder):
 				updated_df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 	print("Files updated successfully.")
+
+def get_header_list(list_name):
+	csv_file_path = find_path_upwards(r'config.txt\headers.csv')
+	with open(csv_file_path, mode='r') as file:
+		csv_reader = csv.reader(file)
+		for row in csv_reader:
+			if row[0] == list_name:
+				return [header for header in row[1:] if header and not header.startswith('!')]
+	return []
