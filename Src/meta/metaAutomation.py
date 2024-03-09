@@ -63,7 +63,7 @@ def get_meta_insights(meta_token, id_number, metrics, since, until):
 	df_pivot = df.pivot(index='end_time', columns='metric', values='value').reset_index()
 	return df_pivot
 
-def get_posts_and_insights(meta_token, page_id, since, until):
+def get_posts_and_insights(meta_token, page_id, headers, since, until):
 	base_url = f'https://graph.facebook.com/v19.0/{page_id}/posts'
 	params = {
 		'access_token': meta_token,
@@ -80,7 +80,7 @@ def get_posts_and_insights(meta_token, page_id, since, until):
 		print(f"ID: {post['id']}, Message: {post.get('message', '')}, Created Time: {post['created_time']}")
 
 	post_insights = []
-	base_metrics = {metric.split('.')[0] for metric in facebook_insights_posts_headers}
+	base_metrics = {metric.split('.')[0] for metric in headers}
 	metrics = ','.join(base_metrics)
 
 	for post in posts_data['data']:

@@ -99,11 +99,9 @@ def get_and_build_facebook():
 
 def get_and_build_facebook_posts():
 	print("Getting Facebook")
-	facebook_df = get_posts_and_insights(meta_access_token(),  meta_facebook_id(),  since, until)
+	facebook_df = get_posts_and_insights(meta_access_token(),  meta_facebook_id(), facebook_insights_posts_headers, since, until)
+	facebook_df = clean_df(facebook_df, ["created_time", "message"]+facebook_insights_posts_headers)
 	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
-	#clean_facebook_df = clean_df(facebook_df, ["end_time"]+facebook_insights_headers)
-	# split_facebook_df = split_insights_to_sheets(clean_facebook_df, facebook_insights_pages)
-	#save_df_to_csv(clean_facebook_df, path_gen('facebook_posts', 'data', 'csv'))
 
 def get_and_build_instagram_posts():
 	print("Getting Facebook")
@@ -126,16 +124,15 @@ def get_and_build_cin7():
 	cleaned_df = clean_df(data, cin7_defined_subheaders)
 	save_df_to_csv(cleaned_df, path_gen('cin7', 'data', 'csv'))
 
+#todo keep a years worth of data
 def excel_update():
-	#todo keep a years worth of data
 	csv_files = [
 		path_gen('shopify', 'orders', 'csv'),
 		path_gen('shopify', 'customers', 'csv'),
 		path_gen('cin7', 'data', 'csv'),
 		path_gen('starshipit', 'orders', 'csv'),
 		path_gen('instagram', 'data', 'csv'),
-		# path_gen('google', 'sessions', 'csv'),
-		# path_gen('facebook', 'data', 'csv'),
+		path_gen('facebook_posts', 'data', 'csv'),
 	]
 	csv_sheets_to_excel(csv_files, path_gen('compiled'))
 
@@ -146,12 +143,10 @@ def main():
 	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7()
 	# get_and_build_instagram()
-
+	get_and_build_facebook_posts()
 	#
 	# excel_update()
 	#
-	# get_and_build_instagram_posts()
-	get_and_build_facebook_posts()
 
 	# get_and_build_google()
 

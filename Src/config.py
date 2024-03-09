@@ -268,7 +268,7 @@ facebook_insights_headers = [
 	# 'page_fan_adds_unique'
 ]
 
-facebook_insights_posts_headers = {
+facebook_insights_posts_headers = [
 	"page_total_actions",
 	"page_get_directions_clicks_logged_in_unique",
 	"post_engaged_users",
@@ -277,7 +277,7 @@ facebook_insights_posts_headers = {
 	"post_negative_feedback_by_type.report spam clicks",
 	"post_negative_feedback_by_type.unlike page clicks",
 	"post_clicks",
-}
+]
 
 facebook_insights_pages = {
 	"page_impressions_by_city_unique",
