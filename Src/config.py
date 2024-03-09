@@ -250,15 +250,6 @@ facebook_insights_headers = [
 	"page_impressions_by_age_gender_unique",
 	"page_fans_city",
 
-	# "page_total_actions", # empty
-	# "page_get_directions_clicks_logged_in_unique", #empty
-	# "post_engaged_users", # empty
-	# "post_negative_feedback_by_type.hide clicks", # empty
-	# "post_negative_feedback_by_type.hide all clicks", # empty
-	# "post_negative_feedback_by_type.report spam clicks", # empty
-	# "post_negative_feedback_by_type.unlike page clicks",  # empty
-	# "post_clicks", #empty
-
 	# page_video_views
 	# page_video_views_paid
 	# page_video_views_organic
@@ -276,6 +267,17 @@ facebook_insights_headers = [
 	# 'page_views_total',
 	# 'page_fan_adds_unique'
 ]
+
+facebook_insights_posts_headers = {
+	"page_total_actions",
+	"page_get_directions_clicks_logged_in_unique",
+	"post_engaged_users",
+	"post_negative_feedback_by_type.hide clicks",
+	"post_negative_feedback_by_type.hide all clicks",
+	"post_negative_feedback_by_type.report spam clicks",
+	"post_negative_feedback_by_type.unlike page clicks",
+	"post_clicks",
+}
 
 facebook_insights_pages = {
 	"page_impressions_by_city_unique",

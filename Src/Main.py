@@ -89,7 +89,6 @@ def get_and_build_google():
 	google_dfs = clean_google_dfs(google_dfs)
 	save_df_to_excel(google_dfs, path_gen('google'))
 
-#todo facebook cant get more than 2 weeks of data
 def get_and_build_facebook():
 	print("Getting Facebook")
 	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  facebook_insights_headers, since, until)
@@ -97,6 +96,22 @@ def get_and_build_facebook():
 	clean_facebook_df = clean_df(facebook_df, ["end_time"]+facebook_insights_headers)
 	split_facebook_df = split_insights_to_sheets(clean_facebook_df, facebook_insights_pages)
 	save_df_to_excel(split_facebook_df, path_gen('facebook'))
+
+def get_and_build_facebook_posts():
+	print("Getting Facebook")
+	facebook_df = get_posts_and_insights(meta_access_token(),  meta_facebook_id(),  since, until)
+	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
+	#clean_facebook_df = clean_df(facebook_df, ["end_time"]+facebook_insights_headers)
+	# split_facebook_df = split_insights_to_sheets(clean_facebook_df, facebook_insights_pages)
+	#save_df_to_csv(clean_facebook_df, path_gen('facebook_posts', 'data', 'csv'))
+
+def get_and_build_instagram_posts():
+	print("Getting Facebook")
+	facebook_df = get_posts_and_insights(meta_access_token(),  meta_insta_id(),  since, until)
+	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
+	clean_facebook_df = clean_df(facebook_df, ["end_time"]+facebook_insights_headers)
+	split_facebook_df = split_insights_to_sheets(clean_facebook_df, facebook_insights_pages)
+	save_df_to_excel(split_facebook_df, path_gen('facebook_posts'))
 
 def get_and_build_instagram():
 	print("Getting Instagram")
@@ -131,10 +146,13 @@ def main():
 	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7()
 	# get_and_build_instagram()
+
 	#
 	# excel_update()
 	#
-	get_and_build_facebook()
+	# get_and_build_instagram_posts()
+	get_and_build_facebook_posts()
+
 	# get_and_build_google()
 
 	# update_files(os.path.join(access.FOLDER_PATH, 'output'), os.path.join(access.FOLDER_PATH, 'custom'))

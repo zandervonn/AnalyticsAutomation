@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 import requests
 import pandas as pd
 
-# todo test pagination
-# todo get posts and get stats for the post
+from Src.config import facebook_insights_posts_headers
+
 def get_meta_insights(meta_token, id_number, metrics, since, until):
 	page_limit = 250
 	base_url = f'https://graph.facebook.com/v19.0/{id_number}/insights'
@@ -62,6 +62,54 @@ def get_meta_insights(meta_token, id_number, metrics, since, until):
 	# Pivot the DataFrame
 	df_pivot = df.pivot(index='end_time', columns='metric', values='value').reset_index()
 	return df_pivot
+
+def get_posts_and_insights(meta_token, page_id, since, until):
+	base_url = f'https://graph.facebook.com/v19.0/{page_id}/posts'
+	params = {
+		'access_token': meta_token,
+		'since': since,
+		'until': until,
+		'fields': 'id,message,created_time'
+	}
+
+	response = requests.get(base_url, params=params)
+	posts_data = response.json()
+
+	print("Posts:")
+	for post in posts_data['data']:
+		print(f"ID: {post['id']}, Message: {post.get('message', '')}, Created Time: {post['created_time']}")
+
+	post_insights = []
+	base_metrics = {metric.split('.')[0] for metric in facebook_insights_posts_headers}
+	metrics = ','.join(base_metrics)
+
+	for post in posts_data['data']:
+		post_id = post['id']
+		insights_url = f'https://graph.facebook.com/v19.0/{post_id}/insights'
+		insights_params = {
+			'access_token': meta_token,
+			'metric': metrics
+		}
+		insights_response = requests.get(insights_url, params=insights_params)
+		print(insights_response.request.url)
+		insights_data = insights_response.json()
+
+		# Check if 'data' key exists in the insights_data
+		if 'data' in insights_data:
+			insights_dict = {insight['name']: insight['values'][0]['value'] if insight['values'] else None for insight in insights_data['data']}
+			post_insights.append({
+				'post_id': post_id,
+				'message': post.get('message', ''),
+				'created_time': post['created_time'],
+				**insights_dict
+			})
+		else:
+			print(f"No insights data available for post ID: {post_id}")
+
+	# Convert the list of dictionaries to a DataFrame
+	df = pd.DataFrame(post_insights)
+
+	return df
 
 def split_insights_to_sheets(df, insights_pages):
 	# Dictionary to store the DataFrames
