@@ -119,12 +119,14 @@ def reorder_columns(df, defined_headers):
 	return df[[header for header in defined_headers if header in df.columns]]
 
 def sort_by_date_column(df, date_column, date_format='%Y-%m-%dT%H:%M:%S%z'):
-	# Find the first date column in the DataFrame
-	if date_column:
-		# Convert the date column to datetime for sorting
-		df[date_column] = pd.to_datetime(df[date_column], format=date_format, errors='coerce')
-		# Sort by the date column from highest to lowest
-		df = df.sort_values(by=date_column, ascending=False)
+	# Check if date_column is a list and extract the first element if it is
+	if isinstance(date_column, list):
+		date_column = date_column[0]
+
+	# Convert the date column to datetime for sorting
+	df[date_column] = pd.to_datetime(df[date_column], format=date_format, errors='coerce')
+	# Sort by the date column from highest to lowest
+	df = df.sort_values(by=date_column, ascending=False)
 	return df
 
 def sort_by_value_column(df, column_name, ascending=False):

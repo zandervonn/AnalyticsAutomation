@@ -37,7 +37,11 @@ def analyze_repurchase_trends(csv_file_path):
 		plt.show()
 
 def shopify_orders_clean_df(df):
-	df[['channel', 'campaign']] = df['landing_site'].apply(lambda x: extract_channel_and_campaign(x) if pd.notna(x) else ('other', None)).apply(pd.Series)
+	if 'landing_site' in df.columns:
+		df[['channel', 'campaign']] = df['landing_site'].apply(lambda x: extract_channel_and_campaign(x) if pd.notna(x) else ('other', None)).apply(pd.Series)
+	else:
+		df['channel'] = 'other'
+		df['campaign'] = None
 
 	return df
 

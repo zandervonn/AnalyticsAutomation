@@ -12,19 +12,18 @@ from gitignore.access import *
 
 since, until = get_dates("today", "weeks", 1)
 
-def main_get_and_build_all_shopify_order_report():
+def main_get_and_build_all_shopify_order_report(lim = -1):
 	print("Getting Shopify orders")
-	new_orders_json = get_shopify_orders(shopify_api_key(), shopify_password(), shopify_url())
+	new_orders_json = get_shopify_orders(shopify_api_key(), shopify_password(), shopify_url(), lim)
 	new_orders_json = clean_json(new_orders_json, get_header_list('shopify_orders'))
 	orders_df = pd.json_normalize(new_orders_json)
 	cleaned_orders_df = shopify_orders_clean_df(orders_df)
 	cleaned_orders_df = clean_df(cleaned_orders_df, get_header_list('shopify_orders'))
 	save_df_to_csv(cleaned_orders_df, path_gen('shopify', 'orders', 'csv'))
 
-def main_get_and_build_all_shopify_customer_report():
-	#todo get just the number of current users
+def main_get_and_build_all_shopify_customer_report(lim = -1):
 	print("Getting Shopify customers")
-	new_customers_json = get_shopify_customers(shopify_api_key(), shopify_password(), shopify_url())
+	new_customers_json = get_shopify_customers(shopify_api_key(), shopify_password(), shopify_url(), lim)
 	customers_cleaned_json = clean_json(new_customers_json, get_header_list('shopify_customers'))
 	orders_df = pd.json_normalize(customers_cleaned_json)
 	cleaned_customers_df = clean_df(orders_df, get_header_list('shopify_customers'))
@@ -136,6 +135,8 @@ def excel_update():
 def main():
 	# main_update_shopify_customer_report()
 	# main_update_shopify_order_report()
+	main_get_and_build_all_shopify_order_report()
+	main_get_and_build_all_shopify_customer_report()
 	#
 	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7()
@@ -147,7 +148,7 @@ def main():
 	# get_and_build_google()
 	# get_and_build_facebook()
 
-	update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
+	# update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
 
 	# set_last_run_timestamp()
 
