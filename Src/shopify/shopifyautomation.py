@@ -1,6 +1,5 @@
 import time
 
-import pandas as pd
 import requests
 from gitignore import access
 from datetime import datetime

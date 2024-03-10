@@ -1,5 +1,5 @@
 import os
-
+import openpyxl
 from Src.helpers.fileHelpers import find_path_upwards
 from Src.helpers.jsonHelpers import *
 
@@ -123,21 +123,14 @@ def update_columns(df, raw_data):
 			parts = col.split('.', 2)
 			file, sheet, name = parts if period_count == 2 else parts[:2] + ['.'.join(parts[2:])]
 			file += '.xlsx'  # Add the .xlsx extension to the file name
-			print(f"Checking column: {col}")
 			if file in raw_data:
-				print(f"Found file '{file}' in raw data.")
 				if sheet in raw_data[file]:
-					print(f"Found sheet '{sheet}' in file '{file}'.")
 					if name in raw_data[file][sheet].columns:
 						print(f"Found column '{name}' in sheet '{sheet}' of file '{file}'. Updating...")
 						df[col] = raw_data[file][sheet][name]
-					else:
-						print(f"Column '{name}' not found in sheet '{sheet}' of file '{file}'.")
-				else:
-					print(f"Sheet '{sheet}' not found in file '{file}'.")
-			else:
-				print(f"File '{file}' not found in raw data.")
 	return df
+
+
 
 def update_files(raw_folder, update_folder):
 	print("Updating files...")
@@ -151,17 +144,28 @@ def update_files(raw_folder, update_folder):
 	raw_data = load_excel_files_into_dict(raw_files)
 
 	for update_file in update_files:
-		with pd.ExcelWriter(update_file, engine='openpyxl', mode='a', if_sheet_exists='replace') as writer:
-			book = writer.book
-			for sheet_name in book.sheetnames:
-				df = pd.read_excel(update_file, sheet_name=sheet_name)
-				updated_df = update_columns(df, raw_data)
-				updated_df.to_excel(writer, sheet_name=sheet_name, index=False)
+		# Load the workbook and iterate through each sheet
+		wb = openpyxl.load_workbook(update_file, data_only=False)
+		for sheet_name in wb.sheetnames:
+			sheet = wb[sheet_name]
+			df = pd.read_excel(update_file, sheet_name=sheet_name)
+			updated_df = update_columns(df, raw_data)
 
-	print("Files updated successfully.")
+			# Update the cells with values from the updated DataFrame
+			for row in range(len(updated_df)):
+				for col, value in enumerate(updated_df.iloc[row]):
+					cell = sheet.cell(row=row + 2, column=col + 1)  # Adjust indexes for Excel (1-based indexing)
+					# Only update the cell if it does not contain a formula
+					if cell.value is None or not isinstance(cell.value, str) or not cell.value.startswith('='):
+						cell.value = value
+
+		# Save the workbook
+		wb.save(update_file)
+
+	print("Files updated successfully")
 
 def get_header_list(list_name):
-	csv_file_path = find_path_upwards(r'config.txt\headers.csv')
+	csv_file_path = find_path_upwards(r'config\headers.csv')
 	with open(csv_file_path, mode='r') as file:
 		csv_reader = csv.reader(file)
 		for row in csv_reader:

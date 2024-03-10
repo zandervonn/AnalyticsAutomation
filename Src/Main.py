@@ -144,11 +144,10 @@ def main():
 	#
 	# excel_update()
 	#
-
 	# get_and_build_google()
-	get_and_build_facebook()
+	# get_and_build_facebook()
 
-	# update_files(os.path.join(access.FOLDER_PATH, 'output'), os.path.join(access.FOLDER_PATH, 'custom'))
+	update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
 
 	# set_last_run_timestamp()
 
