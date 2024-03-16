@@ -37,7 +37,7 @@ def path_gen(*args):
 		file_name = f"{platform}_output.xlsx"
 
 	else:
-		raise ValueError("Invalid number of arguments. Expected 1 or 4.")
+		raise ValueError("Invalid number of arguments. Expected 1 or 3.")
 
 	# Ensure the subfolder exists
 	os.makedirs(subfolder_path, exist_ok=True)

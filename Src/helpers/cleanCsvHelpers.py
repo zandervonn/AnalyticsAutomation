@@ -35,7 +35,8 @@ def make_lists_normal(text):
 	return text
 
 def clear_empty_columns(df):
-	df = df.map(lambda x: np.nan if x == '' else x)
+	# df = df.map(lambda x: np.nan if x == '' else x)
+	df = df.applymap(lambda x: np.nan if x == '' else x)
 	df = df.dropna(axis=1, how='all')
 	return df
 

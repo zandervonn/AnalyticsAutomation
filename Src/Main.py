@@ -17,6 +17,7 @@ def main_get_and_build_all_shopify_order_report(lim = -1):
 	new_orders_json = get_shopify_orders(shopify_api_key(), shopify_password(), shopify_url(), lim)
 	new_orders_json = clean_json(new_orders_json, get_header_list('shopify_orders'))
 	orders_df = pd.json_normalize(new_orders_json)
+	save_df_to_csv(orders_df, path_gen('shopify', 'data', 'csv'))
 	cleaned_orders_df = shopify_orders_clean_df(orders_df)
 	cleaned_orders_df = clean_df(cleaned_orders_df, get_header_list('shopify_orders'))
 	save_df_to_csv(cleaned_orders_df, path_gen('shopify', 'orders', 'csv'))
@@ -95,7 +96,7 @@ def get_and_build_facebook():
 def get_and_build_facebook_posts():
 	print("Getting Facebook")
 	facebook_df = get_posts_and_insights(meta_access_token(),  meta_facebook_id(), get_header_list('facebook_posts'), since, until)
-	facebook_df = clean_df(facebook_df, ["created_time", "message"]+get_header_list('facebook_posts'))
+	facebook_df = clean_df(facebook_df, get_header_list('facebook_posts'))
 	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
 
 #todo complete
@@ -135,16 +136,16 @@ def excel_update():
 def main():
 	# main_update_shopify_customer_report()
 	# main_update_shopify_order_report()
-	main_get_and_build_all_shopify_order_report()
-	main_get_and_build_all_shopify_customer_report()
+	# main_get_and_build_all_shopify_order_report(3)
+	# main_get_and_build_all_shopify_customer_report(3)
 	#
 	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7()
 	# get_and_build_instagram()
-	# get_and_build_facebook_posts()
-	#
+	get_and_build_facebook_posts()
+
 	# excel_update()
-	#
+
 	# get_and_build_google()
 	# get_and_build_facebook()
 
