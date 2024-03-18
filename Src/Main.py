@@ -85,13 +85,13 @@ def get_and_build_google():
 	google_dfs = clean_google_dfs(google_dfs)
 	save_df_to_excel(google_dfs, path_gen('google'))
 
+#todo it seems like for other pages its only getting one day of results even in the raw data
 def get_and_build_facebook():
 	print("Getting Facebook")
 	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  get_header_list('facebook'), since, until)
-	save_df_to_csv(facebook_df, path_gen('facebook', 'data', 'csv'))
 	clean_facebook_df = clean_df(facebook_df, ["end_time"]+get_header_list('facebook'))
 	split_facebook_df = split_insights_to_sheets(clean_facebook_df, get_header_list('facebook_pages'))
-	save_df_to_excel(split_facebook_df, path_gen('facebook'))
+	save_df_to_excel(split_facebook_df, path_gen('facebook', 'data', 'xlsx'))
 
 def get_and_build_facebook_posts():
 	print("Getting Facebook posts")
@@ -122,14 +122,19 @@ def get_and_build_cin7():
 def excel_update():
 	csv_files = [
 		path_gen('shopify', 'orders', 'csv'),
-		path_gen('shopify', 'customers', 'csv'),
+		# path_gen('shopify', 'customers', 'csv'), #not useful in bulk format
 		path_gen('cin7', 'data', 'csv'),
 		path_gen('starshipit', 'orders', 'csv'),
-		path_gen('instagram', 'data', 'csv'),
-		path_gen('facebook_posts', 'data', 'csv'),
-		path_gen('instagram_posts', 'data', 'csv'),
 	]
 	csv_sheets_to_excel(csv_files, path_gen('compiled'))
+
+	meta_files = [
+		path_gen('facebook', 'data', 'xlsx'),
+		path_gen('facebook_posts', 'data', 'csv'),
+		path_gen('instagram', 'data', 'csv'),
+		path_gen('instagram_posts', 'data', 'csv'),
+	]
+	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
 	# main_update_shopify_customer_report()
@@ -139,15 +144,14 @@ def main():
 	#
 	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7()
-	get_and_build_instagram()
-	get_and_build_instagram_posts()
-	get_and_build_facebook_posts()
+	# get_and_build_instagram()
+	# get_and_build_instagram_posts()
+	# get_and_build_facebook_posts()
+	get_and_build_facebook()
+	# get_and_build_google()
+
 
 	excel_update()
-
-	# get_and_build_google()
-	# get_and_build_facebook()
-
 	# update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
 
 	# set_last_run_timestamp()

@@ -1,6 +1,7 @@
 import os
 
 import openpyxl
+import pandas as pd
 
 from gitignore import access
 
@@ -87,3 +88,29 @@ def get_header_list(list_name):
 		if row[0].value == list_name:
 			return [cell.value for cell in row[1:] if cell.value and not cell.fill.start_color.index == ignore_format.start_color.rgb]
 	return []
+
+def files_to_excel(file_paths, output_excel_path):
+	with pd.ExcelWriter(output_excel_path, engine='openpyxl') as writer:
+		for file_path in file_paths:
+			file_extension = os.path.splitext(file_path)[1].lower()
+			if file_extension == '.csv':
+				try:
+					df = pd.read_csv(file_path)
+					sheet_name = os.path.basename(file_path).split('.')[0]
+					sheet_name = sheet_name[:31]  # Excel sheet name limit
+					df.to_excel(writer, sheet_name=sheet_name, index=False)
+				except pd.errors.EmptyDataError:
+					print(f"Warning: {file_path} is empty and was skipped.")
+			elif file_extension in ['.xls', '.xlsx']:
+				try:
+					xls = pd.ExcelFile(file_path)
+					for sheet_name in xls.sheet_names:
+						df = pd.read_excel(file_path, sheet_name=sheet_name)
+						sheet_name = sheet_name[:31]  # Excel sheet name limit
+						df.to_excel(writer, sheet_name=sheet_name, index=False)
+				except Exception as e:
+					print(f"Error reading {file_path}: {e}")
+			else:
+				print(f"Unsupported file type: {file_path}")
+
+	print(f"Files saved to {output_excel_path}")
