@@ -7,7 +7,7 @@ from gitignore import access
 
 def path_gen(*args):
 	# Define allowed options for each parameter
-	allowed_platforms = {'shopify', 'cin7', 'starshipit', 'google', 'facebook', 'facebook_posts', 'instagram', 'instagram_posts', 'compiled'}
+	allowed_platforms = {'shopify', 'cin7', 'starshipit', 'google', 'facebook', 'facebook_posts', 'facebook_videos', 'instagram', 'instagram_posts', 'compiled'}
 	allowed_data_types = {'orders', 'customers', 'conversions', 'sessions', 'data'}
 	allowed_file_formats = {'json', 'csv', 'xlsx'}
 

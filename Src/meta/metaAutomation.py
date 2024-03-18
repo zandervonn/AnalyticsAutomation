@@ -70,6 +70,18 @@ def get_posts(meta_token, page_id, since, until):
 	posts_data = response.json()
 	return posts_data['data']
 
+def get_videos(meta_token, page_id, since, until):
+	base_url = f'https://graph.facebook.com/v19.0/{page_id}/videos'
+	params = {
+		'access_token': meta_token,
+		'since': since,
+		'until': until,
+		'fields': 'id,description,created_time'
+	}
+	response = requests.get(base_url, params=params)
+	posts_data = response.json()
+	return posts_data['data']
+
 def get_media(meta_token, page_id, since, until):
 	base_url = f'https://graph.facebook.com/v19.0/{page_id}/media'
 	params = {
@@ -92,6 +104,36 @@ def get_insights(meta_token, post_id, metrics):
 	insights_data = response.json()
 	if 'data' in insights_data:
 		return {insight['name']: insight['values'][0]['value'] if insight['values'] else None for insight in insights_data['data']}
+	else:
+		print(f"No insights data available for post ID: {post_id}")
+		return {}
+
+def get_video_insights(meta_token, post_id):
+	insights_url = f'https://graph.facebook.com/v19.0/{post_id}/video_insights'
+	params = {
+		'access_token': meta_token,
+	}
+	response = requests.get(insights_url, params=params)
+	insights_data = response.json()
+	return parse_insights(insights_data, post_id)
+
+def parse_insights(insights_data, post_id):
+	if 'data' in insights_data:
+		parsed_data = {}
+		for insight in insights_data['data']:
+			# Handle the case where 'values' contains multiple values
+			if insight['values']:
+				value = insight['values'][0]['value']
+				if isinstance(value, dict):
+					# If the value is a dictionary, store each key-value pair separately
+					for key, val in value.items():
+						parsed_data[f"{insight['name']}.{key}"] = val
+				else:
+					# If the value is not a dictionary, store it directly
+					parsed_data[insight['name']] = value
+			else:
+				parsed_data[insight['name']] = None
+		return parsed_data
 	else:
 		print(f"No insights data available for post ID: {post_id}")
 		return {}
@@ -137,9 +179,27 @@ def get_facebook_posts_and_insights(meta_token, page_id, metrics, since, until):
 	df = pd.DataFrame(post_insights)
 	return df
 
+def get_facebook_video_insights(meta_token, page_id, since, until):
+	posts = get_videos(meta_token, page_id, since, until)
+	post_insights = []
+
+	for post in posts:
+		post_id = post['id']
+		post_message = post.get('description', '')
+		post_updated_time = post['created_time']
+		insights = get_video_insights(meta_token, post_id)
+		post_insights.append({
+			'post_id': post_id,
+			'description': post_message,
+			'created_time': post_updated_time,
+			**insights
+		})
+
+	df = pd.DataFrame(post_insights)
+	return df
+
 def get_insta_posts_and_insights(meta_token, page_id, metrics, since, until):
 	posts = get_media(meta_token, page_id, since, until)
-	print(posts)
 	post_insights = []
 
 	for post in posts:

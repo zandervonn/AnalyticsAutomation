@@ -99,6 +99,12 @@ def get_and_build_facebook_posts():
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_posts'))
 	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
 
+def get_and_build_facebook_videos():
+	print("Getting Facebook videos")
+	facebook_df = get_facebook_video_insights(meta_access_token(),  meta_facebook_id(), since, until)
+	facebook_df = clean_df(facebook_df, get_header_list('facebook_videos'))
+	save_df_to_csv(facebook_df, path_gen('facebook_videos', 'data', 'csv'))
+
 def get_and_build_instagram_posts():
 	print("Getting Instagram posts")
 	facebook_df = get_insta_posts_and_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), since, until)
@@ -131,6 +137,7 @@ def excel_update():
 	meta_files = [
 		path_gen('facebook', 'data', 'xlsx'),
 		path_gen('facebook_posts', 'data', 'csv'),
+		path_gen('facebook_videos', 'data', 'csv'),
 		path_gen('instagram', 'data', 'csv'),
 		path_gen('instagram_posts', 'data', 'csv'),
 	]
@@ -146,12 +153,18 @@ def main():
 	# get_and_build_cin7()
 	# get_and_build_instagram()
 	# get_and_build_instagram_posts()
+	get_and_build_facebook_videos()
 	# get_and_build_facebook_posts()
-	get_and_build_facebook()
+
+
+
+	# checking new after page_video_views_paid
+
+	# get_and_build_facebook()
 	# get_and_build_google()
 
 
-	excel_update()
+	# excel_update()
 	# update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
 
 	# set_last_run_timestamp()
