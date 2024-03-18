@@ -163,12 +163,3 @@ def update_files(raw_folder, update_folder):
 		wb.save(update_file)
 
 	print("Files updated successfully")
-
-def get_header_list(list_name):
-	csv_file_path = find_path_upwards(r'config\headers.csv')
-	with open(csv_file_path, mode='r') as file:
-		csv_reader = csv.reader(file)
-		for row in csv_reader:
-			if row[0] == list_name:
-				return [header for header in row[1:] if header and not header.startswith('!')]
-	return []

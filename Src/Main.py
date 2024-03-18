@@ -99,7 +99,6 @@ def get_and_build_facebook_posts():
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_posts'))
 	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
 
-#todo complete
 def get_and_build_instagram_posts():
 	print("Getting Instagram posts")
 	facebook_df = get_insta_posts_and_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), since, until)

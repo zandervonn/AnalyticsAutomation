@@ -1,4 +1,7 @@
 import os
+
+import openpyxl
+
 from gitignore import access
 
 def path_gen(*args):
@@ -68,3 +71,19 @@ def find_path_upwards(target_relative_path, start_path=None):
 		current_path = os.path.dirname(current_path)
 
 	return None
+
+def get_header_list(list_name):
+	excel_file_path = find_path_upwards(r'config\headers.xlsx')
+	wb = openpyxl.load_workbook(excel_file_path)
+
+	# Get the formatting sheet and the ignore format
+	formatting_sheet = wb['formatting']
+	ignore_format = formatting_sheet['A1'].fill
+
+	# Get the headers sheet
+	headers_sheet = wb['headers']
+
+	for row in headers_sheet.iter_rows():
+		if row[0].value == list_name:
+			return [cell.value for cell in row[1:] if cell.value and not cell.fill.start_color.index == ignore_format.start_color.rgb]
+	return []
