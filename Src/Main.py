@@ -94,19 +94,17 @@ def get_and_build_facebook():
 	save_df_to_excel(split_facebook_df, path_gen('facebook'))
 
 def get_and_build_facebook_posts():
-	print("Getting Facebook")
-	facebook_df = get_posts_and_insights(meta_access_token(),  meta_facebook_id(), get_header_list('facebook_posts'), since, until)
+	print("Getting Facebook posts")
+	facebook_df = get_facebook_posts_and_insights(meta_access_token(),  meta_facebook_id(), get_header_list('facebook_posts'), since, until)
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_posts'))
 	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
 
 #todo complete
 def get_and_build_instagram_posts():
-	print("Getting Facebook")
-	facebook_df = get_posts_and_insights(meta_access_token(),  meta_insta_id(), since, until)
-	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
-	clean_facebook_df = clean_df(facebook_df, ["end_time"]+get_header_list('facebook'))
-	split_facebook_df = split_insights_to_sheets(clean_facebook_df, get_header_list('facebook_pages'))
-	save_df_to_excel(split_facebook_df, path_gen('facebook_posts'))
+	print("Getting Instagram posts")
+	facebook_df = get_insta_posts_and_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), since, until)
+	facebook_df = clean_df(facebook_df, get_header_list('instagram_posts'))
+	save_df_to_csv(facebook_df, path_gen('instagram_posts', 'data', 'csv'))
 
 def get_and_build_instagram():
 	print("Getting Instagram")
@@ -130,6 +128,7 @@ def excel_update():
 		path_gen('starshipit', 'orders', 'csv'),
 		path_gen('instagram', 'data', 'csv'),
 		path_gen('facebook_posts', 'data', 'csv'),
+		path_gen('instagram_posts', 'data', 'csv'),
 	]
 	csv_sheets_to_excel(csv_files, path_gen('compiled'))
 
@@ -141,10 +140,11 @@ def main():
 	#
 	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7()
-	# get_and_build_instagram()
+	get_and_build_instagram()
+	get_and_build_instagram_posts()
 	get_and_build_facebook_posts()
 
-	# excel_update()
+	excel_update()
 
 	# get_and_build_google()
 	# get_and_build_facebook()

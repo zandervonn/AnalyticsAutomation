@@ -70,6 +70,18 @@ def get_posts(meta_token, page_id, since, until):
 	posts_data = response.json()
 	return posts_data['data']
 
+def get_media(meta_token, page_id, since, until):
+	base_url = f'https://graph.facebook.com/v19.0/{page_id}/media'
+	params = {
+		'access_token': meta_token,
+		'since': since,
+		'until': until,
+		'fields': 'id,message,created_time'
+	}
+	response = requests.get(base_url, params=params)
+	posts_data = response.json()
+	return posts_data['data']
+
 def get_insights(meta_token, post_id, metrics):
 	insights_url = f'https://graph.facebook.com/v19.0/{post_id}/insights'
 	params = {
@@ -84,7 +96,7 @@ def get_insights(meta_token, post_id, metrics):
 		print(f"No insights data available for post ID: {post_id}")
 		return {}
 
-def get_metric_count(meta_token, post_id, metric):
+def get_facebook_metric_count(meta_token, post_id, metric):
 	url = f'https://graph.facebook.com/v19.0/{post_id}/{metric}'
 	params = {
 		'access_token': meta_token,
@@ -94,15 +106,25 @@ def get_metric_count(meta_token, post_id, metric):
 	data = response.json()
 	return data['summary']['total_count']
 
-def get_posts_and_insights(meta_token, page_id, metrics, since, until):
+def get_instagram_post_metrics(meta_token, post_id, metrics):
+	url = f'https://graph.facebook.com/v19.0/{post_id}'
+	params = {
+		'access_token': meta_token,
+		'fields': ','.join(metrics)
+	}
+	response = requests.get(url, params=params)
+	data = response.json()
+	return data
+
+def get_facebook_posts_and_insights(meta_token, page_id, metrics, since, until):
 	posts = get_posts(meta_token, page_id, since, until)
 	post_insights = []
 
 	for post in posts:
 		post_id = post['id']
 		insights = get_insights(meta_token, post_id, metrics)
-		comments_count = get_metric_count(meta_token, post_id, 'comments')
-		likes_count = get_metric_count(meta_token, post_id, 'likes')
+		comments_count = get_facebook_metric_count(meta_token, post_id, 'comments')
+		likes_count = get_facebook_metric_count(meta_token, post_id, 'likes')
 		insights['comments_count'] = comments_count
 		insights['likes_count'] = likes_count
 		post_insights.append({
@@ -111,6 +133,19 @@ def get_posts_and_insights(meta_token, page_id, metrics, since, until):
 			'created_time': post['created_time'],
 			**insights
 		})
+
+	df = pd.DataFrame(post_insights)
+	return df
+
+def get_insta_posts_and_insights(meta_token, page_id, metrics, since, until):
+	posts = get_media(meta_token, page_id, since, until)
+	print(posts)
+	post_insights = []
+
+	for post in posts:
+		post_id = post['id']
+		insta_metrics = get_instagram_post_metrics(meta_token, post_id, metrics)
+		post_insights.append(insta_metrics)
 
 	df = pd.DataFrame(post_insights)
 	return df

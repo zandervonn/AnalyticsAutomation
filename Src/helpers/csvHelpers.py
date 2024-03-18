@@ -48,11 +48,11 @@ def csv_sheets_to_excel(csv_files, excel_file):
 
 def save_to_csv(data, file_name):
 	df = pd.DataFrame(data[1:], columns=data[0])
-	df.to_csv(file_name, index=False)
+	df.to_csv(file_name, encoding='utf-8-sig', index=False)
 	print(f"CSV saved to {file_name}")
 
 def save_df_to_csv(df, file_path):
-	df.to_csv(file_path, index=False)
+	df.to_csv(file_path, encoding='utf-8-sig', index=False)
 	print(f"CSV saved to {file_path}")
 
 def save_df_to_excel(df_or_dict, filename):
