@@ -20,6 +20,7 @@ def get_starshipit_orders(url, api_key, subscription_key, status='', date_param_
 	total_pages = 1  # Initialize total_pages to enter the loop
 
 	while params['page'] <= total_pages:
+		print("Page: ", params['page'])
 		time.sleep(1)  # Respect API rate limit between calls
 		response = requests.get(url, headers=headers, params=params)
 		if response.status_code == 200:

@@ -77,6 +77,7 @@ def main_get_and_build_starshipit_report():
 	cleaned_df = clean_df(df, get_header_list('starshipit'))
 	save_df_to_csv(cleaned_df, path_gen('starshipit', 'orders', 'csv'))
 
+#todo google token still times out
 def get_and_build_google():
 	print("Getting Google")
 	credentials = get_credentials(google_credentials_path(), google_token_path())
@@ -153,18 +154,13 @@ def main():
 	# get_and_build_cin7()
 	# get_and_build_instagram()
 	# get_and_build_instagram_posts()
-	get_and_build_facebook_videos()
+	# get_and_build_facebook_videos()
 	# get_and_build_facebook_posts()
-
-
-
-	# checking new after page_video_views_paid
-
+	#
 	# get_and_build_facebook()
-	# get_and_build_google()
+	get_and_build_google()
 
-
-	# excel_update()
+	excel_update()
 	# update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
 
 	# set_last_run_timestamp()
