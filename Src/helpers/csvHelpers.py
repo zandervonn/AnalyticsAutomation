@@ -46,14 +46,12 @@ def csv_sheets_to_excel(csv_files, excel_file):
 			df.to_excel(writer, sheet_name=sheet_name, index=False)
 	print(f"CSV saved to {excel_file}")
 
-def save_to_csv(data, file_name):
-	df = pd.DataFrame(data[1:], columns=data[0])
-	df.to_csv(file_name, encoding='utf-8-sig', index=False)
+def save_df_to_csv(df, file_name):
+	if os.path.exists(file_name):
+		df.to_csv(file_name, encoding='utf-8-sig', index=False)
+	else:
+		df.to_csv(file_name, encoding='utf-8-sig', index=False)
 	print(f"CSV saved to {file_name}")
-
-def save_df_to_csv(df, file_path):
-	df.to_csv(file_path, encoding='utf-8-sig', index=False)
-	print(f"CSV saved to {file_path}")
 
 def save_df_to_excel(df_or_dict, filename):
 	with pd.ExcelWriter(filename, engine='openpyxl') as writer:

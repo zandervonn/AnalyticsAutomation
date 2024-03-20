@@ -29,6 +29,10 @@ def clean_string_list_column(df, column_name):
 			lambda x: ', '.join(str(item) for item in x) if isinstance(x, list) else x)
 	return df
 
+def clean_keep_first_row(df):
+	cleaned_df = df.applymap(lambda x: x.split('\n')[0] if isinstance(x, str) else x)
+	return cleaned_df
+
 def make_lists_normal(text):
 	if isinstance(text, str):
 		return text.replace("[", "").replace("]", "").replace("'", "")

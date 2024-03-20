@@ -7,7 +7,7 @@ from Src.helpers.timeHelpers import *
 from Src.meta.metaAutomation import *
 from Src.shopify.shopifyautomation import *
 from Src.shopify.shopify_csv_handeling import *
-from Src.shopify.shopifyUiAutomation import *
+from Src.shopify.UI.shopifyUiAutomation import *
 from gitignore.access import *
 
 since, until = get_dates("today", "weeks", 1)
@@ -70,6 +70,11 @@ def main_update_shopify_order_report():
 	# Save the updated report
 	save_df_to_csv(updated_orders_df, shopify_order_path)
 
+def main_build_shopify_ui_reports():
+	_since, _until = convert_dates_to_offsets(since, until)
+	shopify_ui_dfs = get_ui_analytics(get_header_list('shopify_ui'), _since, _until)
+	save_df_to_excel(shopify_ui_dfs, path_gen('shopify', 'data', 'xlsx'))
+
 def main_get_and_build_starshipit_report():
 	print("Getting Starshipit")
 	df = get_all_starshipit_data(starshipit_api_key(), starshipit_subscription_key(), -1, since)
@@ -129,11 +134,12 @@ def get_and_build_cin7():
 def excel_update():
 	csv_files = [
 		path_gen('shopify', 'orders', 'csv'),
+		path_gen('shopify', 'data', 'xlsx'),
 		# path_gen('shopify', 'customers', 'csv'), #not useful in bulk format
 		path_gen('cin7', 'data', 'csv'),
 		path_gen('starshipit', 'orders', 'csv'),
 	]
-	csv_sheets_to_excel(csv_files, path_gen('compiled'))
+	files_to_excel(csv_files, path_gen('compiled'))
 
 	meta_files = [
 		path_gen('facebook', 'data', 'xlsx'),
@@ -149,6 +155,7 @@ def main():
 	# main_update_shopify_order_report()
 	# main_get_and_build_all_shopify_order_report(3)
 	# main_get_and_build_all_shopify_customer_report(3)
+	# main_build_shopify_ui_reports()
 	#
 	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7()
@@ -158,7 +165,7 @@ def main():
 	# get_and_build_facebook_posts()
 	#
 	# get_and_build_facebook()
-	get_and_build_google()
+	# get_and_build_google()
 
 	excel_update()
 	# update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))

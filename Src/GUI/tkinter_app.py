@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog, ttk, font
+from tkinter import filedialog, ttk, font, simpledialog
 import os
 import Src.Main
 import sys
@@ -107,6 +107,17 @@ class MyApp:
 		output_folder = r'C:\Users\Zander\IdeaProjects\Automation-Gel\gitignore\output'
 		self.list_files(input_folder, self.input_files_listbox)
 		self.list_files(output_folder, self.output_files_listbox)
+
+class CustomDialog(simpledialog.Dialog):
+	def body(self, master):
+		self.label = tk.Label(master, text="Waiting for input:")
+		self.label.pack()
+		self.entry = tk.Entry(master)
+		self.entry.pack()
+		return self.entry
+
+	def apply(self):
+		self.result = self.entry.get()
 
 if __name__ == '__main__':
 	root = tk.Tk()
