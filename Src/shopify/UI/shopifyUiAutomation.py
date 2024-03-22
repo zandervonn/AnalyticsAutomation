@@ -26,6 +26,16 @@ def get_report(driver, report_name, since, until):
 
 	return output_file, data
 
+def get_customers(driver):
+	url = f_string(SHOPIFY_CUSTOMERS_URL_TEMPLATE, "-12m")
+	print(url)
+	open_page(driver, url)
+	wait_for_element(driver, CUSTOMER_COUNT_NUM)
+	num_count = get_element_text(driver, CUSTOMER_COUNT_NUM)
+	percent_count = get_element_text(driver, CUSTOMER_COUNT_PERCENT)
+	data = pd.DataFrame({'Active Customer Count': [num_count], 'Perentage of all Customers': [percent_count]})
+	return "Active Customer Count", data
+
 def set_report_and_timeframe(driver, date_range):
 	wait_for_table_data(driver, TABLE_CELL)
 	click_and_wait(driver, REPORT_TIME_CONTOLLER_BUTTON)
@@ -39,8 +49,12 @@ def get_ui_analytics(reports, since, until):
 		open_page(driver, SHOPIFY_URL)
 		login(driver, shopify_ui_username(), shopify_ui_password())
 		for report in reports:
-			name, df = get_report(driver, report, since, until)
-			dfs[name] = df  # Add the dataframe to the dictionary with the report name as the key
+			if report == 'customer_count':
+				name, df = get_customers(driver)
+				dfs[name] = df
+			else:
+				name, df = get_report(driver, report, since, until)
+				dfs[name] = df
 	finally:
 		close(driver)
 	# wait_for_user_input() #for testing

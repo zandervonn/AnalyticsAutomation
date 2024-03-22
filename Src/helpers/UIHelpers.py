@@ -64,7 +64,7 @@ def extract_table_data(driver, table_xpath):
 def setup_webdriver():
 	options = Options()
 	options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
-	# options.add_argument('--headless')  # Uncomment if you want to run in headless mode
+	# options.add_argument('--headless')  #todo not working in headless
 	driver = webdriver.Chrome(options=options)
 	return driver
 

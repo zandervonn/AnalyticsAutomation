@@ -155,7 +155,7 @@ def main():
 	# main_update_shopify_order_report()
 	# main_get_and_build_all_shopify_order_report(3)
 	# main_get_and_build_all_shopify_customer_report(3)
-	# main_build_shopify_ui_reports()
+	main_build_shopify_ui_reports()
 	#
 	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7()

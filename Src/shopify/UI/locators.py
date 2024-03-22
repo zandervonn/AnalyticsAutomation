@@ -3,6 +3,7 @@ def f_string(template, *args):
 
 SHOPIFY_URL = 'https://admin.shopify.com/store/gelous/dashboards'
 SHOPIFY_REPORTS_URL_TEMPLATE = 'https://admin.shopify.com/store/gelous/reports/{0}?since={1}&until={2}&over=day'
+SHOPIFY_CUSTOMERS_URL_TEMPLATE = 'https://admin.shopify.com/store/gelous/customers?segment_query=last_order_date%20%3E%3D%20{0}'
 
 LOGIN_USERNAME = "//input[@id='account_email']"
 LOGIN_USERNAME_SUBMIT = "//button[@type='submit']"
@@ -18,3 +19,5 @@ TABLE = "//table[contains(@class, 'Polaris-DataTable__Table')]"
 TABLE_CELL = "(//table[contains(@class, 'Polaris-DataTable__Table')]//tr//th[contains(@class, 'Cell')])[1]"
 SEARCH_BAR = "//*[@role=\"search\"]"
 HEADER_TEXT = "//h1"
+CUSTOMER_COUNT_NUM = "(//span[contains(@class,'CustomerCount')])[1]"
+CUSTOMER_COUNT_PERCENT = "(//span[contains(@class,'CustomerCount')])[2]"
