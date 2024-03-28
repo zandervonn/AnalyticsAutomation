@@ -123,12 +123,23 @@ def get_and_build_instagram():
 	clean_insta_df = clean_df(insta_df,  ["end_time"]+get_header_list('instagram'))
 	save_df_to_csv(clean_insta_df, path_gen('instagram', 'data', 'csv'))
 
-def get_and_build_cin7():
-	print("Getting Cin7")
-	data = get_cin7_data(cin7_api_key())
-	data = pd.json_normalize(data)
+
+
+def get_and_build_cin7_products_and_sales():
+	print("Getting Cin7 Products")
+	products = get_all_products(cin7_api_key())
+	data = pd.json_normalize(products)
 	cleaned_df = clean_df(data, get_header_list('cin7'))
-	save_df_to_csv(cleaned_df, path_gen('cin7', 'data', 'csv'))
+	save_df_to_csv(cleaned_df, path_gen('cin7', 'products', 'csv'))
+
+	print("Getting Cin7 Sales")
+	sales_data = get_cin7_sales_data(cin7_api_key(), since, until)
+	matched_data = match_sales_with_products(sales_data, products)
+	aggregated_data = aggregate_sales_data(matched_data)
+	aggregated_data_df = pd.DataFrame(aggregated_data)
+	clean_cin7_df = clean_df(aggregated_data_df, ['Date'] + get_header_list('cin7_categories'))
+	save_df_to_csv(clean_cin7_df, path_gen('cin7', 'sales', 'csv'))
+
 
 #todo keep a years worth of data
 def excel_update():
@@ -136,7 +147,8 @@ def excel_update():
 		path_gen('shopify', 'orders', 'csv'),
 		path_gen('shopify', 'data', 'xlsx'),
 		# path_gen('shopify', 'customers', 'csv'), #not useful in bulk format
-		path_gen('cin7', 'data', 'csv'),
+		path_gen('cin7', 'products', 'csv'),
+		path_gen('cin7', 'sales', 'csv'),
 		path_gen('starshipit', 'orders', 'csv'),
 	]
 	files_to_excel(csv_files, path_gen('compiled'))
@@ -155,10 +167,10 @@ def main():
 	# main_update_shopify_order_report()
 	# main_get_and_build_all_shopify_order_report(3)
 	# main_get_and_build_all_shopify_customer_report(3)
-	main_build_shopify_ui_reports()
+	# main_build_shopify_ui_reports()
 	#
 	# main_get_and_build_starshipit_report()
-	# get_and_build_cin7()
+	get_and_build_cin7_products_and_sales()
 	# get_and_build_instagram()
 	# get_and_build_instagram_posts()
 	# get_and_build_facebook_videos()
@@ -167,7 +179,7 @@ def main():
 	# get_and_build_facebook()
 	# get_and_build_google()
 
-	excel_update()
+	# excel_update()
 	# update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
 
 	# set_last_run_timestamp()

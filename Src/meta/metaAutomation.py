@@ -14,6 +14,8 @@ def get_meta_insights(meta_token, id_number, metrics, since, until):
 	since_date = datetime.strptime(since, '%Y-%m-%dT%H:%M:%S')
 	until_date = datetime.strptime(until, '%Y-%m-%dT%H:%M:%S')
 
+	print(metrics)
+
 	# Split the time range into one-week intervals
 	while since_date < until_date:
 		week_until_date = min(since_date + timedelta(days=7), until_date)
