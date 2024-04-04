@@ -82,7 +82,7 @@ def match_sales_with_products(sales_data, products):
 			})
 	return matched_data
 
-def aggregate_sales_data(sales_data):
+def aggregate_sales_by_category(sales_data):
 	# Initialize a dictionary to hold the aggregated data
 	aggregated_data = defaultdict(lambda: defaultdict(int))
 
@@ -90,7 +90,7 @@ def aggregate_sales_data(sales_data):
 	for record in sales_data:
 		# print("Current record:", record)  # Debug print
 		date = record['date']
-		category = record.get('category', 'OTHER')  # Use 'Unknown' if 'category' key is missing
+		category = record.get('category', 'OTHER')  # Use 'OTHER' if 'category' key is missing
 		quantity = record['quantity']
 		aggregated_data[date][category] += quantity
 
@@ -102,3 +102,73 @@ def aggregate_sales_data(sales_data):
 		aggregated_list.append(row)
 
 	return aggregated_list
+
+def aggregate_sales_by_product_id(sales_data, products, top_length=10):
+	# Create a dictionary mapping product IDs to their names
+	product_names = {product['id']: product['name'] for product in products}
+
+	# Initialize a dictionary to hold the aggregated data
+	aggregated_data = defaultdict(int)
+
+	# Loop through the sales data and aggregate the quantities by product ID
+	for record in sales_data:
+		product_id = record['product_id']
+		quantity = record['quantity']
+		aggregated_data[product_id] += quantity
+
+	# Convert the aggregated data into a list of dictionaries for easier processing
+	aggregated_list = [{'Product Name': product_names.get(product_id, 'Unknown'), 'Total Sales': total_sales}
+	                   for product_id, total_sales in aggregated_data.items()]
+
+	# Sort the list by total sales in descending order
+	aggregated_list.sort(key=lambda x: x['Total Sales'], reverse=True)
+
+	# Extract the top performers
+	top_performers = aggregated_list[:top_length]  # Top 'top_length' products
+
+	# Find bottom performers (products with 0 sales, marked as 'Public', not 'Discontinued', and not in category 'Packaging')
+	bottom_performers = [{'Product Name': product['name'], 'Total Sales': 0}
+	                     for product in products if product['id'] not in aggregated_data and
+	                     product.get('status', '') == 'Public' and
+	                     product.get('subCategory', '') != 'Discontinued' and
+	                     product.get('category', '') != 'PACKAGING']
+
+	# Create a DataFrame with the top and bottom performers
+	df = pd.DataFrame({
+		'Top Product': [product['Product Name'] for product in top_performers] + [''] * (len(bottom_performers)-len(top_performers)),
+		'Top Product Total': [product['Total Sales'] for product in top_performers] + [''] * (len(bottom_performers)-len(top_performers)),
+		'Bottom Product': [product['Product Name'] for product in bottom_performers],
+		'Bottom Product Total':[product['Total Sales'] for product in bottom_performers]
+	})
+
+	return df
+
+def calculate_inventory_values_df(products):
+	total_retail_value = 0
+	total_cost_value = 0
+	total_unit_count = 0
+
+	for product in products:
+		for option in product.get('productOptions', []):
+			# Extract relevant values from product option
+			stock_on_hand = option.get('stockOnHand', 0) or 0
+			retail_price = option.get('priceColumns', {}).get('retailNZD', 0) or 0
+			cost_price = option.get('priceColumns', {}).get('costNZD', 0) or 0
+
+			# Ignore negative stock on hand
+			if stock_on_hand < 0:
+				stock_on_hand = 0
+
+			# Update totals
+			total_retail_value += stock_on_hand * retail_price
+			total_cost_value += stock_on_hand * cost_price
+			total_unit_count += stock_on_hand
+
+	# Create a DataFrame with the totals
+	df = pd.DataFrame({
+		'SOH Retail Value': [f"${total_retail_value:,.2f}"],
+		'SOH Stock Value': [f"${total_cost_value:,.2f}"],
+		'SOH': [total_unit_count]
+	})
+
+	return df

@@ -1,8 +1,9 @@
 import os
-
 import openpyxl
 import pandas as pd
+import re
 
+from bs4 import BeautifulSoup
 from gitignore import access
 
 def path_gen(*args):
@@ -73,6 +74,15 @@ def get_header_list(list_name):
 			return [cell.value for cell in row[1:] if cell.value and not cell.fill.start_color.index == ignore_format.start_color.rgb]
 	return []
 
+
+
+def remove_html_tags(text):
+	# Remove HTML tags
+	text = BeautifulSoup(text, "html.parser").get_text()
+	# Remove non-printable characters
+	text = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', text)
+	return text
+
 def files_to_excel(file_paths, output_excel_path):
 	with pd.ExcelWriter(output_excel_path, engine='openpyxl') as writer:
 		for file_path in file_paths:
@@ -80,6 +90,9 @@ def files_to_excel(file_paths, output_excel_path):
 			if file_extension == '.csv':
 				try:
 					df = pd.read_csv(file_path)
+					# Remove HTML tags from all string columns
+					for col in df.select_dtypes(include='object').columns:
+						df[col] = df[col].apply(lambda x: remove_html_tags(x) if isinstance(x, str) else x)
 					sheet_name = os.path.basename(file_path).split('.')[0]
 					sheet_name = sheet_name[:31]  # Excel sheet name limit
 					df.to_excel(writer, sheet_name=sheet_name, index=False)
@@ -90,6 +103,9 @@ def files_to_excel(file_paths, output_excel_path):
 					xls = pd.ExcelFile(file_path)
 					for sheet_name in xls.sheet_names:
 						df = pd.read_excel(file_path, sheet_name=sheet_name)
+						# Remove HTML tags from all string columns
+						for col in df.select_dtypes(include='object').columns:
+							df[col] = df[col].apply(lambda x: remove_html_tags(x) if isinstance(x, str) else x)
 						sheet_name = sheet_name[:31]  # Excel sheet name limit
 						df.to_excel(writer, sheet_name=sheet_name, index=False)
 				except Exception as e:

@@ -128,17 +128,25 @@ def get_and_build_instagram():
 def get_and_build_cin7_products_and_sales():
 	print("Getting Cin7 Products")
 	products = get_all_products(cin7_api_key())
-	data = pd.json_normalize(products)
-	cleaned_df = clean_df(data, get_header_list('cin7'))
-	save_df_to_csv(cleaned_df, path_gen('cin7', 'products', 'csv'))
 
 	print("Getting Cin7 Sales")
 	sales_data = get_cin7_sales_data(cin7_api_key(), since, until)
+
+	print("Getting Cin7 Sales by Product Categories")
 	matched_data = match_sales_with_products(sales_data, products)
-	aggregated_data = aggregate_sales_data(matched_data)
-	aggregated_data_df = pd.DataFrame(aggregated_data)
-	clean_cin7_df = clean_df(aggregated_data_df, ['Date'] + get_header_list('cin7_categories'))
-	save_df_to_csv(clean_cin7_df, path_gen('cin7', 'sales', 'csv'))
+	category_data = aggregate_sales_by_category(matched_data)
+	category_data_df = pd.DataFrame(category_data)
+	category_data_df = clean_df(category_data_df, ['Date'] + get_header_list('cin7_categories'))
+	save_df_to_csv(category_data_df, path_gen('cin7', 'Sale_by_Categories', 'csv'))
+
+	print("Getting Cin7 Top Selling Products")
+	top_selling = aggregate_sales_by_product_id(matched_data, products, 50)
+	save_df_to_csv(top_selling, path_gen('cin7', 'Top_Selling', 'csv'))
+
+	print("Getting Cin7 Stock Values")
+	stock_values = calculate_inventory_values_df(products)
+	save_df_to_csv(stock_values, path_gen('cin7', 'stock_values', 'csv'))
+
 
 
 #todo keep a years worth of data
@@ -147,11 +155,17 @@ def excel_update():
 		path_gen('shopify', 'orders', 'csv'),
 		path_gen('shopify', 'data', 'xlsx'),
 		# path_gen('shopify', 'customers', 'csv'), #not useful in bulk format
-		path_gen('cin7', 'products', 'csv'),
-		path_gen('cin7', 'sales', 'csv'),
 		path_gen('starshipit', 'orders', 'csv'),
 	]
 	files_to_excel(csv_files, path_gen('compiled'))
+
+	csv_files = [
+		path_gen('cin7', 'products', 'csv'),
+		path_gen('cin7', 'Sale_by_Categories', 'csv'),
+		path_gen('cin7', 'Top_Selling', 'csv'),
+		path_gen('cin7', 'stock_values', 'csv'),
+	]
+	files_to_excel(csv_files, path_gen('cin7'))
 
 	meta_files = [
 		path_gen('facebook', 'data', 'xlsx'),
@@ -165,10 +179,10 @@ def excel_update():
 def main():
 	# main_update_shopify_customer_report()
 	# main_update_shopify_order_report()
-	# main_get_and_build_all_shopify_order_report(3)
 	# main_get_and_build_all_shopify_customer_report(3)
-	# main_build_shopify_ui_reports()
 	#
+	# main_get_and_build_all_shopify_order_report(3)
+	# main_build_shopify_ui_reports()
 	# main_get_and_build_starshipit_report()
 	get_and_build_cin7_products_and_sales()
 	# get_and_build_instagram()
