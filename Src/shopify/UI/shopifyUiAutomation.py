@@ -26,15 +26,24 @@ def get_report(driver, report_name, since, until):
 
 	return output_file, data
 
-def get_customers(driver):
-	url = f_string(SHOPIFY_CUSTOMERS_URL_TEMPLATE, "-12m")
-	print(url)
-	open_page(driver, url)
-	wait_for_element(driver, CUSTOMER_COUNT_NUM)
-	num_count = get_element_text(driver, CUSTOMER_COUNT_NUM)
-	percent_count = get_element_text(driver, CUSTOMER_COUNT_PERCENT)
-	data = pd.DataFrame({'Active Customer Count': [num_count], 'Perentage of all Customers': [percent_count]})
-	return "Active Customer Count", data
+def get_customers(driver, query_tuples):
+	data = []
+
+	for query_name, query in query_tuples:
+		url = f_string(SHOPIFY_CUSTOMERS_URL_TEMPLATE, query)
+		print(url)
+		open_page(driver, url)
+		wait_for_element(driver, CUSTOMER_COUNT_NUM)
+		num_count = get_element_text(driver, CUSTOMER_COUNT_NUM)
+		percent_count = get_element_text(driver, CUSTOMER_COUNT_PERCENT)
+		data.append({
+			'type': query_name,
+			'count': num_count,
+			'percent': percent_count
+		})
+
+	df = pd.DataFrame(data)
+	return "Customer Metrics", df
 
 def set_report_and_timeframe(driver, date_range):
 	wait_for_table_data(driver, TABLE_CELL)
@@ -50,7 +59,12 @@ def get_ui_analytics(reports, since, until):
 		login(driver, shopify_ui_username(), shopify_ui_password())
 		for report in reports:
 			if report == 'customer_count':
-				name, df = get_customers(driver)
+				query_tuples = [
+					("Active", "last_order_date%20%3E%3D%20-12m"),
+					("Australian", "customer_countries%20CONTAINS%20%27AU%27"),
+					("Total", "")  # For total customers
+				]
+				name, df = get_customers(driver, query_tuples)
 				dfs[name] = df
 			else:
 				name, df = get_report(driver, report, since, until)

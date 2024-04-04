@@ -3,7 +3,7 @@ def f_string(template, *args):
 
 SHOPIFY_URL = 'https://admin.shopify.com/store/gelous/dashboards'
 SHOPIFY_REPORTS_URL_TEMPLATE = 'https://admin.shopify.com/store/gelous/reports/{0}?since={1}&until={2}&over=day'
-SHOPIFY_CUSTOMERS_URL_TEMPLATE = 'https://admin.shopify.com/store/gelous/customers?segment_query=last_order_date%20%3E%3D%20{0}'
+SHOPIFY_CUSTOMERS_URL_TEMPLATE = 'https://admin.shopify.com/store/gelous/customers?segment_query={0}'
 
 LOGIN_USERNAME = "//input[@id='account_email']"
 LOGIN_USERNAME_SUBMIT = "//button[@type='submit']"

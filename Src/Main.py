@@ -182,9 +182,9 @@ def main():
 	# main_get_and_build_all_shopify_customer_report(3)
 	#
 	# main_get_and_build_all_shopify_order_report(3)
-	# main_build_shopify_ui_reports()
+	main_build_shopify_ui_reports()
 	# main_get_and_build_starshipit_report()
-	get_and_build_cin7_products_and_sales()
+	# get_and_build_cin7_products_and_sales()
 	# get_and_build_instagram()
 	# get_and_build_instagram_posts()
 	# get_and_build_facebook_videos()
