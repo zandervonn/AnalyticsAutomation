@@ -78,11 +78,9 @@ def main_build_shopify_ui_reports():
 def main_get_and_build_starshipit_report():
 	print("Getting Starshipit")
 	df = get_all_starshipit_data(starshipit_api_key(), starshipit_subscription_key(), -1, since)
-	# save_df_to_csv(df, path_gen('starshipit', 'orders', 'csv'))
 	cleaned_df = clean_df(df, get_header_list('starshipit'))
 	save_df_to_csv(cleaned_df, path_gen('starshipit', 'orders', 'csv'))
 
-#todo google token still times out
 def get_and_build_google():
 	print("Getting Google")
 	credentials = get_credentials(google_credentials_path(), google_token_path())
@@ -91,7 +89,6 @@ def get_and_build_google():
 	google_dfs = clean_google_dfs(google_dfs)
 	save_df_to_excel(google_dfs, path_gen('google'))
 
-#todo it seems like for other pages its only getting one day of results even in the raw data
 def get_and_build_facebook():
 	print("Getting Facebook")
 	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  get_header_list('facebook'), since, until)
@@ -123,8 +120,6 @@ def get_and_build_instagram():
 	clean_insta_df = clean_df(insta_df,  ["end_time"]+get_header_list('instagram'))
 	save_df_to_csv(clean_insta_df, path_gen('instagram', 'data', 'csv'))
 
-
-
 def get_and_build_cin7_products_and_sales():
 	print("Getting Cin7 Products")
 	products = get_all_products(cin7_api_key())
@@ -146,8 +141,6 @@ def get_and_build_cin7_products_and_sales():
 	print("Getting Cin7 Stock Values")
 	stock_values = calculate_inventory_values_df(products)
 	save_df_to_csv(stock_values, path_gen('cin7', 'stock_values', 'csv'))
-
-
 
 #todo keep a years worth of data
 def excel_update():
@@ -182,7 +175,7 @@ def main():
 	# main_get_and_build_all_shopify_customer_report(3)
 	#
 	# main_get_and_build_all_shopify_order_report(3)
-	main_build_shopify_ui_reports()
+	# main_build_shopify_ui_reports()
 	# main_get_and_build_starshipit_report()
 	# get_and_build_cin7_products_and_sales()
 	# get_and_build_instagram()
@@ -191,9 +184,9 @@ def main():
 	# get_and_build_facebook_posts()
 	#
 	# get_and_build_facebook()
-	# get_and_build_google()
+	get_and_build_google()
 
-	# excel_update()
+	excel_update()
 	# update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
 
 	# set_last_run_timestamp()

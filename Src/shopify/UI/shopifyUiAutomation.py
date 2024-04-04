@@ -71,5 +71,5 @@ def get_ui_analytics(reports, since, until):
 				dfs[name] = df
 	finally:
 		close(driver)
-	# wait_for_user_input() #for testing
+
 	return dfs  # Return the dictionary of dataframes
