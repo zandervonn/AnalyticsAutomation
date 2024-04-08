@@ -6,15 +6,17 @@ import pandas as pd
 import re
 
 from bs4 import BeautifulSoup
-from gitignore import access
 
 def path_gen(*args):
+
+	# Lazy import of output_folder_path
+	from gitignore.access import output_folder_path
 
 	if len(args) == 3:
 		platform, data_type, file_format = args
 
 		# Create the subfolder path based on the platform and data type
-		subfolder_path = os.path.join(access.FOLDER_PATH, platform, data_type)
+		subfolder_path = os.path.join(output_folder_path(), platform, data_type)
 
 		file_name = f"{platform}_{data_type}.{file_format}"
 
@@ -22,7 +24,7 @@ def path_gen(*args):
 		platform, = args
 
 		# Create the subfolder path based on the platform
-		subfolder_path = os.path.join(access.FOLDER_PATH, 'output', platform)
+		subfolder_path = os.path.join(output_folder_path(), 'output', platform)
 
 		# Construct the file name
 		file_name = f"{platform}_output.xlsx"

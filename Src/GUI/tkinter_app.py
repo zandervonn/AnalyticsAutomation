@@ -4,6 +4,9 @@ import os
 import Src.Main
 import sys
 
+from gitignore.access import output_folder_path
+
+
 class TextRedirector:
 	def __init__(self, widget):
 		self.widget = widget
@@ -103,8 +106,8 @@ class MyApp:
 		self.list_files(folder_path, self.output_files_listbox)
 
 	def preload_files(self):
-		input_folder = r'C:\Users\Zander\IdeaProjects\Automation-Gel\gitignore\custom'
-		output_folder = r'C:\Users\Zander\IdeaProjects\Automation-Gel\gitignore\output'
+		input_folder = output_folder_path() + r'custom'
+		output_folder = output_folder_path() + r'output'
 		self.list_files(input_folder, self.input_files_listbox)
 		self.list_files(output_folder, self.output_files_listbox)
 
