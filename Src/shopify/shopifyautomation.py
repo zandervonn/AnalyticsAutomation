@@ -1,9 +1,9 @@
 import time
 
 import requests
-from gitignore import access
+from Src import access
 from datetime import datetime
-from dateutil import tz, parser
+from dateutil import tz
 
 
 def fetch_pages(base_url, endpoint, type, page_limit=-1):

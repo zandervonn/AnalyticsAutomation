@@ -4,7 +4,7 @@ import os
 import Src.Main
 import sys
 
-from gitignore.access import output_folder_path
+from Src.access import output_folder_path
 
 
 class TextRedirector:

@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 def path_gen(*args):
 
 	# Lazy import of output_folder_path
-	from gitignore.access import output_folder_path
+	from Src.access import output_folder_path
 
 	if len(args) == 3:
 		platform, data_type, file_format = args

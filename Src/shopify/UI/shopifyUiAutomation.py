@@ -2,7 +2,7 @@ from Src.helpers.UIHelpers import *
 from Src.helpers.cleanCsvHelpers import clean_keep_first_row
 from Src.helpers.csvHelpers import *
 from Src.shopify.UI.locators import *
-from gitignore.access import shopify_ui_username, shopify_ui_password
+from Src.access import shopify_ui_username, shopify_ui_password
 
 
 def login(driver, username, password):
