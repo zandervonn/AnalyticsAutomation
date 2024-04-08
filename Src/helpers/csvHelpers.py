@@ -66,9 +66,10 @@ def save_df_to_excel(df_or_dict, filename):
 			for sheet_name, df in df_or_dict.items():
 				if not isinstance(df, pd.DataFrame):
 					raise TypeError(f"The value for key '{sheet_name}' is not a DataFrame. It is of type {type(df)}.")
-				if df.empty:
-					raise ValueError(f"The DataFrame for key '{sheet_name}' is empty. Cannot create an empty sheet.")
-				df.to_excel(writer, sheet_name=sheet_name[:31], index=False)  # Sheet name limited to 31 characters
+				if not df.empty:
+					df.to_excel(writer, sheet_name=sheet_name[:31], index=False)  # Sheet name limited to 31 characters
+				else:
+					print(f"Skipping empty DataFrame for key '{sheet_name}'.")
 		else:
 			raise TypeError("Input must be a DataFrame or a dictionary of DataFrames.")
 

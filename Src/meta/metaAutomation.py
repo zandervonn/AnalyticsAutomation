@@ -151,11 +151,28 @@ def get_facebook_metric_count(meta_token, post_id, metric):
 	return data['summary']['total_count']
 
 def get_instagram_post_metrics(meta_token, post_id, metrics):
-	url = f'https://graph.facebook.com/v19.0/{post_id}'
+	url = f'https://graph.facebook.com/v19.0/{post_id}/insights'
+
+	metrics_str = ','.join(metrics)
 	params = {
 		'access_token': meta_token,
-		'fields': ','.join(metrics)
+		'metric': metrics_str
 	}
+
+	response = requests.get(url, params=params)
+	data = response.json()
+	print(data)
+	return data
+
+def get_instagram_post_headers(meta_token, post_id, metrics):
+	url = f'https://graph.facebook.com/v19.0/{post_id}'
+
+	metrics_str = ','.join(metrics)
+	params = {
+		'access_token': meta_token,
+		'fields': metrics_str
+	}
+
 	response = requests.get(url, params=params)
 	data = response.json()
 	return data
@@ -206,8 +223,17 @@ def get_insta_posts_and_insights(meta_token, page_id, metrics, since, until):
 
 	for post in posts:
 		post_id = post['id']
-		insta_metrics = get_instagram_post_metrics(meta_token, post_id, metrics)
-		post_insights.append(insta_metrics)
+		specified_fields = ['timestamp', 'id', 'caption']
+		header_metrics = [metric for metric in metrics if metric in specified_fields]
+		post_metrics = [metric for metric in metrics if metric not in specified_fields]
+
+		insta_headers = get_instagram_post_headers(meta_token, post_id, header_metrics)
+		insta_metrics = get_instagram_post_metrics(meta_token, post_id, post_metrics)
+		insta_metrics = parse_insights(insta_metrics, post_id)
+
+		# Merge the headers and metrics dictionaries
+		combined_insights = {**insta_headers, **insta_metrics}
+		post_insights.append(combined_insights)
 
 	df = pd.DataFrame(post_insights)
 	return df
@@ -239,3 +265,17 @@ def split_insights_to_sheets(df, insights_pages):
 		dfs[page] = expanded_df
 
 	return dfs
+
+def clean_facebook_video_df(df):
+	# Combine the two columns and insert the new column at the index of the second one
+	index_of_second_column = df.columns.get_loc('post_video_likes_by_reaction_type.REACTION_LIKE')
+	df.insert(
+		index_of_second_column,
+		'post_video_likes_and_loves',
+		df['post_video_likes_by_reaction_type.REACTION_LOVE'] + df['post_video_likes_by_reaction_type.REACTION_LIKE']
+	)
+
+	# Drop the original columns
+	df.drop(['post_video_likes_by_reaction_type.REACTION_LOVE', 'post_video_likes_by_reaction_type.REACTION_LIKE'], axis=1, inplace=True)
+
+	return df

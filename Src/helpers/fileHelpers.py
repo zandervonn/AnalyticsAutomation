@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+
 import openpyxl
 import pandas as pd
 import re
@@ -83,34 +85,38 @@ def remove_html_tags(text):
 	text = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', text)
 	return text
 
+def read_and_clean_data(file_path):
+	try:
+		file_extension = os.path.splitext(file_path)[1].lower()
+		if file_extension == '.csv':
+			df = pd.read_csv(file_path)
+		elif file_extension in ['.xls', '.xlsx']:
+			df = pd.read_excel(file_path)
+		else:
+			print(f"Unsupported file type: {file_path}")
+			return None
+		# Remove HTML tags from string columns
+		df = df.applymap(lambda x: remove_html_tags(x) if isinstance(x, str) else x)
+		return df
+	except Exception as e:
+		print(f"Error processing {file_path}: {e}")
+		return None
+
+def save_data_to_excel(df, writer, sheet_name):
+	if df is not None:
+		df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+def create_date_saved_df(all_data_columns):
+	date_saved = 'Date Saved: ' + datetime.now().strftime('%Y-%m-%d')
+	return pd.DataFrame([[date_saved] + [''] * (all_data_columns - 1)])
+
 def files_to_excel(file_paths, output_excel_path):
 	with pd.ExcelWriter(output_excel_path, engine='openpyxl') as writer:
 		for file_path in file_paths:
-			file_extension = os.path.splitext(file_path)[1].lower()
-			if file_extension == '.csv':
-				try:
-					df = pd.read_csv(file_path)
-					# Remove HTML tags from all string columns
-					for col in df.select_dtypes(include='object').columns:
-						df[col] = df[col].apply(lambda x: remove_html_tags(x) if isinstance(x, str) else x)
-					sheet_name = os.path.basename(file_path).split('.')[0]
-					sheet_name = sheet_name[:31]  # Excel sheet name limit
-					df.to_excel(writer, sheet_name=sheet_name, index=False)
-				except pd.errors.EmptyDataError:
-					print(f"Warning: {file_path} is empty and was skipped.")
-			elif file_extension in ['.xls', '.xlsx']:
-				try:
-					xls = pd.ExcelFile(file_path)
-					for sheet_name in xls.sheet_names:
-						df = pd.read_excel(file_path, sheet_name=sheet_name)
-						# Remove HTML tags from all string columns
-						for col in df.select_dtypes(include='object').columns:
-							df[col] = df[col].apply(lambda x: remove_html_tags(x) if isinstance(x, str) else x)
-						sheet_name = sheet_name[:31]  # Excel sheet name limit
-						df.to_excel(writer, sheet_name=sheet_name, index=False)
-				except Exception as e:
-					print(f"Error reading {file_path}: {e}")
-			else:
-				print(f"Unsupported file type: {file_path}")
+			df = read_and_clean_data(file_path)
+			if df is not None:
+				sheet_name = os.path.basename(file_path).split('.')[0][:31]  # Excel sheet name limit
+				save_data_to_excel(df, writer, sheet_name)
 
 	print(f"Files saved to {output_excel_path}")
+

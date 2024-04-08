@@ -1,5 +1,6 @@
 import pandas as pd
 from selenium import webdriver
+from selenium.common import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -32,10 +33,17 @@ def get_element_text(driver, xpath):
 def wait_for_table_data(driver, table, timeout=30):
 	data_locator = (By.XPATH, table)
 
-	# Wait for the presence of the element
-	WebDriverWait(driver, timeout).until(
-		EC.presence_of_element_located(data_locator)
-	)
+	try:
+		# Wait for the presence of the element
+		WebDriverWait(driver, timeout).until(
+			EC.presence_of_element_located(data_locator)
+		)
+	except TimeoutException:
+		# Refresh the page and try again
+		driver.refresh()
+		WebDriverWait(driver, timeout).until(
+			EC.presence_of_element_located(data_locator)
+		)
 
 def extract_table_data(driver, table_xpath):
 	table = driver.find_element(By.XPATH, table_xpath)

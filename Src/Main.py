@@ -106,6 +106,7 @@ def get_and_build_facebook_videos():
 	print("Getting Facebook videos")
 	facebook_df = get_facebook_video_insights(meta_access_token(),  meta_facebook_id(), since, until)
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_videos'))
+	facebook_df = clean_facebook_video_df(facebook_df)
 	save_df_to_csv(facebook_df, path_gen('facebook_videos', 'data', 'csv'))
 
 def get_and_build_instagram_posts():
@@ -153,7 +154,7 @@ def excel_update():
 	files_to_excel(csv_files, path_gen('compiled'))
 
 	csv_files = [
-		path_gen('cin7', 'products', 'csv'),
+		# path_gen('cin7', 'products', 'csv'),
 		path_gen('cin7', 'Sale_by_Categories', 'csv'),
 		path_gen('cin7', 'Top_Selling', 'csv'),
 		path_gen('cin7', 'stock_values', 'csv'),
@@ -184,7 +185,7 @@ def main():
 	# get_and_build_facebook_posts()
 	#
 	# get_and_build_facebook()
-	get_and_build_google()
+	# get_and_build_google()
 
 	excel_update()
 	# update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
