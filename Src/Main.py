@@ -73,6 +73,7 @@ def main_update_shopify_order_report():
 def main_build_shopify_ui_reports():
 	_since, _until = convert_dates_to_offsets(since, until)
 	shopify_ui_dfs = get_ui_analytics(get_header_list('shopify_ui'), _since, _until)
+	shopify_ui_dfs = combine_shopify_reports(shopify_ui_dfs)
 	save_df_to_excel(shopify_ui_dfs, path_gen('shopify', 'data', 'xlsx'))
 
 def main_get_and_build_starshipit_report():
@@ -91,6 +92,7 @@ def get_and_build_google():
 
 def get_and_build_facebook():
 	print("Getting Facebook")
+	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
 	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  get_header_list('facebook'), since, until)
 	clean_facebook_df = clean_df(facebook_df, ["end_time"]+get_header_list('facebook'))
 	split_facebook_df = split_insights_to_sheets(clean_facebook_df, get_header_list('facebook_pages'))
@@ -98,12 +100,14 @@ def get_and_build_facebook():
 
 def get_and_build_facebook_posts():
 	print("Getting Facebook posts")
+	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
 	facebook_df = get_facebook_posts_and_insights(meta_access_token(),  meta_facebook_id(), get_header_list('facebook_posts'), since, until)
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_posts'))
 	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
 
 def get_and_build_facebook_videos():
 	print("Getting Facebook videos")
+	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
 	facebook_df = get_facebook_video_insights(meta_access_token(),  meta_facebook_id(), since, until)
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_videos'))
 	facebook_df = clean_facebook_video_df(facebook_df)
@@ -111,12 +115,14 @@ def get_and_build_facebook_videos():
 
 def get_and_build_instagram_posts():
 	print("Getting Instagram posts")
+	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
 	facebook_df = get_insta_posts_and_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), since, until)
 	facebook_df = clean_df(facebook_df, get_header_list('instagram_posts'))
 	save_df_to_csv(facebook_df, path_gen('instagram_posts', 'data', 'csv'))
 
 def get_and_build_instagram():
 	print("Getting Instagram")
+	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
 	insta_df = get_meta_insights(meta_access_token(), meta_insta_id(), get_header_list('instagram'), since, until)
 	clean_insta_df = clean_df(insta_df,  ["end_time"]+get_header_list('instagram'))
 	save_df_to_csv(clean_insta_df, path_gen('instagram', 'data', 'csv'))
@@ -175,17 +181,17 @@ def main():
 	# main_update_shopify_order_report()
 	# main_get_and_build_all_shopify_customer_report(3)
 	#
-	main_get_and_build_all_shopify_order_report(3)
+	# main_get_and_build_all_shopify_order_report(3)
 	main_build_shopify_ui_reports()
-	main_get_and_build_starshipit_report()
-	get_and_build_cin7_products_and_sales()
-	get_and_build_instagram()
-	get_and_build_instagram_posts()
-	get_and_build_facebook_videos()
-	get_and_build_facebook_posts()
-	#
-	get_and_build_facebook()
-	get_and_build_google()
+	# main_get_and_build_starshipit_report()
+	# get_and_build_cin7_products_and_sales()
+	# get_and_build_instagram()
+	# get_and_build_instagram_posts()
+	# get_and_build_facebook_videos()
+	# get_and_build_facebook_posts()
+	# #
+	# get_and_build_facebook()
+	# get_and_build_google()
 
 	excel_update()
 	# update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
