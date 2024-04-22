@@ -63,10 +63,10 @@ def meta_insta_id() -> str:
 
 # Google
 def google_credentials_path() -> str:
-	return output_folder_path() + secrets['google_credentials_path']
+	return secrets['google_credentials_path']
 
 def google_token_path() -> str:
-	return output_folder_path() + secrets['google_token_path']
+	return secrets['google_token_path']
 
 def google_property_id() -> str:
 	return secrets['google_property_id']

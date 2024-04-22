@@ -3,3 +3,5 @@
 /build
 /main.spec
 /config/secrets.txt
+/config/google/
+/outputfiles/

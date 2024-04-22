@@ -153,7 +153,7 @@ def get_and_build_cin7_products_and_sales():
 #todo keep a years worth of data
 def excel_update():
 	csv_files = [
-		path_gen('shopify', 'orders', 'csv'),
+		# path_gen('shopify', 'orders', 'csv'),
 		path_gen('shopify', 'data', 'xlsx'),
 		# path_gen('shopify', 'customers', 'csv'), #not useful in bulk format
 		path_gen('starshipit', 'orders', 'csv'),
@@ -180,7 +180,7 @@ def excel_update():
 def main():
 	# main_build_shopify_ui_reports()
 	# main_get_and_build_starshipit_report()
-	get_and_build_cin7_products_and_sales()
+	# get_and_build_cin7_products_and_sales()
 	# get_and_build_instagram()
 	# get_and_build_instagram_posts()
 	# get_and_build_facebook_videos()
@@ -190,7 +190,7 @@ def main():
 	# get_and_build_google()
 
 	excel_update()
-	# update_files(find_path_upwards('gitignore/output'), find_path_upwards('gitignore/custom'))
+	# update_files(find_path_upwards('outputfiles/output'), find_path_upwards('outputfiles/custom'))
 
 	# set_last_run_timestamp()
 
