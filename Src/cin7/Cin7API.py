@@ -43,7 +43,7 @@ def get_cin7_sales_data(api_key, start_date, end_date, rows_per_call=250):
 	page = 1
 
 	while True:
-		url = f'{base_url}{endpoint}?where=createddate>=%27{start_date}Z%27 AND createddate<=%27{end_date}Z%27&fields=id,createddate,lineitems&page={page}&rows={rows_per_call}'
+		url = f'{base_url}{endpoint}?where=createddate>=%27{start_date}Z%27 AND createddate<=%27{end_date}Z%27&fields=id,createddate,billingCompany,lineitems&page={page}&rows={rows_per_call}'
 		response = requests.get(url, headers=headers)
 
 		if response.status_code == 200:
@@ -59,6 +59,11 @@ def get_cin7_sales_data(api_key, start_date, end_date, rows_per_call=250):
 			return None
 
 	return all_data
+
+def filter_out_australia(sales_data):
+	# Filter out entries where 'billingCustomer' equals 'Symet Australia Pty Ltd'
+	filtered_data = [entry for entry in sales_data if entry.get('billingCompany') != 'Symet Australia Pty Ltd']
+	return filtered_data
 
 def match_sales_with_products(sales_data, products):
 	# Create a dictionary mapping product IDs to their categories
@@ -86,7 +91,6 @@ def aggregate_sales_by_category(sales_data):
 
 	# Loop through the sales data and aggregate the quantities by date and category
 	for record in sales_data:
-		# print("Current record:", record)  # Debug print
 		date = record['date']
 		category = record.get('category', 'OTHER')  # Use 'OTHER' if 'category' key is missing
 		quantity = record['quantity']

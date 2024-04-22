@@ -10,7 +10,7 @@ from Src.shopify.shopify_csv_handeling import *
 from Src.shopify.UI.shopifyUiAutomation import *
 from Src.access import *
 
-since, until = get_dates("today", "weeks", 1)
+since, until = get_dates("today", "weeks", 3)
 
 def main_get_and_build_all_shopify_order_report(lim = -1):
 	print("Getting Shopify orders")
@@ -133,6 +133,7 @@ def get_and_build_cin7_products_and_sales():
 
 	print("Getting Cin7 Sales")
 	sales_data = get_cin7_sales_data(cin7_api_key(), since, until)
+	sales_data = filter_out_australia(sales_data)
 
 	print("Getting Cin7 Sales by Product Categories")
 	matched_data = match_sales_with_products(sales_data, products)
@@ -177,19 +178,14 @@ def excel_update():
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	# main_update_shopify_customer_report()
-	# main_update_shopify_order_report()
-	# main_get_and_build_all_shopify_customer_report(3)
-	#
-	# main_get_and_build_all_shopify_order_report(3)
-	main_build_shopify_ui_reports()
+	# main_build_shopify_ui_reports()
 	# main_get_and_build_starshipit_report()
-	# get_and_build_cin7_products_and_sales()
+	get_and_build_cin7_products_and_sales()
 	# get_and_build_instagram()
 	# get_and_build_instagram_posts()
 	# get_and_build_facebook_videos()
 	# get_and_build_facebook_posts()
-	# #
+	#
 	# get_and_build_facebook()
 	# get_and_build_google()
 
