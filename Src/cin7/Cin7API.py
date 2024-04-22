@@ -105,7 +105,7 @@ def aggregate_sales_by_category(sales_data):
 
 	return aggregated_list
 
-def aggregate_sales_by_product_id(sales_data, products, top_length=10):
+def aggregate_sales_by_product_id(sales_data, products):
 	# Create a dictionary mapping product IDs to their names
 	product_names = {product['id']: product['name'] for product in products}
 
@@ -125,8 +125,8 @@ def aggregate_sales_by_product_id(sales_data, products, top_length=10):
 	# Sort the list by total sales in descending order
 	aggregated_list.sort(key=lambda x: x['Total Sales'], reverse=True)
 
-	# Extract the top performers
-	top_performers = aggregated_list[:top_length]  # Top 'top_length' products
+	# Extract the top performers where total sales > 10
+	top_performers = [product for product in aggregated_list if product['Total Sales'] >= 10]
 
 	# Find bottom performers (products with 0 sales, marked as 'Public', not 'Discontinued', not in category 'Packaging', and have stock on hand)
 	bottom_performers = [{'Product Name': product['name'], 'Total Sales': 0}
@@ -136,12 +136,15 @@ def aggregate_sales_by_product_id(sales_data, products, top_length=10):
 	                     product.get('category', '') != 'PACKAGING' and
 	                     any(option.get('stockOnHand', 0) > 0 for option in product.get('productOptions', []))]
 
+	# Calculate the maximum length to standardize DataFrame creation
+	max_length = max(len(top_performers), len(bottom_performers))
+
 	# Create a DataFrame with the top and bottom performers
 	df = pd.DataFrame({
-		'Top Product': [product['Product Name'] for product in top_performers] + [''] * (len(bottom_performers) - len(top_performers)),
-		'Top Product Total': [product['Total Sales'] for product in top_performers] + [''] * (len(bottom_performers) - len(top_performers)),
-		'Bottom Product': [product['Product Name'] for product in bottom_performers],
-		'Bottom Product Total': [product['Total Sales'] for product in bottom_performers]
+		'Top Product': [product['Product Name'] for product in top_performers] + [''] * (max_length - len(top_performers)),
+		'Top Product Total': [product['Total Sales'] for product in top_performers] + [''] * (max_length - len(top_performers)),
+		'Bottom Product': [product['Product Name'] for product in bottom_performers] + [''] * (max_length - len(bottom_performers)),
+		'Bottom Product Total': [product['Total Sales'] for product in bottom_performers] + [''] * (max_length - len(bottom_performers))
 	})
 
 	return df

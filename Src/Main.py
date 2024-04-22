@@ -143,7 +143,7 @@ def get_and_build_cin7_products_and_sales():
 	save_df_to_csv(category_data_df, path_gen('cin7', 'Sale_by_Categories', 'csv'))
 
 	print("Getting Cin7 Top Selling Products")
-	top_selling = aggregate_sales_by_product_id(matched_data, products, 50)
+	top_selling = aggregate_sales_by_product_id(matched_data, products)
 	save_df_to_csv(top_selling, path_gen('cin7', 'Top_Selling', 'csv'))
 
 	print("Getting Cin7 Stock Values")
