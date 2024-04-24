@@ -1,5 +1,3 @@
-import base64
-
 from Src.helpers.cleanCsvHelpers import clean_df, clean_dfs, sort_by_date_column, sort_by_value_column
 from Src.starshipit.StarshipitAPI import *
 from Src.cin7.Cin7API import *
@@ -12,9 +10,9 @@ from Src.shopify.shopify_csv_handeling import *
 from Src.shopify.UI.shopifyUiAutomation import *
 from Src.access import *
 
-since, until = get_dates("today", "weeks", 3)
+since, until = get_dates("today", "weeks", 1)
 
-def main_get_and_build_all_shopify_order_report(lim = -1):
+def build_report_shopify_order_all(lim = -1):
 	print("Getting Shopify orders")
 	new_orders_json = get_shopify_orders(shopify_api_key(), shopify_password(), shopify_url(), lim)
 	new_orders_json = clean_json(new_orders_json, get_header_list('shopify_orders'))
@@ -24,7 +22,7 @@ def main_get_and_build_all_shopify_order_report(lim = -1):
 	cleaned_orders_df = clean_df(cleaned_orders_df, get_header_list('shopify_orders'))
 	save_df_to_csv(cleaned_orders_df, path_gen('shopify', 'orders', 'csv'))
 
-def main_get_and_build_all_shopify_customer_report(lim = -1):
+def build_report_shopify_customer_all(lim = -1):
 	print("Getting Shopify customers")
 	new_customers_json = get_shopify_customers(shopify_api_key(), shopify_password(), shopify_url(), lim)
 	customers_cleaned_json = clean_json(new_customers_json, get_header_list('shopify_customers'))
@@ -33,7 +31,7 @@ def main_get_and_build_all_shopify_customer_report(lim = -1):
 	cleaned_customers_df = sort_by_date_column(cleaned_customers_df, ['updated_at'])
 	save_df_to_csv(cleaned_customers_df, path_gen('shopify', 'customers', 'csv'))
 
-def main_update_shopify_customer_report():
+def update_report_shopify_customer():
 	print("Getting Shopify customers")
 	shopify_customer_path = path_gen('shopify', 'customers', 'csv')
 
@@ -53,7 +51,7 @@ def main_update_shopify_customer_report():
 	# Save the updated report
 	save_df_to_csv(updated_customers_df, shopify_customer_path)
 
-def main_update_shopify_order_report():
+def update_report_shopify_orders():
 	print("Getting Shopify orders")
 	shopify_order_path = path_gen('shopify', 'orders', 'csv')
 
@@ -72,19 +70,22 @@ def main_update_shopify_order_report():
 	# Save the updated report
 	save_df_to_csv(updated_orders_df, shopify_order_path)
 
-def main_build_shopify_ui_reports():
+def build_report_shopify_ui():
 	_since, _until = convert_dates_to_offsets(since, until)
 	shopify_ui_dfs = get_ui_analytics(get_header_list('shopify_ui'), _since, _until)
 	shopify_ui_dfs = combine_shopify_reports(shopify_ui_dfs)
 	save_df_to_excel(shopify_ui_dfs, path_gen('shopify', 'data', 'xlsx'))
 
-def main_get_and_build_starshipit_report():
+def build_report_starshipit_api():
 	print("Getting Starshipit")
 	df = get_all_starshipit_data(starshipit_api_key(), starshipit_subscription_key(), -1, since)
-	cleaned_df = clean_df(df, get_header_list('starshipit'))
-	save_df_to_csv(cleaned_df, path_gen('starshipit', 'orders', 'csv'))
+	cleaned_df = clean_df(df, get_header_list('starshipit') + ['tracking_short_status','tracking_number', 'results.last_updated_date'])
+	save_df_to_csv(cleaned_df, path_gen('starshipit', 'orders', 'csv'), True)
 
-def get_and_build_google():
+def build_report_starshipit_ui():
+	return
+
+def build_report_google():
 	print("Getting Google")
 	credentials = get_credentials(google_credentials_path(), google_token_path())
 	google_dfs = get_google_analytics_sheets(credentials, google_property_id(), since, until, get_header_list('google_dimensions'), get_header_list('google_metrics'))
@@ -92,7 +93,7 @@ def get_and_build_google():
 	google_dfs = clean_google_dfs(google_dfs)
 	save_df_to_excel(google_dfs, path_gen('google'))
 
-def get_and_build_facebook():
+def build_report_facebook():
 	print("Getting Facebook")
 	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
 	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  get_header_list('facebook'), since, until)
@@ -100,14 +101,14 @@ def get_and_build_facebook():
 	split_facebook_df = split_insights_to_sheets(clean_facebook_df, get_header_list('facebook_pages'))
 	save_df_to_excel(split_facebook_df, path_gen('facebook', 'data', 'xlsx'))
 
-def get_and_build_facebook_posts():
+def build_report_facebook_posts():
 	print("Getting Facebook posts")
 	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
 	facebook_df = get_facebook_posts_and_insights(meta_access_token(),  meta_facebook_id(), get_header_list('facebook_posts'), since, until)
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_posts'))
 	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
 
-def get_and_build_facebook_videos():
+def build_report_facebook_videos():
 	print("Getting Facebook videos")
 	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
 	facebook_df = get_facebook_video_insights(meta_access_token(),  meta_facebook_id(), since, until)
@@ -115,21 +116,21 @@ def get_and_build_facebook_videos():
 	facebook_df = clean_facebook_video_df(facebook_df)
 	save_df_to_csv(facebook_df, path_gen('facebook_videos', 'data', 'csv'))
 
-def get_and_build_instagram_posts():
+def build_report_instagram_posts():
 	print("Getting Instagram posts")
 	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
 	facebook_df = get_insta_posts_and_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), since, until)
 	facebook_df = clean_df(facebook_df, get_header_list('instagram_posts'))
 	save_df_to_csv(facebook_df, path_gen('instagram_posts', 'data', 'csv'))
 
-def get_and_build_instagram():
+def build_report_instagram():
 	print("Getting Instagram")
 	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
 	insta_df = get_meta_insights(meta_access_token(), meta_insta_id(), get_header_list('instagram'), since, until)
 	clean_insta_df = clean_df(insta_df,  ["end_time"]+get_header_list('instagram'))
 	save_df_to_csv(clean_insta_df, path_gen('instagram', 'data', 'csv'))
 
-def get_and_build_cin7_products_and_sales():
+def build_report_cin7_products_and_sales():
 	print("Getting Cin7 Products")
 	products = get_all_products(cin7_api_key_NZ())
 
@@ -181,22 +182,19 @@ def excel_update():
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	# main_build_shopify_ui_reports()
-	# main_get_and_build_starshipit_report()
-	get_and_build_cin7_products_and_sales()
-	# get_and_build_instagram()
-	# get_and_build_instagram_posts()
-	# get_and_build_facebook_videos()
-	# get_and_build_facebook_posts()
-	#
-	# get_and_build_facebook()
-	# get_and_build_google()
+	build_report_shopify_ui()
+	build_report_starshipit_api()
+	build_report_starshipit_ui()
+	build_report_cin7_products_and_sales()
+	build_report_instagram()
+	build_report_instagram_posts()
+	build_report_facebook_videos()
+	build_report_facebook_posts()
+
+	build_report_facebook()
+	build_report_google()
 
 	# excel_update()
-	# update_files(find_path_upwards('outputfiles/output'), find_path_upwards('outputfiles/custom'))
-
-	# set_last_run_timestamp()
-
 
 if __name__ == '__main__':
 	main()

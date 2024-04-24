@@ -20,8 +20,8 @@ def get_starshipit_orders(url, api_key, subscription_key, status='', date_param_
 	total_pages = 1  # Initialize total_pages to enter the loop
 
 	while params['page'] <= total_pages:
+		request_time = time.time()  # Record the time at the start of the request
 		print("Page: ", params['page'])
-		time.sleep(1)  # Respect API rate limit between calls
 		response = requests.get(url, headers=headers, params=params)
 		if response.status_code == 200:
 			data = response.json()
@@ -35,6 +35,12 @@ def get_starshipit_orders(url, api_key, subscription_key, status='', date_param_
 			if pages is not None and pages >= 0 and params['page'] >= pages:
 				break
 			params['page'] += 1
+
+			# Calculate elapsed time and sleep if necessary
+			elapsed_time = time.time() - request_time
+			if elapsed_time < 0.5:
+				time.sleep(0.5 - elapsed_time)
+
 		else:
 			print(f'Failed to get data: {response.status_code} - {response.text}')
 			break
@@ -62,8 +68,46 @@ def get_recently_printed_shipments(api_key, subscription_key, pages=None, since_
 def get_all_starshipit_data(api_key, subscription_key, pages=None, since_date=None):
 	unshipped_orders = get_unshipped_orders(api_key, subscription_key, pages, since_date)
 	shipped_orders = get_shipped_orders(api_key, subscription_key, pages, since_date)
+	# print(json.dumps(shipped_orders, indent=4))
+	shipped_orders = update_orders_with_tracking_details(api_key, subscription_key, shipped_orders)
 	df = combine_orders_to_df(unshipped_orders, shipped_orders)
+	# print(df)
 	return df
+
+def get_tracking_details(api_key, subscription_key, tracking_number):
+	url = f'https://api.starshipit.com/api/track?tracking_number={tracking_number}'
+	headers = {
+		'Content-Type': 'application/json',
+		'StarShipIT-Api-Key': api_key,
+		'Ocp-Apim-Subscription-Key': subscription_key
+	}
+
+	response = requests.get(url, headers=headers)
+	if response.status_code == 200:
+		return response.json()
+	else:
+		print(f'Failed to get tracking details for {tracking_number}: {response.status_code} - {response.text}')
+		return None
+
+def update_orders_with_tracking_details(api_key, subscription_key, orders):
+	total = len(orders)
+	i = 0
+	for order in orders:
+		request_time = time.time()
+		tracking_number = order.get('tracking_number')
+		if tracking_number:
+			tracking_details = get_tracking_details(api_key, subscription_key, tracking_number)
+			if tracking_details:
+				order.update(tracking_details)
+
+		# Calculate elapsed time and sleep if necessary
+		elapsed_time = time.time() - request_time
+		if elapsed_time < 0.5:
+			time.sleep(0.5 - elapsed_time)
+
+		print(f'Tracking: {i}/{total}')
+
+	return orders
 
 def combine_orders_to_df(*order_lists):
 	dfs = []

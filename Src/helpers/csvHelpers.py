@@ -1,6 +1,7 @@
 import os
+import time
+
 import openpyxl
-from Src.helpers.fileHelpers import find_path_upwards
 from Src.helpers.jsonHelpers import *
 
 
@@ -46,12 +47,33 @@ def csv_sheets_to_excel(csv_files, excel_file):
 			df.to_excel(writer, sheet_name=sheet_name, index=False)
 	print(f"CSV saved to {excel_file}")
 
-def save_df_to_csv(df, file_name):
-	if os.path.exists(file_name):
-		df.to_csv(file_name, encoding='utf-8-sig', index=False)
-	else:
-		df.to_csv(file_name, encoding='utf-8-sig', index=False)
-	print(f"CSV saved to {file_name}")
+def save_df_to_csv(df, file_name, safe_save=False):
+	start_time = time.time()
+	retry_interval=5
+	timeout=120
+
+	while True:
+		try:
+			# Try to save the DataFrame to a CSV file
+			df.to_csv(file_name, encoding='utf-8-sig', index=False)
+			print(f"CSV saved to {file_name}")
+			break  # Exit the loop if the file is successfully saved
+		except PermissionError as e:
+			# Handle the case where the file is open and locked
+			if safe_save:
+				elapsed_time = time.time() - start_time
+				if elapsed_time >= timeout:
+					print(f"Failed to save CSV after {timeout} seconds. File may be open.")
+					break  # Exit the loop after timeout
+				print(f"File is locked, retrying in {retry_interval} seconds...")
+				time.sleep(retry_interval)  # Wait before retrying
+			else:
+				print(f"Failed to save CSV: {e}")
+				break
+		except Exception as e:
+			# Handle other exceptions
+			print(f"An error occurred: {e}")
+			break
 
 def save_df_to_excel(df_or_dict, filename):
 	with pd.ExcelWriter(filename, engine='openpyxl') as writer:
