@@ -1,4 +1,4 @@
-from Src.helpers.fileHelpers import find_path_upwards
+from Src.helpers.file_helpers import find_path_upwards
 
 
 def load_properties(file_path: str) -> dict:
@@ -43,6 +43,12 @@ def starshipit_api_key() -> str:
 
 def starshipit_subscription_key() -> str:
 	return secrets['starshipit_subscription_key']
+
+def starshipit_username() -> str:
+	return secrets['starshipit_username']
+
+def starshipit_password() -> str:
+	return secrets['starshipit_password']
 
 # Cin7
 def cin7_api_key_AUS() -> str:

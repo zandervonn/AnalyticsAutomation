@@ -8,7 +8,7 @@ from google.oauth2.credentials import Credentials
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest, Dimension, Metric, DateRange, OrderBy
 
-from Src.helpers.cleanCsvHelpers import clean_and_convert_date_column
+from Src.helpers.clean_csv_helpers import clean_and_convert_date_column
 
 
 def get_credentials(client_secret_path, token_path):

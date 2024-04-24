@@ -1,13 +1,13 @@
-from Src.helpers.cleanCsvHelpers import clean_df, clean_dfs, sort_by_date_column, sort_by_value_column
-from Src.starshipit.StarshipitAPI import *
-from Src.cin7.Cin7API import *
-from Src.google.googleAutomation import *
-from Src.helpers.fileHelpers import *
-from Src.helpers.timeHelpers import *
-from Src.meta.metaAutomation import *
-from Src.shopify.shopifyautomation import *
+from Src.helpers.clean_csv_helpers import clean_df, clean_dfs, sort_by_date_column, sort_by_value_column
+from Src.starshipit.starshipit_api import *
+from Src.cin7.Cin7_api import *
+from Src.google.google_automation import *
+from Src.helpers.file_helpers import *
+from Src.helpers.time_helpers import *
+from Src.meta.meta_automation import *
+from Src.shopify.shopify_automation import *
 from Src.shopify.shopify_csv_handeling import *
-from Src.shopify.UI.shopifyUiAutomation import *
+from Src.shopify.UI.shopify_ui_automation import *
 from Src.access import *
 
 since, until = get_dates("today", "weeks", 1)
@@ -182,17 +182,17 @@ def excel_update():
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	build_report_shopify_ui()
+	# build_report_shopify_ui()
 	build_report_starshipit_api()
-	build_report_starshipit_ui()
-	build_report_cin7_products_and_sales()
-	build_report_instagram()
-	build_report_instagram_posts()
-	build_report_facebook_videos()
-	build_report_facebook_posts()
-
-	build_report_facebook()
-	build_report_google()
+	# build_report_starshipit_ui()
+	# build_report_cin7_products_and_sales()
+	# build_report_instagram()
+	# build_report_instagram_posts()
+	# build_report_facebook_videos()
+	# build_report_facebook_posts()
+	#
+	# build_report_facebook()
+	# build_report_google()
 
 	# excel_update()
 

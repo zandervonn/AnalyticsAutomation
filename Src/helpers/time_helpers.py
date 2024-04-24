@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
-from Src.helpers.fileHelpers import find_path_upwards
+from Src.helpers.file_helpers import find_path_upwards
 
 LAST_RUN_FILE_PATH = find_path_upwards(r"config\config.txt")
 

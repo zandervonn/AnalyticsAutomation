@@ -1,7 +1,9 @@
 import time
 import requests
 
-from Src.helpers.jsonHelpers import *
+from Src.helpers.json_helpers import *
+
+waitTime = 0.51
 
 def get_starshipit_orders(url, api_key, subscription_key, status='', date_param_name=None, since_date=None, pages=None):
 	headers = {
@@ -38,8 +40,8 @@ def get_starshipit_orders(url, api_key, subscription_key, status='', date_param_
 
 			# Calculate elapsed time and sleep if necessary
 			elapsed_time = time.time() - request_time
-			if elapsed_time < 0.5:
-				time.sleep(0.5 - elapsed_time)
+			if elapsed_time < waitTime:
+				time.sleep(waitTime - elapsed_time)
 
 		else:
 			print(f'Failed to get data: {response.status_code} - {response.text}')
@@ -68,10 +70,8 @@ def get_recently_printed_shipments(api_key, subscription_key, pages=None, since_
 def get_all_starshipit_data(api_key, subscription_key, pages=None, since_date=None):
 	unshipped_orders = get_unshipped_orders(api_key, subscription_key, pages, since_date)
 	shipped_orders = get_shipped_orders(api_key, subscription_key, pages, since_date)
-	# print(json.dumps(shipped_orders, indent=4))
 	shipped_orders = update_orders_with_tracking_details(api_key, subscription_key, shipped_orders)
 	df = combine_orders_to_df(unshipped_orders, shipped_orders)
-	# print(df)
 	return df
 
 def get_tracking_details(api_key, subscription_key, tracking_number):
@@ -99,11 +99,11 @@ def update_orders_with_tracking_details(api_key, subscription_key, orders):
 			tracking_details = get_tracking_details(api_key, subscription_key, tracking_number)
 			if tracking_details:
 				order.update(tracking_details)
-
+		i += 1
 		# Calculate elapsed time and sleep if necessary
 		elapsed_time = time.time() - request_time
-		if elapsed_time < 0.5:
-			time.sleep(0.5 - elapsed_time)
+		if elapsed_time < waitTime:
+			time.sleep(waitTime - elapsed_time)
 
 		print(f'Tracking: {i}/{total}')
 

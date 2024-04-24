@@ -1,7 +1,7 @@
-from Src.helpers.UIHelpers import *
-from Src.helpers.cleanCsvHelpers import clean_keep_first_row
-from Src.helpers.csvHelpers import *
-from Src.shopify.UI.locators import *
+from Src.helpers.ui_helpers import *
+from Src.helpers.clean_csv_helpers import clean_keep_first_row
+from Src.helpers.csv_helpers import *
+from Src.shopify.UI.shopify_locators import *
 from Src.access import shopify_ui_username, shopify_ui_password
 
 

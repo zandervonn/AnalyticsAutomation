@@ -2,7 +2,7 @@ import os
 import time
 
 import openpyxl
-from Src.helpers.jsonHelpers import *
+from Src.helpers.json_helpers import *
 
 
 def split_json_list_columns(df, column, keys):
