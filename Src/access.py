@@ -45,11 +45,17 @@ def starshipit_subscription_key() -> str:
 	return secrets['starshipit_subscription_key']
 
 # Cin7
-def cin7_api_key() -> str:
-	return secrets['cin7_api_key']
+def cin7_api_key_AUS() -> str:
+	return secrets['cin7_api_key_AUS']
 
-def cin7_api_username() -> str:
-	return secrets['cin7_api_username']
+def cin7_api_key_NZ() -> str:
+	return secrets['cin7_api_key_NZ']
+
+def cin7_api_username_AUS() -> str:
+	return secrets['cin7_api_username_AUS']
+
+def cin7_api_username_NZ() -> str:
+	return secrets['cin7_api_username_NZ']
 
 # Meta
 def meta_access_token() -> str:

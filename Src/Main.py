@@ -1,3 +1,5 @@
+import base64
+
 from Src.helpers.cleanCsvHelpers import clean_df, clean_dfs, sort_by_date_column, sort_by_value_column
 from Src.starshipit.StarshipitAPI import *
 from Src.cin7.Cin7API import *
@@ -129,11 +131,15 @@ def get_and_build_instagram():
 
 def get_and_build_cin7_products_and_sales():
 	print("Getting Cin7 Products")
-	products = get_all_products(cin7_api_key())
+	products = get_all_products(cin7_api_key_NZ())
 
 	print("Getting Cin7 Sales")
-	sales_data = get_cin7_sales_data(cin7_api_key(), since, until)
+	sales_data = get_cin7_sales_data(cin7_api_key_NZ(), since, until)
 	sales_data = filter_out_australia(sales_data)
+
+	print("Getting Cin7 Purchase Orders")
+	purchases_nz = get_cin7_purchase_orders(cin7_api_key_NZ())
+	purchases_aus = get_cin7_purchase_orders(cin7_api_key_AUS())
 
 	print("Getting Cin7 Sales by Product Categories")
 	matched_data = match_sales_with_products(sales_data, products)
@@ -147,21 +153,18 @@ def get_and_build_cin7_products_and_sales():
 	save_df_to_csv(top_selling, path_gen('cin7', 'Top_Selling', 'csv'))
 
 	print("Getting Cin7 Stock Values")
-	stock_values = calculate_inventory_values_df(products)
+	stock_values = calculate_inventory_values_df(products, purchases_nz, purchases_aus)
 	save_df_to_csv(stock_values, path_gen('cin7', 'stock_values', 'csv'))
 
 #todo keep a years worth of data
 def excel_update():
 	csv_files = [
-		# path_gen('shopify', 'orders', 'csv'),
 		path_gen('shopify', 'data', 'xlsx'),
-		# path_gen('shopify', 'customers', 'csv'), #not useful in bulk format
 		path_gen('starshipit', 'orders', 'csv'),
 	]
 	files_to_excel(csv_files, path_gen('compiled'))
 
 	csv_files = [
-		# path_gen('cin7', 'products', 'csv'),
 		path_gen('cin7', 'Sale_by_Categories', 'csv'),
 		path_gen('cin7', 'Top_Selling', 'csv'),
 		path_gen('cin7', 'stock_values', 'csv'),
@@ -180,7 +183,7 @@ def excel_update():
 def main():
 	# main_build_shopify_ui_reports()
 	# main_get_and_build_starshipit_report()
-	# get_and_build_cin7_products_and_sales()
+	get_and_build_cin7_products_and_sales()
 	# get_and_build_instagram()
 	# get_and_build_instagram_posts()
 	# get_and_build_facebook_videos()
@@ -189,10 +192,11 @@ def main():
 	# get_and_build_facebook()
 	# get_and_build_google()
 
-	excel_update()
+	# excel_update()
 	# update_files(find_path_upwards('outputfiles/output'), find_path_upwards('outputfiles/custom'))
 
 	# set_last_run_timestamp()
+
 
 if __name__ == '__main__':
 	main()

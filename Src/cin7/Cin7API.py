@@ -32,7 +32,7 @@ def get_all_products(api_key):
 
 	return all_data
 
-def get_cin7_sales_data(api_key, start_date, end_date, rows_per_call=250):
+def get_cin7_sales_data(api_key, start_date, end_date):
 	base_url = 'https://api.cin7.com/api/v1/'
 	endpoint = "SalesOrders"
 	headers = {
@@ -43,16 +43,44 @@ def get_cin7_sales_data(api_key, start_date, end_date, rows_per_call=250):
 	page = 1
 
 	while True:
-		url = f'{base_url}{endpoint}?where=createddate>=%27{start_date}Z%27 AND createddate<=%27{end_date}Z%27&fields=id,createddate,billingCompany,lineitems&page={page}&rows={rows_per_call}'
+		url = f'{base_url}{endpoint}?where=createddate>=%27{start_date}Z%27 AND createddate<=%27{end_date}Z%27&fields=id,createddate,billingCompany,lineitems&page={page}&rows=250'
 		response = requests.get(url, headers=headers)
 
 		if response.status_code == 200:
 			data = response.json()
 			all_data.extend(data)
-			if len(data) < rows_per_call:
+			if len(data) < 250:
 				break
 			page += 1
 			print("Sales Page", page)
+			time.sleep(1)  # Delay to comply with rate limiting
+		else:
+			print(f'Error: {response.status_code}')
+			return None
+
+	return all_data
+
+def get_cin7_purchase_orders(api_key):
+	base_url = 'https://api.cin7.com/api/v1/'
+	endpoint = "PurchaseOrders"
+	headers = {
+		'Authorization': api_key,
+	}
+
+	all_data = []
+	page = 1
+
+	while True:
+		url = f'{base_url}{endpoint}?fields=id,createdDate,isApproved,reference,total,status,fullyReceivedDate&page={page}&rows=250'
+		response = requests.get(url, headers=headers)
+
+		if response.status_code == 200:
+			data = response.json()
+			all_data.extend(data)
+			if len(data) < 250:
+				break
+			page += 1
+			print("Purchase Order Page", page)
 			time.sleep(1)  # Delay to comply with rate limiting
 		else:
 			print(f'Error: {response.status_code}')
@@ -64,6 +92,18 @@ def filter_out_australia(sales_data):
 	# Filter out entries where 'billingCustomer' equals 'Symet Australia Pty Ltd'
 	filtered_data = [entry for entry in sales_data if entry.get('billingCompany') != 'Symet Australia Pty Ltd']
 	return filtered_data
+
+def get_open_purchase_orders(purchase_orders):
+	# Filter purchase orders that are approved and not fully received
+	open_orders = [
+		order for order in purchase_orders
+		if order.get('isApproved', False) == True and order.get('fullyReceivedDate') is None
+	]
+
+	# Calculate the sum of the 'total' column for the filtered purchase orders
+	total = sum(float(order.get('total', 0)) for order in open_orders)
+
+	return total
 
 def match_sales_with_products(sales_data, products):
 	# Create a dictionary mapping product IDs to their categories
@@ -149,7 +189,7 @@ def aggregate_sales_by_product_id(sales_data, products):
 
 	return df
 
-def calculate_inventory_values_df(products):
+def calculate_inventory_values_df(products, purchases_nz, purchases_aus):
 	total_retail_value = 0
 	total_cost_value = 0
 	total_unit_count = 0
@@ -170,11 +210,17 @@ def calculate_inventory_values_df(products):
 			total_cost_value += stock_on_hand * cost_price
 			total_unit_count += stock_on_hand
 
+	open_purchases_nz = get_open_purchase_orders(purchases_nz)
+	open_purchases_aus = get_open_purchase_orders(purchases_aus)
+	total = open_purchases_nz - open_purchases_aus
+	print(f"total: {open_purchases_nz} - {open_purchases_aus} = {total}")
+
 	# Create a DataFrame with the totals
 	df = pd.DataFrame({
 		'SOH Retail Value': [f"${total_retail_value:,.2f}"],
 		'SOH Stock Value': [f"${total_cost_value:,.2f}"],
-		'SOH': [total_unit_count]
+		'SOH': [total_unit_count],
+		'Open Purchase Orders': [total]
 	})
 
 	return df
