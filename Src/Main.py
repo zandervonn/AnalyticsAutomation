@@ -1,4 +1,5 @@
 from Src.helpers.clean_csv_helpers import clean_df, clean_dfs, sort_by_date_column, sort_by_value_column
+from Src.starshipit.UI.starshipit_ui_automation import *
 from Src.starshipit.starshipit_api import *
 from Src.cin7.Cin7_api import *
 from Src.google.google_automation import *
@@ -77,13 +78,17 @@ def build_report_shopify_ui():
 	save_df_to_excel(shopify_ui_dfs, path_gen('shopify', 'data', 'xlsx'))
 
 def build_report_starshipit_api():
-	print("Getting Starshipit")
+	print("Getting Starshipit API")
 	df = get_all_starshipit_data(starshipit_api_key(), starshipit_subscription_key(), -1, since)
 	cleaned_df = clean_df(df, get_header_list('starshipit') + ['tracking_short_status','tracking_number', 'results.last_updated_date'])
 	save_df_to_csv(cleaned_df, path_gen('starshipit', 'orders', 'csv'), True)
 
 def build_report_starshipit_ui():
-	return
+	print("Getting Starshipit UI")
+	df = starshipit_get_ui_report(since,until)
+	cleaned_df = clean_df(df,["Order Date", "Printed Date", "Delivered Date", "Price", "Carrier", "Package Sent", "AccountName", "Item Skus"])
+	processed_df = process_report(cleaned_df)
+	save_df_to_excel(processed_df, path_gen('starshipit', 'warehouse_report', 'xlsx'))
 
 def build_report_google():
 	print("Getting Google")
@@ -182,19 +187,18 @@ def excel_update():
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	# build_report_shopify_ui()
-	build_report_starshipit_api()
-	# build_report_starshipit_ui()
-	# build_report_cin7_products_and_sales()
-	# build_report_instagram()
-	# build_report_instagram_posts()
-	# build_report_facebook_videos()
-	# build_report_facebook_posts()
-	#
-	# build_report_facebook()
-	# build_report_google()
+	build_report_shopify_ui()
+	build_report_starshipit_ui()
+	build_report_cin7_products_and_sales()
+	build_report_instagram()
+	build_report_instagram_posts()
+	build_report_facebook_videos()
+	build_report_facebook_posts()
 
-	# excel_update()
+	build_report_facebook()
+	build_report_google()
+
+	excel_update()
 
 if __name__ == '__main__':
 	main()

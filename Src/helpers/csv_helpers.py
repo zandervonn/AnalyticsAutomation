@@ -6,6 +6,18 @@ from Src.helpers.json_helpers import *
 
 
 def split_json_list_columns(df, column, keys):
+	"""
+	Split the JSON or list stored in a column into separate columns for each specified key.
+
+	Parameters:
+	- df (pd.DataFrame): DataFrame containing the column with JSON or list.
+	- column (str): Column name in DataFrame where the JSON or list is stored.
+	- keys (list): List of keys to extract values for from the JSON or list.
+
+	Returns:
+	- pd.DataFrame: DataFrame with new columns for each key with values extracted.
+	"""
+
 	# Create new columns for each key
 	for key in keys:
 		df[f"{column}.{key}"] = None
@@ -33,6 +45,17 @@ def split_json_list_columns(df, column, keys):
 	return df
 
 def csv_sheets_to_excel(csv_files, excel_file):
+	"""
+	Convert multiple CSV files into a single Excel workbook with each CSV file as a separate sheet.
+
+	Parameters:
+	- csv_files (list): List of paths to the CSV files.
+	- excel_file (str): Path to save the Excel workbook.
+
+	Returns:
+	- None
+	"""
+
 	with pd.ExcelWriter(excel_file) as writer:
 		for csv_file in csv_files:
 			try:
@@ -48,6 +71,18 @@ def csv_sheets_to_excel(csv_files, excel_file):
 	print(f"CSV saved to {excel_file}")
 
 def save_df_to_csv(df, file_name, safe_save=False):
+	"""
+	Save a DataFrame to a CSV file with optional retry logic if the file is locked.
+
+	Parameters:
+	- df (pd.DataFrame): DataFrame to save to CSV.
+	- file_name (str): Path for the output CSV file.
+	- safe_save (bool): If True, will retry saving if the file is locked.
+
+	Returns:
+	- None
+	"""
+
 	start_time = time.time()
 	retry_interval=5
 	timeout=120
@@ -76,6 +111,16 @@ def save_df_to_csv(df, file_name, safe_save=False):
 			break
 
 def save_df_to_excel(df_or_dict, filename):
+	"""
+	Save a DataFrame or a dictionary of DataFrames to an Excel file.
+
+	Parameters:
+	- df_or_dict (pd.DataFrame | dict): Single DataFrame or dictionary of DataFrames to save.
+	- filename (str): Path for the output Excel file.
+
+	Returns:
+	- None
+	"""
 	with pd.ExcelWriter(filename, engine='openpyxl') as writer:
 		if isinstance(df_or_dict, pd.DataFrame):
 			# If a single DataFrame is provided, save it to the first sheet
@@ -99,6 +144,15 @@ def save_df_to_excel(df_or_dict, filename):
 
 
 def load_csv(path):
+	"""
+	Load a CSV file into a DataFrame with error handling.
+
+	Parameters:
+	- path (str): Path to the CSV file to load.
+
+	Returns:
+	- pd.DataFrame: Loaded data as DataFrame or empty DataFrame if loading fails.
+	"""
 	try:
 		return pd.read_csv(path)
 	except Exception as e:
@@ -106,12 +160,31 @@ def load_csv(path):
 		return pd.DataFrame()
 
 def write_data_to_csv(data, file_path):
+	"""
+	Write a dictionary of data to a CSV file.
+
+	Parameters:
+	- data (dict): Data to write where keys are column headers and values are the row data.
+	- file_path (str): Path for the output CSV file.
+
+	Returns:
+	- None
+	"""
 	with open(file_path, mode='w', newline='') as file:
 		writer = csv.writer(file)
 		writer.writerow(data.keys())
 		writer.writerow(data.values())
 
 def get_excel_files_from_folder(folder):
+	"""
+	Retrieve a list of all Excel files in a folder.
+
+	Parameters:
+	- folder (str): Path to the folder to search for Excel files.
+
+	Returns:
+	- list: List of paths to the Excel files.
+	"""
 	excel_files = []
 	for root, _, files in os.walk(folder):
 		for file in files:
@@ -120,6 +193,15 @@ def get_excel_files_from_folder(folder):
 	return excel_files
 
 def get_excel_files(folder):
+	"""
+	Find and print paths of all Excel files in a folder.
+
+	Parameters:
+	- folder (str): Path to the folder to search for Excel files.
+
+	Returns:
+	- list: List of paths to the Excel files.
+	"""
 	excel_files = []
 	for root, _, files in os.walk(folder):
 		for file in files:
@@ -130,6 +212,15 @@ def get_excel_files(folder):
 	return excel_files
 
 def load_excel_files_into_dict(file_list):
+	"""
+	Load multiple Excel files into a dictionary of DataFrames.
+
+	Parameters:
+	- file_list (list): List of Excel file paths to load.
+
+	Returns:
+	- dict: Dictionary where keys are file names and values are DataFrames of the file's contents.
+	"""
 	data_dict = {}
 	for file in file_list:
 		file_name = os.path.basename(file)
@@ -138,6 +229,16 @@ def load_excel_files_into_dict(file_list):
 	return data_dict
 
 def update_columns(df, raw_data):
+	"""
+	Update columns of a DataFrame with data from a dictionary of raw data.
+
+	Parameters:
+	- df (pd.DataFrame): DataFrame with columns to be updated.
+	- raw_data (dict): Dictionary where keys are file names and values are DataFrames with update data.
+
+	Returns:
+	- pd.DataFrame: Updated DataFrame.
+	"""
 	for col in df.columns:
 		period_count = col.count('.')
 		if period_count >= 2:
@@ -154,6 +255,16 @@ def update_columns(df, raw_data):
 
 
 def update_files(raw_folder, update_folder):
+	"""
+	Update Excel files in a folder using data from another folder's Excel files.
+
+	Parameters:
+	- raw_folder (str): Path to the folder containing the raw data Excel files.
+	- update_folder (str): Path to the folder containing Excel files to be updated.
+
+	Returns:
+	- None
+	"""
 	print("Updating files...")
 
 	raw_files = get_excel_files(raw_folder)
