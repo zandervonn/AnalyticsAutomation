@@ -15,6 +15,9 @@ secrets = load_properties(find_path_upwards(r'config\secrets.txt'))
 def output_folder_path() -> str:
 	return secrets['output_folder_path']
 
+def employee_mapping_path() -> str:
+	return secrets['employee_mapping_path']
+
 # Shopify
 def shopify_url() -> str:
 	return secrets['shopify_url']

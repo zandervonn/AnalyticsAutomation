@@ -80,13 +80,14 @@ def build_report_shopify_ui():
 def build_report_starshipit_api():
 	print("Getting Starshipit API")
 	df = get_all_starshipit_data(starshipit_api_key(), starshipit_subscription_key(), -1, since)
-	cleaned_df = clean_df(df, get_header_list('starshipit') + ['tracking_short_status','tracking_number', 'results.last_updated_date'])
+	cleaned_df = clean_df(df, get_header_list('starshipit'))
 	save_df_to_csv(cleaned_df, path_gen('starshipit', 'orders', 'csv'), True)
 
 def build_report_starshipit_ui():
 	print("Getting Starshipit UI")
+	since, until = get_dates("today", "month", 1)
 	df = starshipit_get_ui_report(since,until)
-	cleaned_df = clean_df(df,["Order Date", "Printed Date", "Delivered Date", "Price", "Carrier", "Package Sent", "AccountName", "Item Skus"])
+	cleaned_df = clean_df(df,get_header_list("starshipit_ui"))
 	processed_df = process_report(cleaned_df)
 	save_df_to_excel(processed_df, path_gen('starshipit', 'warehouse_report', 'xlsx'))
 
@@ -187,16 +188,16 @@ def excel_update():
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	build_report_shopify_ui()
+	# build_report_shopify_ui()
 	build_report_starshipit_ui()
-	build_report_cin7_products_and_sales()
-	build_report_instagram()
-	build_report_instagram_posts()
-	build_report_facebook_videos()
-	build_report_facebook_posts()
-
-	build_report_facebook()
-	build_report_google()
+	# build_report_cin7_products_and_sales() # cin 7 case # 00596468
+	# build_report_instagram()
+	# build_report_instagram_posts()
+	# build_report_facebook_videos()
+	# build_report_facebook_posts()
+	#
+	# build_report_facebook()
+	# build_report_google()
 
 	excel_update()
 

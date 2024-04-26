@@ -99,7 +99,7 @@ def clear_and_send_keys(driver, xpath, text):
 	element.clear()
 	element.send_keys(text)
 
-def refresh_until_visible(driver, xpath, timeout=60):
+def refresh_until_visible(driver, xpath, timeout=120):
 	"""
 	Continuously refreshes the page until the specified element is visible.
 	:param timeout: Maximum time to wait before giving up, in seconds.

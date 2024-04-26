@@ -78,7 +78,15 @@ def get_header_list(list_name):
 			return [cell.value for cell in row[1:] if cell.value and not cell.fill.start_color.index == ignore_format.start_color.rgb]
 	return []
 
-
+def load_employee_mapping(file_path):
+	mapping = {}
+	with open(file_path, 'r') as file:
+		for line in file:
+			parts = line.strip().split('=')
+			if len(parts) == 2:
+				key, value = parts[0].strip(), parts[1].strip()
+				mapping[key] = value
+	return mapping
 
 def remove_html_tags(text):
 	# Remove HTML tags

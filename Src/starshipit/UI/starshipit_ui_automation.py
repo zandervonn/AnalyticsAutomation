@@ -1,6 +1,7 @@
+from Src.helpers.file_helpers import load_employee_mapping
 from Src.helpers.ui_helpers import *
 from Src.starshipit.UI.starshipit_locators import *
-from Src.access import starshipit_username, starshipit_password
+from Src.access import starshipit_username, starshipit_password, employee_mapping_path
 
 
 def login(driver, username, password):
@@ -23,7 +24,8 @@ def get_report(driver, since, until):
 	clear_and_send_keys(driver, START_DATE_FIELD, since.split("T")[0])
 	clear_and_send_keys(driver, END_DATE_FIELD, until.split("T")[0])
 	driver.find_element(By.XPATH, CHILD_ORDER_CHECKBOX).click()
-	click_and_wait(driver, GENERATE_BUTTON)
+	# click_and_wait(driver, GENERATE_BUTTON)
+	time.sleep(1)
 	refresh_until_visible(driver, REPORT_STATUS_READY)
 	driver.find_element(By.XPATH, REPORT_DOWLOAD_CSV).click()
 	return wait_and_rename_downloaded_file(output_folder_path()+"downloads", "starshipit_package_report.csv")
@@ -36,12 +38,16 @@ def process_report(df):
 	postage_types = calculate_postage_type(df)
 	package_types = calculate_package_type(df)
 	status_info = calculate_status(rawData.copy())
-	orders_items_info = calculate_orders_packed_items_picked(df)
+	orders_items_info = calculate_orders_packed_items_picked(df).head(7).reset_index(drop=True)
 
-	accounts_orders = pivot_orders_picked_by_day(df)
-	accounts_items = pivot_items_picked_by_day(df)
+	accounts_orders = pivot_orders_picked_by_day(df).head(7)
+	accounts_items = pivot_items_picked_by_day(df).head(7)
 
-	page2 = pd.concat([dateAverages, postage_info, postage_types, package_types, status_info, orders_items_info, accounts_orders, accounts_items], axis=1)
+	name_mapping = load_employee_mapping(employee_mapping_path())
+	accounts_orders = rename_columns_using_mapping(accounts_orders, name_mapping)
+	accounts_items = rename_columns_using_mapping(accounts_items, name_mapping)
+
+	page2 = pd.concat([dateAverages, postage_info, postage_types, package_types, status_info, orders_items_info], axis=1)
 
 	# Create a dictionary with each DataFrame
 	dfs = {
@@ -70,7 +76,13 @@ def process_handeling_dates_average(df):
 
 def calculate_postage(df):
 	df['Postage Cost'] = df['Price']
-	df['Postage Recovered'] = df['Price'].sum()
+
+	# Create a new column with NaNs
+	df['Postage Recovered'] = pd.NA
+
+	# Set the total only in the first row
+	df.loc[0, 'Postage Recovered'] = df['Price'].sum()
+
 	return df[['Postage Cost', 'Postage Recovered']]
 
 def calculate_postage_type(df):
@@ -98,6 +110,7 @@ def pivot_orders_picked_by_day(df):
 	# Flatten the MultiIndex columns and join with the index (Date)
 	pivot_df.columns = [col for col in pivot_df.columns]  # Flatten MultiIndex
 	pivot_df = pivot_df.reset_index()  # Make sure 'Date' is a column
+	pivot_df = pivot_df.sort_values(by='Printed Date', ascending=False)  # Sort by date descending
 
 	return pivot_df
 
@@ -115,24 +128,22 @@ def pivot_items_picked_by_day(df):
 	# Flatten the MultiIndex columns and join with the index (Date)
 	pivot_df.columns = [col for col in pivot_df.columns]  # Flatten MultiIndex
 	pivot_df = pivot_df.reset_index()  # Make sure 'Date' is a column
+	pivot_df = pivot_df.sort_values(by='Date', ascending=False)  # Sort by date descending
 
 	return pivot_df
 
 
 def calculate_orders_packed_items_picked(df):
-	# Convert dates and format them
-	df['Orders Packed Date'] = pd.to_datetime(df['Order Date']).dt.strftime('%d-%m-%y')
+	# Convert dates and format them without the time
+	df['Orders Packed Date'] = pd.to_datetime(df['Order Date']).dt.date
 	orders_packed_count = df.groupby('Orders Packed Date').size().reset_index(name='Orders Packed')
-	orders_packed_count['Orders Packed Date'] = pd.to_datetime(orders_packed_count['Orders Packed Date'])
-	orders_packed_count.rename(columns={'Orders Packed Date': 'Items Picked Date'}, inplace=True)
 
-	df['Items Picked Date'] = pd.to_datetime(df['Order Date']).dt.strftime('%d-%m-%y')
 	df['Items Picked'] = df['Item Skus'].apply(lambda x: len(x.split(';')) if isinstance(x, str) else 1)
-	items_picked_count = df.groupby('Items Picked Date')['Items Picked'].sum().reset_index()
-	items_picked_count['Items Picked Date'] = pd.to_datetime(items_picked_count['Items Picked Date'])
+	items_picked_count = df.groupby('Orders Packed Date')['Items Picked'].sum().reset_index()
 
 	# Merge using the corrected column names
-	result = orders_packed_count.merge(items_picked_count, on='Items Picked Date', how='outer')
+	result = orders_packed_count.merge(items_picked_count, on='Orders Packed Date', how='outer')
+	result = result.sort_values(by='Orders Packed Date', ascending=False)  # Sort by date descending
 	return result
 
 def calculate_days_between(d1, d2):
@@ -146,3 +157,14 @@ def status_label(row):
 	if pd.isnull(row['Delivered Date']):
 		return 'Still in Transit'
 	return 'Delivered'
+
+def rename_columns_using_mapping(df, mapping):
+	# Trim all the white spaces in the column names
+	trimmed_column_names = {col: col.strip() for col in df.columns}
+	df = df.rename(columns=trimmed_column_names)
+
+	# Use the mapping to rename the columns
+	new_column_names = {col: mapping.get(col, col) for col in df.columns}
+	df = df.rename(columns=new_column_names)
+
+	return df
