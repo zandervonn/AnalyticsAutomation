@@ -18,6 +18,9 @@ def output_folder_path() -> str:
 def employee_mapping_path() -> str:
 	return secrets['employee_mapping_path']
 
+def sending_address() -> str:
+	return secrets['sending_address']
+
 # Shopify
 def shopify_url() -> str:
 	return secrets['shopify_url']

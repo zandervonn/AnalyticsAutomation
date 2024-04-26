@@ -78,7 +78,7 @@ def get_header_list(list_name):
 			return [cell.value for cell in row[1:] if cell.value and not cell.fill.start_color.index == ignore_format.start_color.rgb]
 	return []
 
-def load_employee_mapping(file_path):
+def load_mapping(file_path):
 	mapping = {}
 	with open(file_path, 'r') as file:
 		for line in file:

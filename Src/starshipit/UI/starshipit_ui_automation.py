@@ -1,7 +1,7 @@
-from Src.helpers.file_helpers import load_employee_mapping
+from Src.helpers.file_helpers import load_mapping
 from Src.helpers.ui_helpers import *
 from Src.starshipit.UI.starshipit_locators import *
-from Src.access import starshipit_username, starshipit_password, employee_mapping_path
+from Src.access import starshipit_username, starshipit_password, employee_mapping_path, sending_address
 
 
 def login(driver, username, password):
@@ -21,10 +21,12 @@ def starshipit_get_ui_report(since, until):
 		close(driver)
 
 def get_report(driver, since, until):
-	clear_and_send_keys(driver, START_DATE_FIELD, since.split("T")[0])
-	clear_and_send_keys(driver, END_DATE_FIELD, until.split("T")[0])
+	since = since.split("T")[0]
+	until = until.split("T")[0]
+	clear_and_send_keys(driver, START_DATE_FIELD, since)
+	clear_and_send_keys(driver, END_DATE_FIELD, until)
 	driver.find_element(By.XPATH, CHILD_ORDER_CHECKBOX).click()
-	# click_and_wait(driver, GENERATE_BUTTON)
+	#click_and_wait(driver, GENERATE_BUTTON) # turn off when testing
 	time.sleep(1)
 	refresh_until_visible(driver, REPORT_STATUS_READY)
 	driver.find_element(By.XPATH, REPORT_DOWLOAD_CSV).click()
@@ -43,9 +45,11 @@ def process_report(df):
 	accounts_orders = pivot_orders_picked_by_day(df).head(7)
 	accounts_items = pivot_items_picked_by_day(df).head(7)
 
-	name_mapping = load_employee_mapping(employee_mapping_path())
+	name_mapping = load_mapping(employee_mapping_path())
 	accounts_orders = rename_columns_using_mapping(accounts_orders, name_mapping)
 	accounts_items = rename_columns_using_mapping(accounts_items, name_mapping)
+
+	full_address_df = create_full_address_df(df)
 
 	page2 = pd.concat([dateAverages, postage_info, postage_types, package_types, status_info, orders_items_info], axis=1)
 
@@ -54,7 +58,8 @@ def process_report(df):
 		'RawData': rawData,
 		'SummaryPage': page2,
 		'AccountsOrders': accounts_orders,
-		'AccountsItems': accounts_items
+		'AccountsItems': accounts_items,
+		'FullAddresses': full_address_df
 	}
 
 	return dfs
@@ -145,6 +150,19 @@ def calculate_orders_packed_items_picked(df):
 	result = orders_packed_count.merge(items_picked_count, on='Orders Packed Date', how='outer')
 	result = result.sort_values(by='Orders Packed Date', ascending=False)  # Sort by date descending
 	return result
+
+def create_full_address_df(df):
+	# Concatenate the address components into a full address
+	df['Full Address'] = df[['Street', 'Suburb', 'State', 'Postcode', 'Country']].apply(
+		lambda row: ', '.join(str(val) if not pd.isna(val) else '' for val in row),
+		axis=1
+	)
+
+	df['Sending Address'] = sending_address()  # assuming sending_address() returns a string
+
+	# Select only the relevant columns
+	address_df = df[['Street', 'Suburb', 'State', 'Postcode', 'Country', 'Full Address', 'Sending Address']]
+	return address_df
 
 def calculate_days_between(d1, d2):
 	"""Calculate the difference in days between two dates."""

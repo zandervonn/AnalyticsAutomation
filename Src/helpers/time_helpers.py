@@ -19,6 +19,8 @@ def get_dates(from_date, time_span, num):
 		delta = timedelta(days=num)
 	elif time_span == 'months':  # Approximate month as 30 days
 		delta = timedelta(days=30*num)
+	else:
+		print("Time span cannot be decoded, calculating by days")
 
 	since = (base_date - delta).strftime('%Y-%m-%dT%H:%M:%S')
 	until = base_date.strftime('%Y-%m-%dT%H:%M:%S')

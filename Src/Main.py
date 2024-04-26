@@ -85,9 +85,9 @@ def build_report_starshipit_api():
 
 def build_report_starshipit_ui():
 	print("Getting Starshipit UI")
-	since, until = get_dates("today", "month", 1)
-	df = starshipit_get_ui_report(since,until)
-	cleaned_df = clean_df(df,get_header_list("starshipit_ui"))
+	_since, _until = get_dates("today", "months", 1)
+	df = starshipit_get_ui_report(_since, _until)
+	cleaned_df = clean_df(df, get_header_list("starshipit_ui")+["Street", "Suburb", "State", "Postcode", "Country"])
 	processed_df = process_report(cleaned_df)
 	save_df_to_excel(processed_df, path_gen('starshipit', 'warehouse_report', 'xlsx'))
 
@@ -101,38 +101,38 @@ def build_report_google():
 
 def build_report_facebook():
 	print("Getting Facebook")
-	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
-	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  get_header_list('facebook'), since, until)
+	_since, _until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
+	facebook_df = get_meta_insights(meta_access_token(),  meta_facebook_id(),  get_header_list('facebook'), _since, _until)
 	clean_facebook_df = clean_df(facebook_df, ["end_time"]+get_header_list('facebook'))
 	split_facebook_df = split_insights_to_sheets(clean_facebook_df, get_header_list('facebook_pages'))
 	save_df_to_excel(split_facebook_df, path_gen('facebook', 'data', 'xlsx'))
 
 def build_report_facebook_posts():
 	print("Getting Facebook posts")
-	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
-	facebook_df = get_facebook_posts_and_insights(meta_access_token(),  meta_facebook_id(), get_header_list('facebook_posts'), since, until)
+	_since, _until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
+	facebook_df = get_facebook_posts_and_insights(meta_access_token(),  meta_facebook_id(), get_header_list('facebook_posts'), _since, _until)
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_posts'))
 	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'))
 
 def build_report_facebook_videos():
 	print("Getting Facebook videos")
-	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
-	facebook_df = get_facebook_video_insights(meta_access_token(),  meta_facebook_id(), since, until)
+	_since, _until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
+	facebook_df = get_facebook_video_insights(meta_access_token(),  meta_facebook_id(), _since, _until)
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_videos'))
 	facebook_df = clean_facebook_video_df(facebook_df)
 	save_df_to_csv(facebook_df, path_gen('facebook_videos', 'data', 'csv'))
 
 def build_report_instagram_posts():
 	print("Getting Instagram posts")
-	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
-	facebook_df = get_insta_posts_and_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), since, until)
+	_since, _until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
+	facebook_df = get_insta_posts_and_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), _since, _until)
 	facebook_df = clean_df(facebook_df, get_header_list('instagram_posts'))
 	save_df_to_csv(facebook_df, path_gen('instagram_posts', 'data', 'csv'))
 
 def build_report_instagram():
 	print("Getting Instagram")
-	since, until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
-	insta_df = get_meta_insights(meta_access_token(), meta_insta_id(), get_header_list('instagram'), since, until)
+	_since, _until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
+	insta_df = get_meta_insights(meta_access_token(), meta_insta_id(), get_header_list('instagram'), _since, _until)
 	clean_insta_df = clean_df(insta_df,  ["end_time"]+get_header_list('instagram'))
 	save_df_to_csv(clean_insta_df, path_gen('instagram', 'data', 'csv'))
 
