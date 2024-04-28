@@ -32,7 +32,7 @@ def get_report(driver, since, until):
 	driver.find_element(By.XPATH, REPORT_DOWLOAD_CSV).click()
 	return wait_and_rename_downloaded_file(output_folder_path()+"downloads", "starshipit_package_report.csv")
 
-def process_report(df):
+def process_starshipit_ui_report(df):
 	rawData = process_handeling_dates(df.copy())
 
 	dateAverages = process_handeling_dates_average(rawData.copy())

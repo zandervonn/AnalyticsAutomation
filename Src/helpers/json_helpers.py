@@ -3,6 +3,10 @@ import json
 import pandas as pd
 from io import StringIO
 
+def dump(json_in):
+	tmp = json.dumps(json_in, indent=4)
+	print(tmp)
+
 def parse_json(text):
 	if isinstance(text, dict):
 		return text  # Return the dictionary directly if the input is already a dictionary

@@ -1,12 +1,11 @@
 from Src.helpers.file_helpers import find_path_upwards
 
-
 def load_properties(file_path: str) -> dict:
 	properties = {}
 	with open(file_path, 'r') as file:
 		for line in file:
 			if '=' in line:
-				key, value = line.strip().split('=', 1)
+				key, value = map(str.strip, line.split('=', 1))
 				properties[key] = value
 	return properties
 
@@ -68,6 +67,12 @@ def cin7_api_username_AUS() -> str:
 
 def cin7_api_username_NZ() -> str:
 	return secrets['cin7_api_username_NZ']
+
+def cin7_username() -> str:
+	return secrets['cin7_username']
+
+def cin7_password() -> str:
+	return secrets['cin7_password']
 
 # Meta
 def meta_access_token() -> str:

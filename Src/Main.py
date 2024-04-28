@@ -1,3 +1,4 @@
+from Src.cin7.UI.cin7_ui_automation import cin7_get_ui_report
 from Src.helpers.clean_csv_helpers import clean_df, clean_dfs, sort_by_date_column, sort_by_value_column
 from Src.starshipit.UI.starshipit_ui_automation import *
 from Src.starshipit.starshipit_api import *
@@ -88,7 +89,7 @@ def build_report_starshipit_ui():
 	_since, _until = get_dates("today", "months", 1)
 	df = starshipit_get_ui_report(_since, _until)
 	cleaned_df = clean_df(df, get_header_list("starshipit_ui")+["Street", "Suburb", "State", "Postcode", "Country"])
-	processed_df = process_report(cleaned_df)
+	processed_df = process_starshipit_ui_report(cleaned_df)
 	save_df_to_excel(processed_df, path_gen('starshipit', 'warehouse_report', 'xlsx'))
 
 def build_report_google():
@@ -136,7 +137,10 @@ def build_report_instagram():
 	clean_insta_df = clean_df(insta_df,  ["end_time"]+get_header_list('instagram'))
 	save_df_to_csv(clean_insta_df, path_gen('instagram', 'data', 'csv'))
 
-def build_report_cin7_products_and_sales():
+def build_report_cin7_ui():
+	cin7_get_ui_report()
+
+def build_report_cin7():
 	print("Getting Cin7 Products")
 	products = get_all_products(cin7_api_key_NZ())
 
@@ -160,8 +164,13 @@ def build_report_cin7_products_and_sales():
 	save_df_to_csv(top_selling, path_gen('cin7', 'Top_Selling', 'csv'))
 
 	print("Getting Cin7 Stock Values")
-	stock_values = calculate_inventory_values_df(products, purchases_nz, purchases_aus)
+	stock_values = calculate_inventory_values(products, purchases_nz, purchases_aus)
 	save_df_to_csv(stock_values, path_gen('cin7', 'stock_values', 'csv'))
+
+	# print("Getting Cin7 Aged Products")
+	# production_jobs = get_cin7_production_jobs(cin7_api_key_NZ())
+	# aged_inventory_df = calculate_aged_inventory(production_jobs)
+	# save_df_to_csv(aged_inventory_df, path_gen('cin7', 'aged_inventory', 'csv'))
 
 #todo keep a years worth of data
 def excel_update():
@@ -188,16 +197,17 @@ def excel_update():
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	# build_report_shopify_ui()
+	build_report_shopify_ui()
 	build_report_starshipit_ui()
-	# build_report_cin7_products_and_sales() # cin 7 case # 00596468
-	# build_report_instagram()
-	# build_report_instagram_posts()
-	# build_report_facebook_videos()
-	# build_report_facebook_posts()
-	#
-	# build_report_facebook()
-	# build_report_google()
+	# build_report_cin7_ui()
+	build_report_cin7() # cin 7 case # 00596468
+	build_report_instagram()
+	build_report_instagram_posts()
+	build_report_facebook_videos()
+	build_report_facebook_posts()
+
+	build_report_facebook()
+	build_report_google()
 
 	excel_update()
 

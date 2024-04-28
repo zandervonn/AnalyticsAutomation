@@ -1,3 +1,4 @@
+import json
 import os
 import time
 
@@ -10,7 +11,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import tkinter as tk
 
-from Src.GUI.tkinter_app import CustomDialog
 from Src.access import output_folder_path
 
 
@@ -150,6 +150,7 @@ def wait_and_rename_downloaded_file(download_dir, new_filename, timeout=300):
 
 
 def wait_for_user_input():
+	from Src.GUI.tkinter_app import CustomDialog
 	print("waiting for user input")
 	root = tk.Tk()
 	root.withdraw()  # Hide the root window

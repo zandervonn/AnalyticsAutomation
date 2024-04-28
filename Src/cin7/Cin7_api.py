@@ -1,5 +1,6 @@
 import time
 from collections import defaultdict
+from datetime import datetime, timedelta
 
 import pandas as pd
 import requests
@@ -81,6 +82,34 @@ def get_cin7_purchase_orders(api_key):
 				break
 			page += 1
 			print("Purchase Order Page", page)
+			time.sleep(1)  # Delay to comply with rate limiting
+		else:
+			print(f'Error: {response.status_code}')
+			return None
+
+	return all_data
+
+def get_cin7_production_jobs(api_key):
+	base_url = 'https://api.cin7.com/api/v1/'
+	endpoint = "ProductionJobs"
+	headers = {
+		'Authorization': api_key,
+	}
+
+	all_data = []
+	page = 1
+
+	while True:
+		url = f'{base_url}{endpoint}?page={page}&rows=250'
+		response = requests.get(url, headers=headers)
+
+		if response.status_code == 200:
+			data = response.json()
+			all_data.extend(data)
+			if len(data) < 250:
+				break
+			page += 1
+			print("Production Jobs Page", page)
 			time.sleep(1)  # Delay to comply with rate limiting
 		else:
 			print(f'Error: {response.status_code}')
@@ -189,7 +218,7 @@ def aggregate_sales_by_product_id(sales_data, products):
 
 	return df
 
-def calculate_inventory_values_df(products, purchases_nz, purchases_aus):
+def calculate_inventory_values(products, purchases_nz, purchases_aus):
 	total_retail_value = 0
 	total_cost_value = 0
 	total_unit_count = 0
@@ -224,3 +253,45 @@ def calculate_inventory_values_df(products, purchases_nz, purchases_aus):
 	})
 
 	return df
+
+def parse_aged_record(record):
+	# Extract the completed date from the record level
+	completed_date = record.get('completedDate')
+	if completed_date:
+		# Adjust timezone offset here if necessary
+		completed_date = pd.to_datetime(completed_date, utc=True) + timedelta(hours=13)
+		completed_date = completed_date.date()  # Convert to date format
+	else:
+		# Define default value for completedDate if it's None
+		completed_date = datetime.now().date()  # or any other default date
+
+	# Flatten the components within each product
+	products = record.get('products', [])
+	for product in products:
+		components = product.get('components', [])
+		for component in components:
+			yield {
+				'Date': completed_date,  # Use the completed date from record level
+				'Ref': record.get('reference'),
+				'Code': component.get('code'),
+				'Product': component.get('name'),
+				'Option1': component.get('option1'),
+				'Option2': component.get('option2'),
+				'Qty': component.get('standardQty'),
+				'Branch': record.get('company'),  # Assuming default value
+				'Value': component.get('unitCost'),
+				'Days Old': '',  # Calculated later
+			}
+
+def calculate_aged_inventory(production_jobs):
+	flattened_data = [component for record in production_jobs for component in parse_aged_record(record)]
+	inventory_df = pd.DataFrame(flattened_data)
+
+	# Assuming 'Date' is already in the correct format after parse_record
+	current_date = datetime.now().date()
+	inventory_df['Days Old'] = inventory_df['Date'].apply(lambda x: (current_date - x).days if pd.notnull(x) else 0)
+
+	# Replace NaNs or NaTs with an empty string or a default value for 'Date'
+	inventory_df['Date'] = inventory_df['Date'].fillna('')
+
+	return inventory_df
