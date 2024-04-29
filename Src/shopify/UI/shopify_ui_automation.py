@@ -28,22 +28,51 @@ def get_report(driver, report_name, since, until):
 
 def get_customers(driver, query_tuples):
 	data = []
+	total_customers = 0
+	new_customers = 0
 
 	for query_name, query in query_tuples:
 		url = f_string(SHOPIFY_CUSTOMERS_URL_TEMPLATE, query)
 		print(url)
 		open_page(driver, url)
 		wait_for_element(driver, CUSTOMER_COUNT_NUM)
-		num_count = get_element_text(driver, CUSTOMER_COUNT_NUM)
-		percent_count = get_element_text(driver, CUSTOMER_COUNT_PERCENT)
+		num_count = get_element_text(driver, CUSTOMER_COUNT_NUM).replace(',', '')
+		percent_count = get_element_text(driver, CUSTOMER_COUNT_PERCENT).replace('%', '')
+
+		# Store counts numerically
 		data.append({
 			'type': query_name,
-			'count': num_count,
-			'percent': percent_count
+			'count': int(num_count),
+			'percent': float(percent_count)
 		})
 
+		if query_name == "Total":
+			total_customers = int(num_count)
+		elif query_name == "New":
+			new_customers = int(num_count)
+
 	df = pd.DataFrame(data)
-	return "Customer Metrics", df
+
+	# Calculate additional metrics
+	active_customers = df[df['type'] == 'Active']['count'].values[0]
+	non_active_customers = total_customers - active_customers
+	ratio_active_customers = (active_customers / total_customers * 100) if total_customers else 0
+
+	# Calculate prior period base
+	prior_period_customer_base = total_customers - new_customers
+
+	# Reformat DataFrame
+	result_df = pd.DataFrame({
+		'Prior Period Customer Base': [prior_period_customer_base],
+		'Current Customer Base': [total_customers],
+		'Australia Customers in NZ Shopify': df[df['type'] == 'Australian']['count'].values[0],
+		'Increase in Customer Base': [new_customers],
+		'Active Customers': [active_customers],
+		'Non-Active Customers': [non_active_customers],
+		'Ratio - Active Customers': [f"{ratio_active_customers:.2f}%"]
+	})
+
+	return "Customer Metrics", result_df
 
 def set_report_and_timeframe(driver, date_range):
 	wait_for_table_data(driver, TABLE_CELL)
@@ -55,6 +84,7 @@ def handle_customer_count(driver):
 	query_tuples = [
 		("Active", "last_order_date%20%3E%3D%20-12m"),
 		("Australian", "customer_countries%20CONTAINS%20%27AU%27"),
+		("New", "customer_added_date%20>%3D%20-7d%20"),
 		("Total", "")  # For total customers
 	]
 	name, df = get_customers(driver, query_tuples)

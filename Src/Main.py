@@ -211,5 +211,7 @@ def main():
 
 	excel_update()
 
+	update_template_files(r"C:\Users\Zander\IdeaProjects\Automation-Gel\config\templates", r"C:\Users\Zander\IdeaProjects\Automation-Gel\outputfiles", r"C:\Users\Zander\IdeaProjects\Automation-Gel\outputfiles\Clean Outputs")
+
 if __name__ == '__main__':
 	main()

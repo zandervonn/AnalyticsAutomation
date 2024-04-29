@@ -161,7 +161,6 @@ def get_instagram_post_metrics(meta_token, post_id, metrics):
 
 	response = requests.get(url, params=params)
 	data = response.json()
-	print(data)
 	return data
 
 def get_instagram_post_headers(meta_token, post_id, metrics):

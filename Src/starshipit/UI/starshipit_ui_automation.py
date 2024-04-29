@@ -26,7 +26,7 @@ def get_report(driver, since, until):
 	clear_and_send_keys(driver, START_DATE_FIELD, since)
 	clear_and_send_keys(driver, END_DATE_FIELD, until)
 	driver.find_element(By.XPATH, CHILD_ORDER_CHECKBOX).click()
-	#click_and_wait(driver, GENERATE_BUTTON) # turn off when testing
+	# click_and_wait(driver, GENERATE_BUTTON) # todo turn off when testing
 	time.sleep(1)
 	refresh_until_visible(driver, REPORT_STATUS_READY)
 	driver.find_element(By.XPATH, REPORT_DOWLOAD_CSV).click()
@@ -107,7 +107,7 @@ def calculate_status(df):
 
 def pivot_orders_picked_by_day(df):
 	# Normalize the date to remove the time component and convert to 'YYYY-MM-DD' string format
-	df['Printed Date'] = pd.to_datetime(df['Printed Date']).dt.date
+	df['Date'] = pd.to_datetime(df['Printed Date']).dt.date
 
 	# Pivot the table to get counts of AccountName per Date
 	pivot_df = df.pivot_table(index='Printed Date', columns='AccountName', aggfunc='size', fill_value=0)
@@ -148,7 +148,9 @@ def calculate_orders_packed_items_picked(df):
 
 	# Merge using the corrected column names
 	result = orders_packed_count.merge(items_picked_count, on='Orders Packed Date', how='outer')
+	result.insert(2, 'Items Picked Date', result['Orders Packed Date'])
 	result = result.sort_values(by='Orders Packed Date', ascending=False)  # Sort by date descending
+
 	return result
 
 def create_full_address_df(df):

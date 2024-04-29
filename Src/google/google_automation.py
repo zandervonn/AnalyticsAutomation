@@ -3,16 +3,15 @@ from datetime import datetime
 
 import pandas as pd
 from google.auth.transport.requests import Request
-from google_auth_oauthlib import flow
 from google.oauth2.credentials import Credentials
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import RunReportRequest, Dimension, Metric, DateRange, OrderBy
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 from Src.helpers.clean_csv_helpers import clean_and_convert_date_column
 
 
 def get_credentials(client_secret_path, token_path):
-
 	creds = None
 	scopes = ["https://www.googleapis.com/auth/analytics.readonly"]
 
@@ -21,24 +20,28 @@ def get_credentials(client_secret_path, token_path):
 		creds = Credentials.from_authorized_user_file(token_path, scopes)
 
 	# If there are no (valid) credentials available, let the user log in.
-	if not creds or not creds.valid:
-		if creds and creds.expired and creds.refresh_token:
-			creds.refresh(Request())
-		else:
-			appflow = flow.InstalledAppFlow.from_client_secrets_file(
-				client_secret_path,
-				scopes=scopes,
-			)
-			launch_browser = True
-			if launch_browser:
-				# Modify the authorization URL to include 'prompt=consent'
-				authorization_url, _ = appflow.authorization_url(prompt='consent')
-				creds = appflow.run_local_server(authorization_url=authorization_url)
+	try:
+		if not creds or not creds.valid:
+			if creds and creds.expired and creds.refresh_token:
+				creds.refresh(Request())
 			else:
-				appflow.run_console()
-		# Save the credentials for the next run
-		with open(token_path, 'w') as token:
-			token.write(creds.to_json())
+				appflow = InstalledAppFlow.from_client_secrets_file(
+					client_secret_path,
+					scopes=scopes,
+				)
+				creds = appflow.run_local_server(port=0)
+			# Save the credentials for the next run
+			with open(token_path, 'w') as token:
+				token.write(creds.to_json())
+	except Exception as e:
+		print("Failed to refresh or obtain new token, error:", e)
+		# If the refresh or login fails, delete the token file to force reauthentication
+		if os.path.exists(token_path):
+			os.remove(token_path)
+			print(f"Deleted corrupted token file at {token_path}.")
+		# Rerun this function to reattempt login
+		creds = get_credentials(client_secret_path, token_path)
+
 	return creds
 
 def build_dataframe(response):
