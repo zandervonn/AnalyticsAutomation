@@ -201,7 +201,7 @@ def aggregate_sales_by_product_id(sales_data, products):
 	bottom_performers = [{'Product Name': product['name'], 'Total Sales': 0}
 	                     for product in products if product['id'] not in aggregated_data and
 	                     product.get('status', '') == 'Public' and
-	                     product.get('subCategory', '') != 'Discontinued' and
+	                     # product.get('subCategory', '') != 'Discontinued' and some discontinued they still want to track
 	                     product.get('category', '') != 'PACKAGING' and
 	                     any(option.get('stockOnHand', 0) > 0 for option in product.get('productOptions', []))]
 

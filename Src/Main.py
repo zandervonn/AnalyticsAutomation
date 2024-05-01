@@ -197,21 +197,21 @@ def excel_update():
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	build_report_shopify_ui()
+	# build_report_shopify_ui()
 	build_report_starshipit_ui()
 	# build_report_cin7_ui()
-	build_report_cin7() # cin 7 case # 00596468
-	build_report_instagram()
-	build_report_instagram_posts()
-	build_report_facebook_videos()
-	build_report_facebook_posts()
+	# build_report_cin7() # cin 7 case # 00596468
+	# build_report_instagram()
+	# build_report_instagram_posts()
+	# build_report_facebook_videos()
+	# build_report_facebook_posts()
+	#
+	# build_report_facebook()
+	# build_report_google()
+	#
+	# excel_update()
 
-	build_report_facebook()
-	build_report_google()
-
-	excel_update()
-
-	update_template_files(r"C:\Users\Zander\IdeaProjects\Automation-Gel\config\templates", r"C:\Users\Zander\IdeaProjects\Automation-Gel\outputfiles", r"C:\Users\Zander\IdeaProjects\Automation-Gel\outputfiles\Clean Outputs")
+	# update_template_files(r"C:\Users\Zander\IdeaProjects\Automation-Gel\config\templates", r"C:\Users\Zander\IdeaProjects\Automation-Gel\outputfiles", r"C:\Users\Zander\IdeaProjects\Automation-Gel\outputfiles\Clean Outputs")
 
 if __name__ == '__main__':
 	main()
