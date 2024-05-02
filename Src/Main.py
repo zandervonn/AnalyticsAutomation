@@ -198,18 +198,22 @@ def excel_update():
 
 def main():
 	# build_report_shopify_ui()
-	build_report_starshipit_ui()
+	# build_report_starshipit_ui()
 	# build_report_cin7_ui()
-	# build_report_cin7() # cin 7 case # 00596468
+	# build_report_cin7()
 	# build_report_instagram()
 	# build_report_instagram_posts()
 	# build_report_facebook_videos()
 	# build_report_facebook_posts()
 	#
 	# build_report_facebook()
-	# build_report_google()
+	build_report_google()
 	#
 	# excel_update()
+
+	# df = clean_session_sources(load_csv(path_gen('google_sessions', 'data', 'csv')), r"C:\Users\Zander\IdeaProjects\Automation-Gel\config\google\googleSessionsMapping")
+	# df = clean_session_sources(load_csv(path_gen('google_sessions', 'data', 'csv')))
+	# save_df_to_csv(df, path_gen('google_sessions', 'out', 'csv'))
 
 	# update_template_files(r"C:\Users\Zander\IdeaProjects\Automation-Gel\config\templates", r"C:\Users\Zander\IdeaProjects\Automation-Gel\outputfiles", r"C:\Users\Zander\IdeaProjects\Automation-Gel\outputfiles\Clean Outputs")
 

@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -9,6 +10,8 @@ from google.analytics.data_v1beta.types import RunReportRequest, Dimension, Metr
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 from Src.helpers.clean_csv_helpers import clean_and_convert_date_column
+from Src.helpers.csv_helpers import save_df_to_csv
+from Src.helpers.file_helpers import path_gen
 
 
 def get_credentials(client_secret_path, token_path):
@@ -139,7 +142,87 @@ def convert_to_google_date_format(date_str):
 def clean_google_dfs(google_dfs):
 	cleaned_google_dfs = {}
 	for dimension, df in google_dfs.items():
+
+		# Check if 'sessionSource' column exists and clean it
+		if 'sessionSource' in df.columns:
+			df = clean_session_sources(df)
+
+		# Clean and convert date columns
 		df = clean_and_convert_date_column(df, 'dateHour', '%Y%m%d%H', '%Y-%m-%d %H:%M')
 		df = clean_and_convert_date_column(df, 'date', '%Y%m%d', '%Y-%m-%d')
+
 		cleaned_google_dfs[dimension] = df
 	return cleaned_google_dfs
+
+def load_mapping_from_file(file_path):
+	"""
+	Load mapping from a text file with format:
+	<key> = <val>, <val>
+	Returns a dictionary where each <val> points to <key>.
+	"""
+	mapping = {}
+	with open(file_path, 'r') as file:
+		for line in file:
+			key, values = line.strip().split(' = ')
+			for value in values.split(', '):
+				mapping[value] = key
+	return mapping
+
+def clean_session_sources(df):
+	"""
+	Normalize session sources to consolidate variations by extracting the main part of the domain.
+	Then, use a mapping file to correct common variations and aggregate the cleaned data.
+	"""
+	# Normalize session sources by extracting the main part of the domain
+	df['sessionSource'] = df['sessionSource'].apply(
+		lambda x: x.split('.')[-2] if '.' in x else x
+	)
+
+	for col in df.columns[1:]:
+		df[col] = pd.to_numeric(df[col], errors='coerce')
+
+	# Load common variations mapping from a file
+	common_mappings = load_mapping_from_file(r"C:\Users\Zander\IdeaProjects\Automation-Gel\config\google\googleSessionsMapping")
+
+	# Replace session sources using the loaded mapping
+	df['sessionSource'] = df['sessionSource'].replace(common_mappings)
+
+	# Aggregate the data based on the normalized session sources
+	df = aggregate_session_source_data(df)
+
+	return df
+
+def aggregate_session_source_data(df):
+	"""
+	Aggregate data based on the normalized session source, applying specific aggregation rules.
+	Handles cases where weights sum to zero by defaulting to zero and printing debug information.
+	Custom aggregations are applied only if the column exists in the DataFrame.
+	"""
+	# Define a safe weighted average function
+	def safe_weighted_average(data, weights):
+		if np.sum(weights) == 0:
+			print(f"Debug: Zero weights encountered for data: {data.name} with weights: {weights.name}")
+			return 0
+		return np.average(data, weights=weights)
+
+	# Initialize aggregation rules, defaulting to 'sum' for all columns except 'sessionSource'
+	aggregation_rules = {col: 'sum' for col in df.columns if col != 'sessionSource'}
+
+	# Define custom aggregation rules
+	custom_aggregations = {
+		'advertiserAdCostPerClick': ('advertiserAdClicks', safe_weighted_average),
+		'advertiserAdCostPerConversion': ('transactions', safe_weighted_average),
+		'averagePurchaseRevenue': ('transactions', safe_weighted_average),
+		'averageSessionDuration': ('sessions', safe_weighted_average),
+		'returnOnAdSpend': ('advertiserAdCost', safe_weighted_average)
+	}
+
+	# Apply custom aggregations only if the column exists in the DataFrame
+	for key, (weight_col, func) in custom_aggregations.items():
+		if key in aggregation_rules and weight_col in df.columns:
+			aggregation_rules[key] = lambda x, func=func, weight_col=weight_col: func(x, df.loc[x.index, weight_col])
+
+	# Aggregate the DataFrame
+	aggregated_df = df.groupby('sessionSource').agg(aggregation_rules).reset_index()
+
+	return aggregated_df
