@@ -185,7 +185,7 @@ def update_template_files(template_folder, data_folder, output_folder):
 					print(f"Error processing cell {cell.coordinate} with value '{cell.value}': Reference in cell {cell.coordinate} is incomplete.")
 			ws.delete_rows(2)
 		# Save with date appended to filename
-		today = datetime.datetime.now().strftime("%d-%m-%Y")
+		today = datetime.now().strftime("%d-%m-%Y")
 		file_name, file_extension = os.path.splitext(os.path.basename(template_file))
 		output_path = os.path.join(output_folder, f"{file_name} {today}{file_extension}")
 		wb.save(output_path)

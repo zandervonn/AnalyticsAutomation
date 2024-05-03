@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from Src.helpers.ui_helpers import *
 from Src.helpers.clean_csv_helpers import clean_keep_first_row
 from Src.helpers.csv_helpers import *
@@ -100,6 +102,11 @@ def get_ui_analytics(reports, since, until):
 			if report == 'customer_count':
 				name, df = handle_customer_count(driver)
 				dfs[name] = df
+			elif report == 2792653102:
+				date = datetime.today().strftime('%Y-%m-%d')
+				name, df = get_report(driver, report, "2000-01-01", date)
+				dfs[name] = df
+				wait_for_user_input()
 			else:
 				name, df = get_report(driver, report, since, until)
 				dfs[name] = df
