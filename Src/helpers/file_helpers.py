@@ -7,8 +7,6 @@ import re
 
 from bs4 import BeautifulSoup
 
-from Src.helpers.csv_helpers import get_excel_files
-
 
 def path_gen(*args):
 
@@ -135,59 +133,53 @@ def files_to_excel(file_paths, output_excel_path):
 
 
 def update_template_files(template_folder, data_folder, output_folder):
-	data_files = get_excel_files(data_folder)
+	# Load available data files into a dictionary
+	data_files = get_excel_csv_files(data_folder)
 	data_dict = load_files_into_dict(data_files)
-	print("Loaded data files into dictionary.")
+	print("Data dictionary keys:", list(data_dict.keys()))  # Debug: Print available keys
 
-	template_files = get_excel_files(template_folder)
-	print("Found template files:", template_files)
+	# Load template files
+	template_files = get_excel_csv_files(template_folder)
 
 	for template_file in template_files:
-		print(f"Processing template file: {template_file}")
 		wb = openpyxl.load_workbook(template_file)
 		for sheet_name in wb.sheetnames:
-			print(f"Processing sheet: {sheet_name}")
 			ws = wb[sheet_name]
-			header = ws[2]  # Second row contains references
+			header = ws[2]  # Assume second row contains references
 
 			for col, cell in enumerate(header, start=1):
-				ref = str(cell.value).strip().lower() if isinstance(cell.value, str) else ""
-				print(f"Column {col} reference: {cell.value}")
+				ref = str(cell.value).strip().lower() if cell.value else ""
 				if not ref or '.' not in ref:
-					print(f"Invalid reference format in cell {cell.coordinate}")
-					continue  # Ignore cells that don't contain proper references
+					continue  # Skip cells without proper references
 
 				update_header = ref.endswith('_headers')
-				if update_header:
-					ref = ref[:-8]  # Remove '_headers' suffix
-					print(f"Updating header for column {col}")
+				ref = ref[:-8] if update_header else ref  # Remove '_headers' suffix if present
 
-				try:
-					file, sheet, column = ref.split('.', 2)
-					key = f"{file}.{sheet}".lower()
-					print(f"Looking for key: {key}")
+				parts = [x.strip() for x in ref.split('.')]
+				if len(parts) < 3:
+					print(f"Reference in cell {cell.coordinate} is incomplete: '{cell.value}'")
+					continue
 
-					if key in data_dict:
-						df = data_dict[key]
-						if column == "all":
-							print(f"Replacing data starting from column {col} for key {key}")
-							replace_entire_sheet(ws, df, col, update_header)
-						elif column in df.columns:
-							print(f"Replacing data in column {col} for key {key}")
-							replace_column_data(ws, col, df[column], update_header)
-						else:
-							print(f"Missing column: {column} in data for key {key}")
-							indicate_missing(ws, 2, col, file, sheet, column)
-					else:
-						print(f"Missing key: {key}")
-						indicate_missing(ws, 2, col, file, sheet)
-				except ValueError:
-					print(f"Error processing cell {cell.coordinate} with value '{cell.value}': Reference in cell {cell.coordinate} is incomplete.")
-			ws.delete_rows(2)
-		# Save with date appended to filename
-		today = datetime.now().strftime("%d-%m-%Y")
+				file, sheet, column = parts
+				key = f"{file}.{sheet}".lower()
+
+				if key not in data_dict:
+					print(f"Could not find data for key: '{key}'")
+					continue
+
+				df = data_dict[key]
+				if column == "all":
+					replace_entire_sheet(ws, df, col, update_header)
+				elif column in df.columns:
+					replace_column_data(ws, col, df[column], update_header)
+				else:
+					print(f"Column '{column}' not found in data for key: '{key}'")
+
+			ws.delete_rows(2)  # Remove the reference row
+
+		today = datetime.now().strftime("%Y-%m-%d")
 		file_name, file_extension = os.path.splitext(os.path.basename(template_file))
-		output_path = os.path.join(output_folder, f"{file_name} {today}{file_extension}")
+		output_path = os.path.join(output_folder, f"{file_name}_{today}{file_extension}")
 		wb.save(output_path)
 		print(f"Saved processed file to: {output_path}")
 
@@ -228,25 +220,92 @@ def indicate_missing(ws, row, col, file, sheet, column=None):
 	ws.cell(row=row, column=col, value=message)
 
 def load_files_into_dict(files):
+	"""
+	Load multiple data files (Excel and CSV) into a dictionary of DataFrames.
+	Keys are formatted as 'filename.sheetname' for Excel files and 'filename.filename' for CSV files.
+	"""
 	data_dict = {}
 	for file in files:
+		file_name, file_ext = os.path.splitext(file)
+		base_file_key = os.path.basename(file_name).lower().strip()
+
 		try:
-			ext = os.path.splitext(file)[1]
-			if ext == '.xlsx':
+			if file_ext in ['.xlsx', '.xls']:
 				wb = openpyxl.load_workbook(file, data_only=True)
 				for sheet in wb.sheetnames:
 					df = pd.read_excel(file, sheet_name=sheet)
-					df.columns = df.columns.str.strip().str.lower()  # Ensure column names are lowercase
-					key = f"{os.path.splitext(os.path.basename(file))[0].lower()}.{sheet.lower()}"
+					df.columns = df.columns.str.strip().str.lower()
+					key = f"{base_file_key}.{sheet.lower().strip()}"
 					data_dict[key] = df
 					print(f"Loaded {df.shape[0]} rows from {key}")
-			elif ext == '.csv':
+			elif file_ext == '.csv':
 				df = pd.read_csv(file)
-				df.columns = df.columns.str.strip().str.lower()  # Ensure column names are lowercase
-				key = os.path.splitext(os.path.basename(file))[0].lower()
+				df.columns = df.columns.str.strip().str.lower()
+				# For CSV files, assume sheet name is same as file name
+				key = f"{base_file_key}.{base_file_key}"
 				data_dict[key] = df
 				print(f"Loaded {df.shape[0]} rows from {key}")
 		except Exception as e:
 			print(f"Error loading file {file}: {e}")
 	return data_dict
 
+def get_excel_files_from_folder(folder):
+	"""
+	Retrieve a list of all Excel files in a folder.
+
+	Parameters:
+	- folder (str): Path to the folder to search for Excel files.
+
+	Returns:
+	- list: List of paths to the Excel files.
+	"""
+	excel_files = []
+	for root, _, files in os.walk(folder):
+		for file in files:
+			if file.endswith('.xlsx'):
+				excel_files.append(os.path.join(root, file))
+	return excel_files
+
+def get_excel_csv_files(folder):
+	"""
+	Find and print paths of all Excel and CSV files in a folder.
+
+	Parameters:
+	- folder (str): Path to the folder to search for Excel and CSV files.
+
+	Returns:
+	- list: List of paths to the Excel and CSV files.
+	"""
+	excel_files = []
+	for root, _, files in os.walk(folder):
+		for file in files:
+			if file.endswith(('.xlsx', '.xls', '.csv')):
+				file_path = os.path.join(root, file)
+				excel_files.append(file_path)
+				print(f"Found file: {file_path}")
+	return excel_files
+
+
+def get_all_files(folder):
+	"""
+	Create a dictionary with file names as keys and full paths as values for all Excel and CSV files in a directory.
+	"""
+	files_dict = {}
+	for root, _, files in os.walk(folder):
+		for file in files:
+			if file.endswith(('.xlsx', '.xls', '.csv')):
+				file_key = file.lower().split('.')[0]
+				files_dict[file_key] = os.path.join(root, file)
+	return files_dict
+
+def load_data(file_path, sheet_name=None):
+	"""
+	Load data from an Excel or CSV file into a DataFrame.
+	"""
+	ext = os.path.splitext(file_path)[1]
+	if ext in ['.xlsx', '.xls']:
+		return pd.read_excel(file_path, sheet_name=sheet_name)
+	elif ext == '.csv':
+		return pd.read_csv(file_path)
+	else:
+		raise ValueError(f"Unsupported file extension: {ext}")

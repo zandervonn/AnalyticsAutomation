@@ -2,6 +2,8 @@ import os
 import time
 
 import openpyxl
+
+from Src.helpers.file_helpers import get_excel_csv_files
 from Src.helpers.json_helpers import *
 
 
@@ -175,59 +177,6 @@ def write_data_to_csv(data, file_path):
 		writer.writerow(data.keys())
 		writer.writerow(data.values())
 
-def get_excel_files_from_folder(folder):
-	"""
-	Retrieve a list of all Excel files in a folder.
-
-	Parameters:
-	- folder (str): Path to the folder to search for Excel files.
-
-	Returns:
-	- list: List of paths to the Excel files.
-	"""
-	excel_files = []
-	for root, _, files in os.walk(folder):
-		for file in files:
-			if file.endswith('.xlsx'):
-				excel_files.append(os.path.join(root, file))
-	return excel_files
-
-def get_excel_files(folder):
-	"""
-	Find and print paths of all Excel files in a folder.
-
-	Parameters:
-	- folder (str): Path to the folder to search for Excel files.
-
-	Returns:
-	- list: List of paths to the Excel files.
-	"""
-	excel_files = []
-	for root, _, files in os.walk(folder):
-		for file in files:
-			if file.endswith('.xlsx'):
-				file_path = os.path.join(root, file)
-				excel_files.append(file_path)
-				print(f"Found Excel file: {file_path}")
-	return excel_files
-
-def load_excel_files_into_dict(file_list):
-	"""
-	Load multiple Excel files into a dictionary of DataFrames.
-
-	Parameters:
-	- file_list (list): List of Excel file paths to load.
-
-	Returns:
-	- dict: Dictionary where keys are file names and values are DataFrames of the file's contents.
-	"""
-	data_dict = {}
-	for file in file_list:
-		file_name = os.path.basename(file)
-		data_dict[file_name] = pd.read_excel(file, sheet_name=None)
-		print(f"Loading file into dictionary: {file} (basename: {file_name})")
-	return data_dict
-
 def update_columns(df, raw_data):
 	"""
 	Update columns of a DataFrame with data from a dictionary of raw data.
@@ -252,8 +201,6 @@ def update_columns(df, raw_data):
 						df[col] = raw_data[file][sheet][name]
 	return df
 
-
-
 def update_files(raw_folder, update_folder):
 	"""
 	Update Excel files in a folder using data from another folder's Excel files.
@@ -267,8 +214,8 @@ def update_files(raw_folder, update_folder):
 	"""
 	print("Updating files...")
 
-	raw_files = get_excel_files(raw_folder)
-	update_files = get_excel_files(update_folder)
+	raw_files = get_excel_csv_files(raw_folder)
+	update_files = get_excel_csv_files(update_folder)
 
 	print("Number of output files found:", len(raw_files))
 	print("Number of custom files found:", len(update_files))

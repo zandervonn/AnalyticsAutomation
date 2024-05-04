@@ -1,4 +1,4 @@
-from Src.cin7.UI.cin7_ui_automation import cin7_get_ui_report
+from Src.cin7.UI.cin7_ui_automation import cin7_get_ui_aged_report
 from Src.helpers.clean_csv_helpers import clean_df, clean_dfs, sort_by_date_column, sort_by_value_column
 from Src.starshipit.UI.starshipit_ui_automation import *
 from Src.starshipit.starshipit_api import *
@@ -138,7 +138,8 @@ def build_report_instagram():
 	save_df_to_csv(clean_insta_df, path_gen('instagram', 'data', 'csv'))
 
 def build_report_cin7_ui():
-	cin7_get_ui_report()
+	aged_report = cin7_get_ui_aged_report()
+	save_df_to_csv(aged_report, path_gen('cin7', 'aged', 'csv'))
 
 def build_report_cin7():
 	print("Getting Cin7 Products")
@@ -197,9 +198,9 @@ def excel_update():
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	build_report_shopify_ui()
+	build_report_cin7_ui()
+	# build_report_shopify_ui()
 	# build_report_starshipit_ui()
-	# build_report_cin7_ui()
 	# build_report_cin7()
 	# build_report_instagram()
 	# build_report_instagram_posts()

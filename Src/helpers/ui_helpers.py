@@ -1,4 +1,3 @@
-import json
 import os
 import time
 
@@ -122,6 +121,7 @@ def wait_and_rename_downloaded_file(download_dir, new_filename, timeout=300):
 	Waits for a download to complete in 'download_dir', renames the new file, overwrites if necessary,
 	and returns the file as a pandas DataFrame.
 	Assumes there's only one file being downloaded at the time.
+	Handles both CSV and Excel files.
 	"""
 	start_time = time.time()
 	download_complete = False
@@ -137,13 +137,19 @@ def wait_and_rename_downloaded_file(download_dir, new_filename, timeout=300):
 				break
 
 	if downloaded_file_path:
-		# Construct the full path for the new filename
-		new_file_path = os.path.join(download_dir, new_filename)
+		# Identify the file extension
+		file_extension = os.path.splitext(downloaded_file_path)[1]
+		new_file_path = os.path.join(download_dir, new_filename + file_extension)
 		os.replace(downloaded_file_path, new_file_path)  # This replaces the file if it exists
 		print(f"File renamed to {new_file_path}")
 
-		# Load the renamed file into a pandas DataFrame
-		df = pd.read_csv(new_file_path)
+		# Load the renamed file into a pandas DataFrame based on the file type
+		if file_extension == '.csv':
+			df = pd.read_csv(new_file_path)
+		elif file_extension in ['.xls', '.xlsx']:
+			df = pd.read_excel(new_file_path)
+		else:
+			raise ValueError("Unsupported file format for data processing.")
 		return df
 	else:
 		raise Exception("Download did not complete within the allotted time.")
