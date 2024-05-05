@@ -14,6 +14,12 @@ secrets = load_properties(find_path_upwards(r'config\secrets.txt'))
 def output_folder_path() -> str:
 	return secrets['output_folder_path']
 
+def template_folder_path() -> str:
+	return secrets['template_folder_path']
+
+def final_output_path() -> str:
+	return secrets['final_output_path']
+
 def employee_mapping_path() -> str:
 	return secrets['employee_mapping_path']
 

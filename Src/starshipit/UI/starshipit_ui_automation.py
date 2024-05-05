@@ -223,3 +223,39 @@ def rename_and_aggregate_columns(df, mapping):
 	df.drop(columns=set(columns_to_drop), inplace=True, errors='ignore')
 
 	return df
+
+def add_open_orders_to_starshipit(processed_df, open_orders):
+	"""
+	Adds the open order count to an existing DataFrame under the 'SummaryPage' sheet.
+	Inserts 'Open Orders' in the 'Status' column and the count in the 'Status #' column.
+
+	Parameters:
+	processed_df (dict): Dictionary of DataFrames, key is the sheet name.
+	open_orders (int): The count of open orders to add.
+
+	Returns:
+	dict: Updated dictionary of DataFrames with the open order count added.
+	"""
+	# Ensure that the SummaryPage exists in the processed DataFrame dictionary
+	if 'SummaryPage' not in processed_df:
+		print("SummaryPage not found in the DataFrame.")
+		return processed_df
+
+	# Access the DataFrame for the SummaryPage
+	summary_df = processed_df['SummaryPage']
+
+	# Ensure 'Status' and 'Status #' columns exist, if not create them and initialize as empty
+	if 'Status' not in summary_df.columns:
+		summary_df['Status'] = None
+	if 'Status #' not in summary_df.columns:
+		summary_df['Status #'] = None
+
+	# Find the first available index to add 'Open Orders' and the count
+	idx = (summary_df['Status'].isnull() | summary_df['Status'].eq('')).idxmax()
+	summary_df.at[idx, 'Status'] = 'Open Orders'
+	summary_df.at[idx, 'Status #'] = open_orders
+
+	# Save the updated DataFrame back into the dictionary
+	processed_df['SummaryPage'] = summary_df
+
+	return processed_df

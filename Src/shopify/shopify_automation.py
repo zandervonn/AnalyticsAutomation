@@ -1,5 +1,6 @@
 import time
 
+import pandas as pd
 import requests
 from Src import access
 from datetime import datetime
@@ -169,3 +170,17 @@ def convert_to_shopify_format_utc(time_str, timezone_str="Pacific/Auckland"):
 	print("shopify time: ", shopify_time_str)
 
 	return shopify_time_str
+
+def get_open_orders_count(shopify_api_key, shopify_password, shopify_url):
+	base_url = f"https://{shopify_api_key}:{shopify_password}@{shopify_url}/admin/api/2024-01/"
+	endpoint = "orders/count.json?status=open"  # Query for count of open orders
+	url = base_url + endpoint
+
+	response = requests.get(url)
+	if response.status_code == 200:
+		count_data = response.json()
+		open_orders_count = count_data.get('count', 0)  # Default to 0 if not found
+		return open_orders_count
+	else:
+		print(f"Failed to retrieve data, status code: {response.status_code}")
+		return -1

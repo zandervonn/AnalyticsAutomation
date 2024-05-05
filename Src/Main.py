@@ -88,8 +88,12 @@ def build_report_starshipit_ui():
 	print("Getting Starshipit UI")
 	_since, _until = get_dates("today", "months", 1)
 	df = starshipit_get_ui_report(_since, _until)
-	cleaned_df = clean_df(df, get_header_list("starshipit_ui")+["Street", "Suburb", "State", "Postcode", "Country"])
+	cleaned_df = clean_df(df, get_header_list("starshipit_ui"))
 	processed_df = process_starshipit_ui_report(cleaned_df)
+
+	open_orders = get_open_orders_count(shopify_api_key(), shopify_password(), shopify_url())
+	processed_df = add_open_orders_to_starshipit(processed_df, open_orders)
+
 	save_df_to_excel(processed_df, path_gen('starshipit', 'warehouse_report', 'xlsx'))
 
 def build_report_google():
@@ -198,7 +202,7 @@ def excel_update():
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	build_report_cin7_ui()
+	# build_report_cin7_ui()
 	# build_report_shopify_ui()
 	# build_report_starshipit_ui()
 	# build_report_cin7()
@@ -212,7 +216,7 @@ def main():
 	#
 	# excel_update()
 
-	update_template_files(r"C:\Users\Zander\IdeaProjects\Automation-Gel\config\templates", r"C:\Users\Zander\IdeaProjects\Automation-Gel\outputfiles", r"C:\Users\Zander\IdeaProjects\Automation-Gel\outputfiles\Clean Outputs")
+	update_template_files(template_folder_path(), output_folder_path(), final_output_path())
 
 if __name__ == '__main__':
 	main()

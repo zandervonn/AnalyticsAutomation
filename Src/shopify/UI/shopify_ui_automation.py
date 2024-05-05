@@ -106,7 +106,11 @@ def get_ui_analytics(reports, since, until):
 				date = datetime.today().strftime('%Y-%m-%d')
 				name, df = get_report(driver, report, "2000-01-01", date)
 				dfs[name] = df
-				wait_for_user_input()
+			elif report == "shipping":
+				name, df = get_report(driver, "sales_over_time", "-30d", "-1d")
+				df['Shipping'] = df['Shipping'].replace('[\$,]', '', regex=True).astype(float)
+				total_shipping = df['Shipping'].sum()
+				dfs['shipping_total'] = pd.DataFrame({'Shipping': [total_shipping]})
 			else:
 				name, df = get_report(driver, report, since, until)
 				dfs[name] = df
@@ -119,6 +123,16 @@ def combine_shopify_reports(dfs):
 	# Extract the specific dataframes
 	df_conversion = dfs.get('Online_store_conversion_over_time')
 	df_sales = dfs.get('Sales_over_time')
+
+	# Check if either dataframe is None
+	if df_conversion is None or df_sales is None:
+		missing_reports = []
+		if df_conversion is None:
+			missing_reports.append('Online_store_conversion_over_time')
+		if df_sales is None:
+			missing_reports.append('Sales_over_time')
+		print(f"Missing reports: {', '.join(missing_reports)}")
+		return dfs  # Return the original dfs without modification
 
 	# Clean and convert 'Sessions' and 'Sessions converted' columns to numeric
 	df_conversion['Sessions'] = pd.to_numeric(df_conversion['Sessions'].str.replace(',', ''), errors='coerce')

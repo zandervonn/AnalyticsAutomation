@@ -141,6 +141,12 @@ def update_template_files(template_folder, data_folder, output_folder):
 	# Load template files
 	template_files = get_excel_csv_files(template_folder)
 
+	# Create a subfolder in the output directory with today's date
+	today = datetime.now().strftime("%Y-%m-%d")
+	date_output_folder = os.path.join(output_folder, today)
+	if not os.path.exists(date_output_folder):
+		os.makedirs(date_output_folder)
+
 	for template_file in template_files:
 		wb = openpyxl.load_workbook(template_file)
 		for sheet_name in wb.sheetnames:
@@ -177,9 +183,9 @@ def update_template_files(template_folder, data_folder, output_folder):
 
 			ws.delete_rows(2)  # Remove the reference row
 
-		today = datetime.now().strftime("%Y-%m-%d")
+		# Construct the full output path including the date subfolder
 		file_name, file_extension = os.path.splitext(os.path.basename(template_file))
-		output_path = os.path.join(output_folder, f"{file_name}_{today}{file_extension}")
+		output_path = os.path.join(date_output_folder, f"{file_name}_{today}{file_extension}")
 		wb.save(output_path)
 		print(f"Saved processed file to: {output_path}")
 
@@ -237,14 +243,12 @@ def load_files_into_dict(files):
 					df.columns = df.columns.str.strip().str.lower()
 					key = f"{base_file_key}.{sheet.lower().strip()}"
 					data_dict[key] = df
-					print(f"Loaded {df.shape[0]} rows from {key}")
 			elif file_ext == '.csv':
 				df = pd.read_csv(file)
 				df.columns = df.columns.str.strip().str.lower()
 				# For CSV files, assume sheet name is same as file name
 				key = f"{base_file_key}.{base_file_key}"
 				data_dict[key] = df
-				print(f"Loaded {df.shape[0]} rows from {key}")
 		except Exception as e:
 			print(f"Error loading file {file}: {e}")
 	return data_dict
@@ -282,7 +286,6 @@ def get_excel_csv_files(folder):
 			if file.endswith(('.xlsx', '.xls', '.csv')):
 				file_path = os.path.join(root, file)
 				excel_files.append(file_path)
-				print(f"Found file: {file_path}")
 	return excel_files
 
 
