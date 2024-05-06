@@ -90,7 +90,7 @@ def get_media(meta_token, page_id, since, until):
 		'access_token': meta_token,
 		'since': since,
 		'until': until,
-		'fields': 'id,message,created_time'
+		'fields': 'id,message,created_time,media_type'
 	}
 	response = requests.get(base_url, params=params)
 	posts_data = response.json()
@@ -119,26 +119,6 @@ def get_video_insights(meta_token, post_id):
 	insights_data = response.json()
 	return parse_insights(insights_data, post_id)
 
-def parse_insights(insights_data, post_id):
-	if 'data' in insights_data:
-		parsed_data = {}
-		for insight in insights_data['data']:
-			# Handle the case where 'values' contains multiple values
-			if insight['values']:
-				value = insight['values'][0]['value']
-				if isinstance(value, dict):
-					# If the value is a dictionary, store each key-value pair separately
-					for key, val in value.items():
-						parsed_data[f"{insight['name']}.{key}"] = val
-				else:
-					# If the value is not a dictionary, store it directly
-					parsed_data[insight['name']] = value
-			else:
-				parsed_data[insight['name']] = None
-		return parsed_data
-	else:
-		print(f"No insights data available for post ID: {post_id}")
-		return {}
 
 def get_facebook_metric_count(meta_token, post_id, metric):
 	url = f'https://graph.facebook.com/v19.0/{post_id}/{metric}'
@@ -216,24 +196,96 @@ def get_facebook_video_insights(meta_token, page_id, since, until):
 	df = pd.DataFrame(post_insights)
 	return df
 
-def get_insta_posts_and_insights(meta_token, page_id, metrics, since, until):
+def parse_insights(insights_data, post_id):
+	if 'data' in insights_data:
+		parsed_data = {}
+		for insight in insights_data['data']:
+			# Handle the case where 'values' contains multiple values
+			if insight['values']:
+				value = insight['values'][0]['value']
+				if isinstance(value, dict):
+					# If the value is a dictionary, store each key-value pair separately
+					for key, val in value.items():
+						parsed_data[f"{insight['name']}.{key}"] = val
+				else:
+					# If the value is not a dictionary, store it directly
+					parsed_data[insight['name']] = value
+			else:
+				parsed_data[insight['name']] = None
+		return parsed_data
+	else:
+		print(f"No insights data available for post ID: {post_id}")
+		return {}
+
+def get_insta_video_insights(meta_token, page_id, _, since, until):
 	posts = get_media(meta_token, page_id, since, until)
 	post_insights = []
 
+	# Define metrics and headers for each media type
+	media_details = {
+		'VIDEO': {
+			'header_metrics': ['timestamp', 'id', 'media_type', 'caption'],
+			'post_metrics': ['reach', 'saved', 'likes', 'comments', 'shares', 'plays', 'total_interactions', 'ig_reels_video_view_total_time', 'ig_reels_avg_watch_time', 'clips_replays_count', 'ig_reels_aggregated_all_plays_count']
+		},
+	}
+
 	for post in posts:
 		post_id = post['id']
-		specified_fields = ['timestamp', 'id', 'caption']
-		header_metrics = [metric for metric in metrics if metric in specified_fields]
-		post_metrics = [metric for metric in metrics if metric not in specified_fields]
+		media_type = post.get('media_type')
+		if media_type == 'VIDEO':
+			details = media_details.get('VIDEO')
 
-		insta_headers = get_instagram_post_headers(meta_token, post_id, header_metrics)
-		insta_metrics = get_instagram_post_metrics(meta_token, post_id, post_metrics)
-		insta_metrics = parse_insights(insta_metrics, post_id)
+			# Fetch post headers and metrics
+			insta_headers = get_instagram_post_headers(meta_token, post_id, details['header_metrics'])
+			insta_metrics = get_instagram_post_metrics(meta_token, post_id, details['post_metrics'])
 
-		# Merge the headers and metrics dictionaries
-		combined_insights = {**insta_headers, **insta_metrics}
-		post_insights.append(combined_insights)
+			# Parse insights and combine headers with metrics
+			insta_metrics = parse_insights(insta_metrics, post_id)
 
+			combined_insights = {**insta_headers, **insta_metrics}
+			post_insights.append(combined_insights)
+
+	# Convert the list of dictionaries into a DataFrame
+	df = pd.DataFrame(post_insights)
+	return df
+
+def get_insta_image_insights(meta_token, page_id, _, since, until):
+	posts = get_media(meta_token, page_id, since, until)
+	post_insights = []
+
+	# Define metrics and headers for each media type
+	media_details = {
+		'CAROUSEL_ALBUM': {
+			'header_metrics': ['timestamp', 'id', 'media_type', 'caption', 'like_count', 'comments'],
+			'post_metrics': ['impressions', 'reach', 'engagement', 'saved', 'total_interactions']
+		},
+		'IMAGE': {
+			'header_metrics': ['timestamp', 'id', 'media_type', 'caption'],
+			'post_metrics': ['impressions', 'reach', 'engagement', 'saved', 'likes', 'comments', 'shares', 'total_interactions']
+		}
+	}
+
+	for post in posts:
+		post_id = post['id']
+		media_type = post.get('media_type')
+		if media_type == 'IMAGE' or media_type == 'CAROUSEL_ALBUM':
+			details = media_details.get(media_type)
+
+			# Fetch post headers and metrics
+			insta_headers = get_instagram_post_headers(meta_token, post_id, details['header_metrics'])
+			insta_metrics = get_instagram_post_metrics(meta_token, post_id, details['post_metrics'])
+
+			# Simplify comments to count only
+			if 'comments' in insta_headers:
+				insta_headers['comments'] = len(insta_headers['comments'].get('data', [])) - 1
+
+			# Parse insights and combine headers with metrics
+			insta_metrics = parse_insights(insta_metrics, post_id)
+			combined_insights = {**insta_headers, **insta_metrics}
+			post_insights.append(combined_insights)
+
+
+	# Convert the list of dictionaries into a DataFrame
 	df = pd.DataFrame(post_insights)
 	return df
 
@@ -278,3 +330,66 @@ def clean_facebook_video_df(df):
 	df.drop(['post_video_likes_by_reaction_type.REACTION_LOVE', 'post_video_likes_by_reaction_type.REACTION_LIKE'], axis=1, inplace=True)
 
 	return df
+
+def clean_insta_video_df(insta_df):
+	"""
+	Clean and convert Instagram video data within a DataFrame.
+
+	Parameters:
+	insta_df (pd.DataFrame): The DataFrame containing Instagram video insights.
+
+	Returns:
+	pd.DataFrame: The cleaned DataFrame with time conversions applied.
+	"""
+	# Convert 'ig_reels_video_view_total_time' from ms to s and rename the column
+	if 'ig_reels_video_view_total_time' in insta_df.columns:
+		insta_df['video_view_time_s'] = insta_df['ig_reels_video_view_total_time'] / 1000
+		insta_df.drop('ig_reels_video_view_total_time', axis=1, inplace=True)
+
+	# Convert 'ig_reels_avg_watch_time' from ms to s and rename the column
+	if 'ig_reels_avg_watch_time' in insta_df.columns:
+		insta_df['avg_watch_time_s'] = insta_df['ig_reels_avg_watch_time'] / 1000
+		insta_df.drop('ig_reels_avg_watch_time', axis=1, inplace=True)
+
+	# Trim captions
+	if 'caption' in insta_df.columns:
+		insta_df['caption'] = insta_df['caption'].apply(lambda x: x.split('\n', 1)[0] if pd.notna(x) else x)
+
+	return insta_df
+
+
+def clean_insta_image_df(insta_df):
+	"""
+	Clean and adjust the Instagram image data within a DataFrame by merging likes counts
+	and calculating shares when necessary.
+
+	Parameters:
+	insta_df (pd.DataFrame): The DataFrame containing Instagram image insights.
+
+	Returns:
+	pd.DataFrame: The cleaned DataFrame with combined likes and calculated shares.
+	"""
+	# Combine 'like_count' and 'likes' into one 'likes' column
+	if 'like_count' in insta_df.columns and 'likes' in insta_df.columns:
+		insta_df['likes'] = insta_df['like_count'].fillna(0) + insta_df['likes'].fillna(0)
+		insta_df.drop('like_count', axis=1, inplace=True)
+	elif 'like_count' in insta_df.columns:
+		insta_df.rename(columns={'like_count': 'likes'}, inplace=True)
+
+	# Calculate 'shares' if it is blank
+	if 'shares' in insta_df.columns:
+		for idx, row in insta_df.iterrows():
+			if pd.isna(row['shares']) or row['shares'] == '':
+				# Ensure values are not NaN before subtraction to avoid negative or NaN results
+				comments = row.get('comments', 0) or 0
+				likes = row.get('likes', 0) or 0
+				saved = row.get('saved', 0) or 0
+				total_interactions = row.get('total_interactions', 0) or 0
+				insta_df.at[idx, 'shares'] = total_interactions - (comments + likes + saved)
+
+	# Trim captions
+	if 'caption' in insta_df.columns:
+		insta_df['caption'] = insta_df['caption'].apply(lambda x: x.split('\n', 1)[0] if pd.notna(x) else x)
+
+
+	return insta_df

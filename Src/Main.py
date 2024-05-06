@@ -127,12 +127,19 @@ def build_report_facebook_videos():
 	facebook_df = clean_facebook_video_df(facebook_df)
 	save_df_to_csv(facebook_df, path_gen('facebook_videos', 'data', 'csv'))
 
-def build_report_instagram_posts():
-	print("Getting Instagram posts")
+def build_report_instagram_videos():
+	print("Getting Instagram videos")
 	_since, _until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
-	facebook_df = get_insta_posts_and_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), _since, _until)
-	facebook_df = clean_df(facebook_df, get_header_list('instagram_posts'))
-	save_df_to_csv(facebook_df, path_gen('instagram_posts', 'data', 'csv'))
+	insta_df = get_insta_video_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), _since, _until)
+	insta_df = clean_insta_video_df(insta_df)
+	save_df_to_csv(insta_df, path_gen('instagram', 'videos', 'csv'))
+
+def build_report_instagram_images():
+	print("Getting Instagram images")
+	_since, _until = get_dates("today", "weeks", 2)  # get 2 weeks of data to show change over the week
+	insta_df = get_insta_image_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), _since, _until)
+	insta_df = clean_insta_image_df(insta_df)
+	save_df_to_csv(insta_df, path_gen('instagram', 'images', 'csv'))
 
 def build_report_instagram():
 	print("Getting Instagram")
@@ -197,17 +204,19 @@ def excel_update():
 		path_gen('facebook_posts', 'data', 'csv'),
 		path_gen('facebook_videos', 'data', 'csv'),
 		path_gen('instagram', 'data', 'csv'),
-		path_gen('instagram_posts', 'data', 'csv'),
+		path_gen('instagram', 'videos', 'csv'),
+		path_gen('instagram', 'images', 'csv'),
 	]
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	# build_report_cin7_ui()
+	# build_report_cin7_ui() #needs 2fa
 	# build_report_shopify_ui()
 	# build_report_starshipit_ui()
 	# build_report_cin7()
 	# build_report_instagram()
-	# build_report_instagram_posts()
+	build_report_instagram_images()
+	build_report_instagram_videos()
 	# build_report_facebook_videos()
 	# build_report_facebook_posts()
 	#
@@ -216,7 +225,7 @@ def main():
 	#
 	# excel_update()
 
-	update_template_files(template_folder_path(), output_folder_path(), final_output_path())
+	# update_template_files(template_folder_path(), output_folder_path(), final_output_path())
 
 if __name__ == '__main__':
 	main()

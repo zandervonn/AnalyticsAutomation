@@ -180,6 +180,7 @@ def update_template_files(template_folder, data_folder, output_folder):
 					replace_column_data(ws, col, df[column], update_header)
 				else:
 					print(f"Column '{column}' not found in data for key: '{key}'")
+					print(f"Available columns in '{sheet}' of '{file}': {list(df.columns)}")  # Show available columns for the sheet
 
 			ws.delete_rows(2)  # Remove the reference row
 
