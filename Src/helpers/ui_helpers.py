@@ -16,11 +16,19 @@ from Src.access import output_folder_path
 def open_page(driver, url):
 	driver.get(url)
 
-def click_and_wait(driver, xpath, wait_time=10):
-	element = WebDriverWait(driver, wait_time).until(
-		EC.element_to_be_clickable((By.XPATH, xpath))
-	)
-	element.click()
+def click_and_wait(driver, xpath, wait_time=10, use_js=False):
+	try:
+		element = WebDriverWait(driver, wait_time).until(
+			EC.element_to_be_clickable((By.XPATH, xpath))
+		)
+		if use_js:
+			driver.execute_script("arguments[0].click();", element)
+		else:
+			element.click()
+	except TimeoutException:
+		print("Element not clickable at the path provided: {}".format(xpath))
+	except Exception as e:
+		print("Error clicking on element: {}".format(e))
 
 def close(driver):
 	driver.quit()
@@ -118,7 +126,7 @@ def refresh_until_visible(driver, xpath, timeout=120):
 
 def wait_and_rename_downloaded_file(download_dir, new_filename, timeout=300):
 	"""
-	Waits for a download to complete in 'download_dir', renames the new file, overwrites if necessary,
+	Waits for a download to complete in 'download_dir', renames the newest file, overwrites if necessary,
 	and returns the file as a pandas DataFrame.
 	Assumes there's only one file being downloaded at the time.
 	Handles both CSV and Excel files.
@@ -130,11 +138,11 @@ def wait_and_rename_downloaded_file(download_dir, new_filename, timeout=300):
 	# Wait for the download to complete
 	while not download_complete and (time.time() - start_time) < timeout:
 		time.sleep(1)  # Check every second
-		for fname in os.listdir(download_dir):
-			if not fname.endswith('.crdownload'):
-				downloaded_file_path = os.path.join(download_dir, fname)
-				download_complete = True
-				break
+		files = [os.path.join(download_dir, f) for f in os.listdir(download_dir) if not f.endswith('.crdownload')]
+		if files:
+			# Find the most recently modified file
+			downloaded_file_path = max(files, key=os.path.getmtime)
+			download_complete = True
 
 	if downloaded_file_path:
 		# Identify the file extension

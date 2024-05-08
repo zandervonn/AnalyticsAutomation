@@ -76,6 +76,7 @@ def build_report_shopify_ui():
 	_since, _until = convert_dates_to_offsets(since, until)
 	shopify_ui_dfs = get_ui_analytics(get_header_list('shopify_ui'), _since, _until)
 	shopify_ui_dfs = combine_shopify_reports(shopify_ui_dfs)
+	shopify_ui_dfs = clean_shopify_ui_dfs(shopify_ui_dfs, )
 	save_df_to_excel(shopify_ui_dfs, path_gen('shopify', 'data', 'xlsx'))
 
 def build_report_starshipit_api():
@@ -211,12 +212,12 @@ def excel_update():
 
 def main():
 	# build_report_cin7_ui() #needs 2fa
-	# build_report_shopify_ui()
+	build_report_shopify_ui()
 	# build_report_starshipit_ui()
 	# build_report_cin7()
 	# build_report_instagram()
-	build_report_instagram_images()
-	build_report_instagram_videos()
+	# build_report_instagram_images()
+	# build_report_instagram_videos()
 	# build_report_facebook_videos()
 	# build_report_facebook_posts()
 	#

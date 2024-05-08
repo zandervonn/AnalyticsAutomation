@@ -22,8 +22,10 @@ def cin7_get_ui_aged_report():
 
 def get_aged_report(driver):
 	clear_and_send_keys(driver, START_DATE_FIELD, "01-01-2000")
-	click_and_wait(driver, SEARCH_BUTTON)
+	click_and_wait(driver, SEARCH_BUTTON, use_js=True)
+	wait_for_element(driver, AGE_REPORT_DATE_2000)
 	click_and_wait(driver, REPORT_DOWLOAD_CSV)
+	wait_for_user_input()
 	df = wait_and_rename_downloaded_file(output_folder_path()+"downloads", "cin7_aged_report")
 	df = trim_aged_report(df, get_header_list('cin7_aged_trim'))
 	return df

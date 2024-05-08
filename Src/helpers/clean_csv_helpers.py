@@ -137,6 +137,24 @@ def sort_by_date_column(df, date_column, date_format='%Y-%m-%dT%H:%M:%S%z'):
 def sort_by_value_column(df, column_name, ascending=False):
 	return df.sort_values(by=column_name, ascending=ascending)
 
+def clean_numeric_columns(df, abs_values=False):
+	for col in df.columns:
+		# Temporarily remove common formatting characters to better assess numeric content
+		temp_col = df[col].replace('[\$,]', '', regex=True).replace('-', '', regex=True)
+		# Check if the column is numeric after cleaning by attempting to convert it
+		try:
+			numeric_check = pd.to_numeric(temp_col, errors='raise')
+			is_numeric = True
+		except:
+			is_numeric = False
+
+		if is_numeric:
+			# Properly clean the column, converting to numeric and handling negatives correctly
+			df[col] = pd.to_numeric(df[col].replace('[\$,]', '', regex=True), errors='coerce')
+			if abs_values:
+				df[col] = df[col].abs()
+	return df
+
 def clean_df(df, defined_headers):
 	split_columns_info = extract_split_columns_info(defined_headers)
 	df = apply_splitting(df, split_columns_info)

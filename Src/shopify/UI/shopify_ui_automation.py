@@ -1,10 +1,11 @@
 from datetime import datetime
 
+from Src.helpers.file_helpers import load_mapping
 from Src.helpers.ui_helpers import *
-from Src.helpers.clean_csv_helpers import clean_keep_first_row
+from Src.helpers.clean_csv_helpers import clean_keep_first_row, clean_numeric_columns
 from Src.helpers.csv_helpers import *
 from Src.shopify.UI.shopify_locators import *
-from Src.access import shopify_ui_username, shopify_ui_password
+from Src.access import shopify_ui_username, shopify_ui_password, discount_mapping_path
 
 
 def login(driver, username, password):
@@ -160,3 +161,38 @@ def combine_shopify_reports(dfs):
 
 	# Return the modified dictionary of dataframes
 	return dfs
+
+def clean_shopify_ui_dfs(dfs):
+	# Load discount mapping
+	mapping = load_mapping(discount_mapping_path())
+
+	# Ensure 'Sales by Discount' DataFrame exists and make all values positive
+	if 'Sales_by_discount' in dfs:
+		dfs['Sales_by_discount'] = apply_mapping_to_discounts(dfs['Sales_by_discount'], mapping)
+		dfs['Sales_by_discount'] = clean_numeric_columns(dfs['Sales_by_discount'], abs_values=True)
+
+	# Ensure 'Top Discount Codes' DataFrame exists and make all values positive
+	if 'Top_10_Discount_Codes' in dfs:
+		dfs['Top_10_Discount_Codes'] = clean_numeric_columns(dfs['Top_10_Discount_Codes'], abs_values=True)
+
+	# Sort 'Orders Over Time' by most recent date if it exists
+	if 'Orders_over_time' in dfs:
+		dfs['Orders_over_time'] = dfs['Orders_over_time'].sort_values(by='Day', ascending=False)
+		dfs['Orders_over_time'] = clean_numeric_columns(dfs['Orders_over_time'], abs_values=True)
+
+	# Sort 'Conversions Over Time' by most recent date if it exists
+	if 'conversions_over_time' in dfs:
+		dfs['conversions_over_time'] = dfs['conversions_over_time'].sort_values(by='Day', ascending=False)
+		dfs['conversions_over_time'] = clean_numeric_columns(dfs['conversions_over_time'], abs_values=True)
+
+	return dfs
+
+def apply_mapping_to_discounts(df, mapping):
+	# Reverse the mapping for easier application
+	reverse_mapping = {v: k for k, v in mapping.items()}
+
+	# Apply the mapping to the Discount name column
+	df['Discount name'] = df['Discount name'].apply(lambda x: reverse_mapping[x] if x in reverse_mapping else x)
+
+	# Group by the updated 'Discount name' and sum the values
+	return df.groupby('Discount name').sum().reset_index()
