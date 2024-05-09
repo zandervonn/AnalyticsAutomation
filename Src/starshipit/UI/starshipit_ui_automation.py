@@ -13,16 +13,16 @@ def login(driver, username, password):
 	time.sleep(1)
 	wait_for_element(driver, GENERATE_BUTTON)
 
-def starshipit_get_ui_report(since, until):
+def starshipit_get_ui_report(since, until, testing):
 	driver = setup_webdriver()
 	try:
 		open_page(driver, STARSHIPIT_URL)
 		login(driver, starshipit_username(), starshipit_password())
-		return get_report(driver, since, until)
+		return get_report(driver, since, until, testing)
 	finally:
 		close(driver)
 
-def get_report(driver, since, until):
+def get_report(driver, since, until, testing=False):
 	since = since.split("T")[0]
 	until = until.split("T")[0]
 	# Convert dates from "dd/mm/yyyy" to "mm/dd/yyyy"
@@ -31,9 +31,9 @@ def get_report(driver, since, until):
 	clear_and_send_keys(driver, START_DATE_FIELD, since)
 	clear_and_send_keys(driver, END_DATE_FIELD, until)
 	driver.find_element(By.XPATH, CHILD_ORDER_CHECKBOX).click()
-	# click_and_wait(driver, GENERATE_BUTTON) # todo turn off when testing
-	# time.sleep(1)
-	# wait_for_user_input()
+	if not testing:
+		click_and_wait(driver, GENERATE_BUTTON)
+		time.sleep(1)
 	refresh_until_visible(driver, REPORT_STATUS_READY)
 	driver.find_element(By.XPATH, REPORT_DOWLOAD_CSV).click()
 	return wait_and_rename_downloaded_file(output_folder_path()+"downloads", "starshipit_package_report")
@@ -48,8 +48,8 @@ def process_starshipit_ui_report(df):
 	status_info = calculate_status(rawData.copy())
 	orders_items_info = calculate_orders_packed_items_picked(df)
 
-	accounts_orders = pivot_orders_picked_by_day(df).head(7)
-	accounts_items = pivot_items_picked_by_day(df).head(7)
+	accounts_orders = pivot_orders_picked_by_day(df).head(8)
+	accounts_items = pivot_items_picked_by_day(df).head(8)
 
 	name_mapping = load_mapping(employee_mapping_path())
 	accounts_orders = rename_and_aggregate_columns(accounts_orders, name_mapping)
@@ -124,8 +124,8 @@ def pivot_orders_picked_by_day(df):
 	"""
 	df['Date'] = pd.to_datetime(df['Printed Date']).dt.date
 	pivot_df = df.pivot_table(index='Date', columns='AccountName', values='Printed Date', aggfunc='size', fill_value=0)
-	pivot_df = pivot_df.reset_index()
 	pivot_df = pivot_df.sort_values(by='Date', ascending=False)
+	pivot_df = pivot_df.reset_index()
 	return pivot_df
 
 def pivot_items_picked_by_day(df):
@@ -139,27 +139,35 @@ def pivot_items_picked_by_day(df):
 	Returns:
 	DataFrame: A pivot table with dates as rows, account names as columns, and sum of items picked as values.
 	"""
-	df['Date'] = pd.to_datetime(df['Order Date']).dt.date
-	df['AccountName'] = df['AccountName'].astype(str)
+	df['Date'] = pd.to_datetime(df['Printed Date']).dt.date
 	df['Items Picked'] = df['Item Skus'].apply(lambda x: len(x.split(';')) if isinstance(x, str) else 0)
 	pivot_df = df.pivot_table(index='Date', columns='AccountName', values='Items Picked', aggfunc='sum', fill_value=0)
-	pivot_df = pivot_df.reset_index()
 	pivot_df = pivot_df.sort_values(by='Date', ascending=False)
+	pivot_df = pivot_df.reset_index()
+
+	print(pivot_df)
+
 	return pivot_df
 
 
 def calculate_orders_packed_items_picked(df):
-	# Convert dates and format them without the time
+	# Ensure date columns are converted properly to datetime
 	df['Orders Packed Date'] = pd.to_datetime(df['Printed Date']).dt.date
+
+	# Calculate the number of orders packed
 	orders_packed_count = df.groupby('Orders Packed Date').size().reset_index(name='Orders Packed')
 
+	# Calculate the number of items picked
 	df['Items Picked'] = df['Item Skus'].apply(lambda x: len(x.split(';')) if isinstance(x, str) else 1)
 	items_picked_count = df.groupby('Orders Packed Date')['Items Picked'].sum().reset_index()
 
-	# Merge using the corrected column names
+	# Merge the counts
 	result = orders_packed_count.merge(items_picked_count, on='Orders Packed Date', how='outer')
+
 	result.insert(2, 'Items Picked Date', result['Orders Packed Date'])
-	result = result.sort_values(by='Orders Packed Date', ascending=False)  # Sort by date descending
+
+	# Sort by date in ascending order
+	result = result.sort_values(by='Orders Packed Date', ascending=False).reset_index(drop=True)
 
 	return result
 

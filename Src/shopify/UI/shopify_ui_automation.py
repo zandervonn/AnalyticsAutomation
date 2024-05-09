@@ -168,8 +168,8 @@ def clean_shopify_ui_dfs(dfs):
 
 	# Ensure 'Sales by Discount' DataFrame exists and make all values positive
 	if 'Sales_by_discount' in dfs:
-		dfs['Sales_by_discount'] = apply_mapping_to_discounts(dfs['Sales_by_discount'], mapping)
 		dfs['Sales_by_discount'] = clean_numeric_columns(dfs['Sales_by_discount'], abs_values=True)
+		dfs['Sales_by_discount'] = apply_mapping_to_discounts(dfs['Sales_by_discount'], mapping)
 
 	# Ensure 'Top Discount Codes' DataFrame exists and make all values positive
 	if 'Top_10_Discount_Codes' in dfs:
@@ -191,8 +191,17 @@ def apply_mapping_to_discounts(df, mapping):
 	# Reverse the mapping for easier application
 	reverse_mapping = {v: k for k, v in mapping.items()}
 
-	# Apply the mapping to the Discount name column
-	df['Discount name'] = df['Discount name'].apply(lambda x: reverse_mapping[x] if x in reverse_mapping else x)
+	# Define a helper function to apply the mapping
+	def map_discount_name(name):
+		for prefix in reverse_mapping:
+			if name.startswith(prefix):
+				return reverse_mapping[prefix]
+		return name
 
-	# Group by the updated 'Discount name' and sum the values
-	return df.groupby('Discount name').sum().reset_index()
+	# Apply the mapping to the Discount name column
+	df['Discount name'] = df['Discount name'].apply(map_discount_name)
+
+	# Group by the updated 'Discount name' and aggregate the data
+	# For numeric columns, sum up, for string columns, check if all are the same
+	aggregated_df = df.groupby('Discount name').agg({col: 'sum' if df[col].dtype in ['float64', 'int64'] else (lambda x: x.iloc[0] if x.nunique() == 1 else 'Different') for col in df.columns if col != 'Discount name'})
+	return aggregated_df.reset_index()

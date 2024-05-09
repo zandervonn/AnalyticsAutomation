@@ -85,10 +85,10 @@ def build_report_starshipit_api():
 	cleaned_df = clean_df(df, get_header_list('starshipit'))
 	save_df_to_csv(cleaned_df, path_gen('starshipit', 'orders', 'csv'), True)
 
-def build_report_starshipit_ui():
+def build_report_starshipit_ui(testing=False):
 	print("Getting Starshipit UI")
 	_since, _until = get_dates("today", "months", 1)
-	df = starshipit_get_ui_report(_since, _until)
+	df = starshipit_get_ui_report(_since, _until, testing)
 	cleaned_df = clean_df(df, get_header_list("starshipit_ui"))
 	processed_df = process_starshipit_ui_report(cleaned_df)
 
@@ -213,7 +213,7 @@ def excel_update():
 def main():
 	# build_report_cin7_ui() #needs 2fa
 	build_report_shopify_ui()
-	# build_report_starshipit_ui()
+	# build_report_starshipit_ui(testing=True)
 	# build_report_cin7()
 	# build_report_instagram()
 	# build_report_instagram_images()
@@ -225,7 +225,7 @@ def main():
 	# build_report_google()
 	#
 	# excel_update()
-
+	#
 	# update_template_files(template_folder_path(), output_folder_path(), final_output_path())
 
 if __name__ == '__main__':

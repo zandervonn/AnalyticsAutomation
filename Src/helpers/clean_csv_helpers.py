@@ -150,7 +150,7 @@ def clean_numeric_columns(df, abs_values=False):
 
 		if is_numeric:
 			# Properly clean the column, converting to numeric and handling negatives correctly
-			df[col] = pd.to_numeric(df[col].replace('[\$,]', '', regex=True), errors='coerce')
+			df[col] = pd.to_numeric(df[col].replace('[\$,%]', '', regex=True), errors='coerce')
 			if abs_values:
 				df[col] = df[col].abs()
 	return df
@@ -161,6 +161,7 @@ def clean_df(df, defined_headers):
 	df = normalize_object_columns(df)
 	df = clear_empty_columns(df)
 	df = round_numeric_columns(df)
+	df = clean_numeric_columns(df)
 	df = reorder_columns(df, defined_headers)
 	return df
 
