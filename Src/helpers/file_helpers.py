@@ -183,15 +183,6 @@ def update_cell(ws, col, cell, data_dict):
 	df = data_dict[key]
 	update_worksheet_data(ws, col, df, column, update_header, file, sheet)
 
-def update_worksheet_data(ws, col, df, column, update_header, file, sheet):
-	if column == "all":
-		replace_entire_sheet(ws, df, col, update_header)
-	elif column in df.columns:
-		replace_column_data(ws, col, df[column], update_header)
-	else:
-		print(f"Column '{column}' not found in data for key: '{file}.{sheet}'")
-		print(f"Available columns in '{sheet}' of '{file}': {list(df.columns)}")
-
 def save_workbook(wb, template_file, output_folder):
 	today = datetime.now().strftime("%Y-%m-%d")
 	file_name, file_extension = os.path.splitext(os.path.basename(template_file))
@@ -199,34 +190,49 @@ def save_workbook(wb, template_file, output_folder):
 	wb.save(output_path)
 	print(f"Saved processed file to: {output_path}")
 
+def capitalize_headers(headers):
+	""" Capitalize the first letter of each header """
+	return [header.capitalize() for header in headers]
+
 def replace_entire_sheet(ws, df, start_col, update_header):
-	# Assuming row 1 is headers and row 2 is the reference row
+	""" Replace the entire sheet's data and optionally update headers """
 	data_start_row = 2 if update_header else 3
 
-	# Clear data from the columns to be updated
-	for col in range(start_col, start_col + len(df.columns)):
-		for row in range(data_start_row, ws.max_row + 1):
-			ws.cell(row=row, column=col).value = None
+	# Clear existing data from the sheet
+	for row in ws.iter_rows(min_row=data_start_row, min_col=start_col, max_col=start_col+len(df.columns)-1):
+		for cell in row:
+			cell.value = None
 
 	# Insert new data
-	for idx, (i, row) in enumerate(df.iterrows(), start=data_start_row):
+	for idx, row in enumerate(df.itertuples(index=False), start=data_start_row):
 		for j, value in enumerate(row, start=start_col):
 			ws.cell(row=idx, column=j).value = value
 
 	# Update headers if required
 	if update_header:
-		for i, col_name in enumerate(df.columns, start=start_col):
-			ws.cell(row=1, column=i).value = col_name
+		headers = capitalize_headers(list(df.columns))
+		for i, header in enumerate(headers, start=start_col):
+			ws.cell(row=1, column=i).value = header
 
 def replace_column_data(ws, col, data, update_header):
+	""" Replace data in a specific column and optionally update its header """
 	data_start_row = 2 if update_header else 3
-	max_row = max(data_start_row, ws.max_row)
-	for row in range(data_start_row, max_row + 1):
-		ws.cell(row=row, column=col).value = None
 	for i, value in enumerate(data, start=data_start_row):
-		ws.cell(row=i, column=col, value=value)
+		ws.cell(row=i, column=col).value = value
+
 	if update_header:
-		ws.cell(row=1, column=col, value=data.name)
+		header = data.name.capitalize()  # Capitalize the header name
+		ws.cell(row=1, column=col).value = header
+
+def update_worksheet_data(ws, col, df, column, update_header, file, sheet):
+	""" Updates data or headers in a worksheet based on the specified column information """
+	if column == "all":
+		replace_entire_sheet(ws, df, col, update_header)
+	elif column in df.columns:
+		replace_column_data(ws, col, df[column], update_header)
+	else:
+		print(f"Column '{column}' not found in data for key: '{file}.{sheet}'")
+		print(f"Available columns in '{sheet}' of '{file}': {list(df.columns)}")
 
 def indicate_missing(ws, row, col, file, sheet, column=None):
 	if column:
