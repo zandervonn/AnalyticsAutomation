@@ -177,12 +177,12 @@ def clean_shopify_ui_dfs(dfs):
 
 	# Sort 'Orders Over Time' by most recent date if it exists
 	if 'Orders_over_time' in dfs:
-		dfs['Orders_over_time'] = dfs['Orders_over_time'].sort_values(by='Day', ascending=False)
+		dfs['Orders_over_time'] = dfs['Orders_over_time'].sort_values(by='Day', ascending=True)
 		dfs['Orders_over_time'] = clean_numeric_columns(dfs['Orders_over_time'], abs_values=True)
 
 	# Sort 'Conversions Over Time' by most recent date if it exists
 	if 'conversions_over_time' in dfs:
-		dfs['conversions_over_time'] = dfs['conversions_over_time'].sort_values(by='Day', ascending=False)
+		dfs['conversions_over_time'] = dfs['conversions_over_time'].sort_values(by='Day', ascending=True)
 		dfs['conversions_over_time'] = clean_numeric_columns(dfs['conversions_over_time'], abs_values=True)
 
 	# Sort 'Conversions Over Time' by most recent date if it exists

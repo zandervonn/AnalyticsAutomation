@@ -172,7 +172,12 @@ def aggregate_sales_by_category(sales_data):
 		row.update(categories)
 		aggregated_list.append(row)
 
-	return aggregated_list
+	# Sort by date in ascending order
+	result_df = pd.DataFrame(aggregated_list)
+	result_df = result_df.sort_values(by='Date', ascending=True)
+	result_df = result_df.reset_index(drop=True)
+
+	return result_df
 
 def aggregate_sales_by_product_id(sales_data, products):
 	# Create a dictionary mapping product IDs to their names

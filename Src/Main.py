@@ -167,8 +167,7 @@ def build_report_cin7():
 
 	print("Getting Cin7 Sales by Product Categories")
 	matched_data = match_sales_with_products(sales_data, products)
-	category_data = aggregate_sales_by_category(matched_data)
-	category_data_df = pd.DataFrame(category_data)
+	category_data_df = aggregate_sales_by_category(matched_data)
 	category_data_df = clean_df(category_data_df, ['Date'] + get_header_list('cin7_categories'))
 	save_df_to_csv(category_data_df, path_gen('cin7', 'Sale_by_Categories', 'csv'))
 
@@ -178,6 +177,7 @@ def build_report_cin7():
 
 	print("Getting Cin7 Stock Values")
 	stock_values = calculate_inventory_values(products, purchases_nz, purchases_aus)
+	stock_values = clean_numeric_columns(stock_values)
 	save_df_to_csv(stock_values, path_gen('cin7', 'stock_values', 'csv'))
 
 	# print("Getting Cin7 Aged Products")
@@ -224,7 +224,7 @@ def main():
 	# build_report_facebook()
 	# build_report_google()
 	#
-	# excel_update()
+	excel_update()
 	#
 	update_template_files(template_folder_path(), output_folder_path(), final_output_path())
 

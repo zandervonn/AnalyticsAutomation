@@ -34,28 +34,30 @@ def get_report(driver, since, until, testing=False):
 	if not testing:
 		click_and_wait(driver, GENERATE_BUTTON)
 		time.sleep(1)
-	refresh_until_visible(driver, REPORT_STATUS_READY)
-	driver.find_element(By.XPATH, REPORT_DOWLOAD_CSV).click()
+		refresh_until_visible(driver, REPORT_STATUS_READY)
+		driver.find_element(By.XPATH, REPORT_DOWLOAD_CSV).click()
+	else:
+		wait_for_user_input()
 	return wait_and_rename_downloaded_file(output_folder_path()+"downloads", "starshipit_package_report")
 
 def process_starshipit_ui_report(df):
 	rawData = process_handeling_dates(df.copy())
 
-	dateAverages = process_handeling_dates_average(rawData.copy())
-	postage_info = calculate_postage(df)
-	postage_types = calculate_postage_type(df)
-	package_types = calculate_package_type(df)
-	status_info = calculate_status(rawData.copy())
-	orders_items_info = calculate_orders_packed_items_picked(df)
+	dateAverages = process_handeling_dates_average(rawData.copy()).reset_index(drop=True)
+	postage_info = calculate_postage(df).reset_index(drop=True)
+	postage_types = calculate_postage_type(df).reset_index(drop=True)
+	package_types = calculate_package_type(df).reset_index(drop=True)
+	status_info = calculate_status(rawData.copy()).reset_index(drop=True)
+	orders_items_info = calculate_orders_packed_items_picked(df).reset_index(drop=True)
 
-	accounts_orders = pivot_orders_picked_by_day(df).head(8)
-	accounts_items = pivot_items_picked_by_day(df).head(8)
+	accounts_orders = pivot_orders_picked_by_day(df).reset_index(drop=True)
+	accounts_items = pivot_items_picked_by_day(df).reset_index(drop=True)
 
 	name_mapping = load_mapping(employee_mapping_path())
 	accounts_orders = rename_and_aggregate_columns(accounts_orders, name_mapping)
 	accounts_items = rename_and_aggregate_columns(accounts_items, name_mapping)
 
-	full_address_df = create_full_address_df(df)
+	full_address_df = create_full_address_df(df).reset_index(drop=True)
 
 	page2 = pd.concat([dateAverages, postage_info, postage_types, package_types, status_info, orders_items_info], axis=1)
 
@@ -127,8 +129,8 @@ def pivot_orders_picked_by_day(df):
 	"""
 	df['Date'] = pd.to_datetime(df['Printed Date']).dt.date
 	pivot_df = df.pivot_table(index='Date', columns='AccountName', values='Printed Date', aggfunc='size', fill_value=0)
-	pivot_df = pivot_df.sort_values(by='Date', ascending=False)
-	pivot_df = pivot_df.reset_index()
+	pivot_df = pivot_df.sort_values(by='Date', ascending=True)
+	pivot_df = pivot_df.reset_index().tail(8)
 	return pivot_df
 
 def pivot_items_picked_by_day(df):
@@ -145,8 +147,8 @@ def pivot_items_picked_by_day(df):
 	df['Date'] = pd.to_datetime(df['Printed Date']).dt.date
 	df['Items Picked'] = df['Item Skus'].apply(lambda x: len(x.split(';')) if isinstance(x, str) else 0)
 	pivot_df = df.pivot_table(index='Date', columns='AccountName', values='Items Picked', aggfunc='sum', fill_value=0)
-	pivot_df = pivot_df.sort_values(by='Date', ascending=False)
-	pivot_df = pivot_df.reset_index()
+	pivot_df = pivot_df.sort_values(by='Date', ascending=True)
+	pivot_df = pivot_df.reset_index().tail(8)
 
 	return pivot_df
 
@@ -169,7 +171,7 @@ def calculate_orders_packed_items_picked(df):
 	result['Items Picked Date'] = result['Orders Packed Date']
 
 	# Sort by date in descending order to see the most recent entries first
-	result = result.sort_values(by='Orders Packed Date', ascending=False).reset_index(drop=True)
+	result = result.sort_values(by='Orders Packed Date', ascending=True).reset_index(drop=True)
 
 	return result
 
