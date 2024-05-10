@@ -89,13 +89,16 @@ def process_handeling_dates_average(df):
 def calculate_postage(df):
 	df['Postage Cost'] = df['Price']
 
-	# Create a new column with NaNs
+	# Create a new column with NaNs for 'Postage Recovered'
 	df['Postage Recovered'] = pd.NA
 
 	# Set the total only in the first row
 	df.loc[0, 'Postage Recovered'] = df['Price'].sum()
 
-	return df[['Postage Cost', 'Postage Recovered']]
+	# Sort the DataFrame by 'Postage Cost' in descending order before slicing
+	df_sorted = df.sort_values(by='Postage Cost', ascending=False)
+
+	return df_sorted[['Postage Cost', 'Postage Recovered']]
 
 def calculate_postage_type(df):
 	postage_type_count = df['Carrier'].value_counts().reset_index()
@@ -145,13 +148,11 @@ def pivot_items_picked_by_day(df):
 	pivot_df = pivot_df.sort_values(by='Date', ascending=False)
 	pivot_df = pivot_df.reset_index()
 
-	print(pivot_df)
-
 	return pivot_df
 
 
 def calculate_orders_packed_items_picked(df):
-	# Ensure date columns are converted properly to datetime
+	# Convert 'Printed Date' to datetime and strip time, ensuring format is 'Y-M-D'
 	df['Orders Packed Date'] = pd.to_datetime(df['Printed Date']).dt.date
 
 	# Calculate the number of orders packed
@@ -164,9 +165,10 @@ def calculate_orders_packed_items_picked(df):
 	# Merge the counts
 	result = orders_packed_count.merge(items_picked_count, on='Orders Packed Date', how='outer')
 
-	result.insert(2, 'Items Picked Date', result['Orders Packed Date'])
+	# Include 'Items Picked Date' as duplicate of 'Orders Packed Date'
+	result['Items Picked Date'] = result['Orders Packed Date']
 
-	# Sort by date in ascending order
+	# Sort by date in descending order to see the most recent entries first
 	result = result.sort_values(by='Orders Packed Date', ascending=False).reset_index(drop=True)
 
 	return result
@@ -199,14 +201,14 @@ def status_label(row):
 def rename_and_aggregate_columns(df, mapping):
 	"""
 	Rename and aggregate DataFrame columns based on a mapping. Sum columns if they are mapped to the same new name.
-	Remove columns that are mapped to 'REMOVE'.
+	Remove columns that are mapped to 'REMOVE'. Capitalize the first letter of each column header.
 
 	Parameters:
 	df (DataFrame): The DataFrame to process.
 	mapping (dict): A dictionary mapping old column names to new names or 'REMOVE' to indicate removal.
 
 	Returns:
-	DataFrame: The modified DataFrame with renamed and aggregated columns.
+	DataFrame: The modified DataFrame with renamed, aggregated, and properly capitalized columns.
 	"""
 	# Trim and handle removal
 	df.columns = df.columns.str.strip()
@@ -229,6 +231,9 @@ def rename_and_aggregate_columns(df, mapping):
 
 	# Drop columns
 	df.drop(columns=set(columns_to_drop), inplace=True, errors='ignore')
+
+	# Capitalize first letter of each header
+	df.columns = df.columns.str.capitalize()
 
 	return df
 

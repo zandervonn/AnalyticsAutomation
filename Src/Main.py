@@ -212,8 +212,8 @@ def excel_update():
 
 def main():
 	# build_report_cin7_ui() #needs 2fa
-	build_report_shopify_ui()
-	# build_report_starshipit_ui(testing=True)
+	# build_report_shopify_ui()
+	build_report_starshipit_ui(testing=True)
 	# build_report_cin7()
 	# build_report_instagram()
 	# build_report_instagram_images()
@@ -226,7 +226,7 @@ def main():
 	#
 	# excel_update()
 	#
-	# update_template_files(template_folder_path(), output_folder_path(), final_output_path())
+	update_template_files(template_folder_path(), output_folder_path(), final_output_path())
 
 if __name__ == '__main__':
 	main()

@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from Src.helpers.json_helpers import *
@@ -139,21 +140,39 @@ def sort_by_value_column(df, column_name, ascending=False):
 
 def clean_numeric_columns(df, abs_values=False):
 	for col in df.columns:
-		# Temporarily remove common formatting characters to better assess numeric content
-		temp_col = df[col].replace('[\$,]', '', regex=True).replace('-', '', regex=True)
-		# Check if the column is numeric after cleaning by attempting to convert it
-		try:
-			numeric_check = pd.to_numeric(temp_col, errors='raise')
-			is_numeric = True
-		except:
-			is_numeric = False
+		# Apply the conversion function to each column only if it is numeric
+		new_col_data = []
+		for val in df[col]:
+			if is_numeric(val):
+				new_val = convert_value(val)
+				if abs_values and isinstance(new_val, (int, float)):
+					new_val = abs(new_val)
+				new_col_data.append(new_val)
+			else:
+				new_col_data.append(val)  # Keep the original non-numeric value
+		df[col] = new_col_data
 
-		if is_numeric:
-			# Properly clean the column, converting to numeric and handling negatives correctly
-			df[col] = pd.to_numeric(df[col].replace('[\$,%]', '', regex=True), errors='coerce')
-			if abs_values:
-				df[col] = df[col].abs()
 	return df
+
+def convert_value(val):
+	patterns = {
+		'currency': re.compile(r'^\s*[-+]?\$?'),  # Matches optional leading +/- and currency symbol
+		'comma_decimal': re.compile(r',')  # Matches commas used as thousands separators
+	}
+	val = str(val).strip()
+	if patterns['currency'].search(val):
+		val = patterns['currency'].sub('', val)
+	val = patterns['comma_decimal'].sub('', val)
+	if '%' in val:
+		val = val.replace('%', '')
+		try:
+			return float(val) / 100
+		except ValueError:
+			return pd.NA
+	try:
+		return pd.to_numeric(val, errors='coerce')
+	except:
+		return pd.NA
 
 def clean_df(df, defined_headers):
 	split_columns_info = extract_split_columns_info(defined_headers)
@@ -180,3 +199,28 @@ def clean_dfs(df_input, headers):
 		raise TypeError("Input must be either a list or a dictionary of DataFrames")
 
 	return clean_dfs
+
+
+def is_numeric(val):
+	patterns = {
+		'currency': re.compile(r'^\s*[-+]?\$?'),  # Matches optional leading +/- and currency symbol
+		'comma_decimal': re.compile(r',')  # Matches commas used as thousands separators
+	}
+	# Convert the value to a string and strip white space
+	val = str(val).strip()
+
+	# Remove currency symbols and commas
+	if patterns['currency'].search(val):
+		val = patterns['currency'].sub('', val)
+	val = patterns['comma_decimal'].sub('', val)
+
+	# Remove percentage sign and adjust value
+	if '%' in val:
+		val = val.replace('%', '')
+
+	# Attempt numeric conversion
+	try:
+		float(val)  # Attempt to convert to float
+		return True
+	except ValueError:
+		return False

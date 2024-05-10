@@ -185,6 +185,10 @@ def clean_shopify_ui_dfs(dfs):
 		dfs['conversions_over_time'] = dfs['conversions_over_time'].sort_values(by='Day', ascending=False)
 		dfs['conversions_over_time'] = clean_numeric_columns(dfs['conversions_over_time'], abs_values=True)
 
+	# Sort 'Conversions Over Time' by most recent date if it exists
+	if 'Customer Metrics' in dfs:
+		dfs['Customer Metrics'] = clean_numeric_columns(dfs['Customer Metrics'], abs_values=True)
+
 	return dfs
 
 def apply_mapping_to_discounts(df, mapping):
