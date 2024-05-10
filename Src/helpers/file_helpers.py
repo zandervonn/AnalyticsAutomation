@@ -1,12 +1,10 @@
-import os
-from datetime import datetime
-
 import openpyxl
 import pandas as pd
 import re
+import os
 
 from bs4 import BeautifulSoup
-
+from datetime import datetime
 
 def path_gen(*args):
 
@@ -133,62 +131,73 @@ def files_to_excel(file_paths, output_excel_path):
 
 
 def update_template_files(template_folder, data_folder, output_folder):
-	# Load available data files into a dictionary
+	# Load data from the specified folder and print available keys
 	data_files = get_excel_csv_files(data_folder)
 	data_dict = load_files_into_dict(data_files)
-	print("Data dictionary keys:", list(data_dict.keys()))  # Debug: Print available keys
+	print("Data dictionary keys:", list(data_dict.keys()))
 
 	# Load template files
 	template_files = get_excel_csv_files(template_folder)
 
-	# Create a subfolder in the output directory with today's date
+	# Create a subfolder in the output directory for today's date
 	today = datetime.now().strftime("%Y-%m-%d")
 	date_output_folder = os.path.join(output_folder, today)
-	if not os.path.exists(date_output_folder):
-		os.makedirs(date_output_folder)
+	os.makedirs(date_output_folder, exist_ok=True)
 
+	# Process each template file
 	for template_file in template_files:
-		wb = openpyxl.load_workbook(template_file)
-		for sheet_name in wb.sheetnames:
-			ws = wb[sheet_name]
-			header = ws[2]  # Assume second row contains references
+		process_template_file(template_file, data_dict, date_output_folder)
 
-			for col, cell in enumerate(header, start=1):
-				ref = str(cell.value).strip().lower() if cell.value else ""
-				if not ref or '.' not in ref:
-					continue  # Skip cells without proper references
+def process_template_file(template_file, data_dict, output_folder):
+	wb = openpyxl.load_workbook(template_file)
+	for sheet_name in wb.sheetnames:
+		process_sheet(wb[sheet_name], data_dict)
 
-				update_header = ref.endswith('_headers')
-				ref = ref[:-8] if update_header else ref  # Remove '_headers' suffix if present
+	# Save the workbook to the specified output folder with a dated filename
+	save_workbook(wb, template_file, output_folder)
 
-				parts = [x.strip() for x in ref.split('.')]
-				if len(parts) < 3:
-					print(f"Reference in cell {cell.coordinate} is incomplete: '{cell.value}'")
-					continue
+def process_sheet(ws, data_dict):
+	header = ws[2]  # Assuming second row contains references
+	for col, cell in enumerate(header, start=1):
+		update_cell(ws, col, cell, data_dict)
+	ws.delete_rows(2)  # Remove the reference row after updates
 
-				file, sheet, column = parts
-				key = f"{file}.{sheet}".lower()
+def update_cell(ws, col, cell, data_dict):
+	ref = str(cell.value).strip().lower() if cell.value else ""
+	if not ref or '.' not in ref:
+		return  # Skip cells without proper references
 
-				if key not in data_dict:
-					print(f"Could not find data for key: '{key}'")
-					continue
+	update_header = ref.endswith('_headers')
+	ref = ref[:-8] if update_header else ref  # Remove '_headers' suffix if needed
+	parts = ref.split('.')
+	if len(parts) < 3:
+		print(f"Reference in cell {cell.coordinate} is incomplete: '{cell.value}'")
+		return
 
-				df = data_dict[key]
-				if column == "all":
-					replace_entire_sheet(ws, df, col, update_header)
-				elif column in df.columns:
-					replace_column_data(ws, col, df[column], update_header)
-				else:
-					print(f"Column '{column}' not found in data for key: '{key}'")
-					print(f"Available columns in '{sheet}' of '{file}': {list(df.columns)}")  # Show available columns for the sheet
+	file, sheet, column = (part.strip() for part in parts)
+	key = f"{file}.{sheet}".lower()
+	if key not in data_dict:
+		print(f"Could not find data for key: '{key}'")
+		return
 
-			ws.delete_rows(2)  # Remove the reference row
+	df = data_dict[key]
+	update_worksheet_data(ws, col, df, column, update_header, file, sheet)
 
-		# Construct the full output path including the date subfolder
-		file_name, file_extension = os.path.splitext(os.path.basename(template_file))
-		output_path = os.path.join(date_output_folder, f"{file_name}_{today}{file_extension}")
-		wb.save(output_path)
-		print(f"Saved processed file to: {output_path}")
+def update_worksheet_data(ws, col, df, column, update_header, file, sheet):
+	if column == "all":
+		replace_entire_sheet(ws, df, col, update_header)
+	elif column in df.columns:
+		replace_column_data(ws, col, df[column], update_header)
+	else:
+		print(f"Column '{column}' not found in data for key: '{file}.{sheet}'")
+		print(f"Available columns in '{sheet}' of '{file}': {list(df.columns)}")
+
+def save_workbook(wb, template_file, output_folder):
+	today = datetime.now().strftime("%Y-%m-%d")
+	file_name, file_extension = os.path.splitext(os.path.basename(template_file))
+	output_path = os.path.join(output_folder, f"{file_name}_{today}{file_extension}")
+	wb.save(output_path)
+	print(f"Saved processed file to: {output_path}")
 
 def replace_entire_sheet(ws, df, start_col, update_header):
 	# Assuming row 1 is headers and row 2 is the reference row
