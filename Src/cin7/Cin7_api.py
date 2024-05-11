@@ -247,7 +247,6 @@ def calculate_inventory_values(products, purchases_nz, purchases_aus):
 	open_purchases_nz = get_open_purchase_orders(purchases_nz)
 	open_purchases_aus = get_open_purchase_orders(purchases_aus)
 	total = open_purchases_nz - open_purchases_aus
-	print(f"total: {open_purchases_nz} - {open_purchases_aus} = {total}")
 
 	# Create a DataFrame with the totals
 	df = pd.DataFrame({
