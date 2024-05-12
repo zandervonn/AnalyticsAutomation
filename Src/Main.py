@@ -59,6 +59,7 @@ def build_report_facebook_posts():
 	_since, _until = get_dates("sunday", "weeks", 2)  # get 2 weeks of data to show change over the week
 	facebook_df = get_facebook_posts_and_insights(meta_access_token(),  meta_facebook_id(), get_header_list('facebook_posts'), _since, _until)
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_posts'))
+	facebook_df = clean_facebook_post_df(facebook_df)
 	save_df_to_csv(facebook_df, path_gen('facebook_posts', 'data', 'csv'), True)
 
 def build_report_facebook_videos():
@@ -66,20 +67,20 @@ def build_report_facebook_videos():
 	_since, _until = get_dates("sunday", "weeks", 2)  # get 2 weeks of data to show change over the week
 	facebook_df = get_facebook_video_insights(meta_access_token(),  meta_facebook_id(), _since, _until)
 	facebook_df = clean_df(facebook_df, get_header_list('facebook_videos'))
-	facebook_df = clean_facebook_video_df(facebook_df)
+	facebook_df = clean_facebook_post_df(facebook_df)
 	save_df_to_csv(facebook_df, path_gen('facebook_videos', 'data', 'csv'), True)
 
 def build_report_instagram_videos():
 	print("Getting Instagram videos")
 	_since, _until = get_dates("sunday", "weeks", 2)  # get 2 weeks of data to show change over the week
-	insta_df = get_insta_video_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), _since, _until)
+	insta_df = get_insta_video_insights(meta_access_token(),  meta_insta_id(), _since, _until)
 	insta_df = clean_insta_video_df(insta_df)
 	save_df_to_csv(insta_df, path_gen('instagram', 'videos', 'csv'), True)
 
 def build_report_instagram_images():
 	print("Getting Instagram images")
 	_since, _until = get_dates("sunday", "weeks", 2)  # get 2 weeks of data to show change over the week
-	insta_df = get_insta_image_insights(meta_access_token(),  meta_insta_id(),get_header_list('instagram_posts'), _since, _until)
+	insta_df = get_insta_image_insights(meta_access_token(),  meta_insta_id(), _since, _until)
 	insta_df = clean_insta_image_df(insta_df)
 	save_df_to_csv(insta_df, path_gen('instagram', 'images', 'csv'), True)
 

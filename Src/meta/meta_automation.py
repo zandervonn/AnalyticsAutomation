@@ -217,7 +217,7 @@ def parse_insights(insights_data, post_id):
 		print(f"No insights data available for post ID: {post_id}")
 		return {}
 
-def get_insta_video_insights(meta_token, page_id, _, since, until):
+def get_insta_video_insights(meta_token, page_id, since, until):
 	posts = get_media(meta_token, page_id, since, until)
 	post_insights = []
 
@@ -249,7 +249,7 @@ def get_insta_video_insights(meta_token, page_id, _, since, until):
 	df = pd.DataFrame(post_insights)
 	return df
 
-def get_insta_image_insights(meta_token, page_id, _, since, until):
+def get_insta_image_insights(meta_token, page_id, since, until):
 	posts = get_media(meta_token, page_id, since, until)
 	post_insights = []
 
@@ -317,19 +317,65 @@ def split_insights_to_sheets(df, insights_pages):
 
 	return dfs
 
-def clean_facebook_video_df(df):
-	# Combine the two columns and insert the new column at the index of the second one
-	index_of_second_column = df.columns.get_loc('post_video_likes_by_reaction_type.REACTION_LIKE')
-	df.insert(
-		index_of_second_column,
-		'post_video_likes_and_loves',
-		df['post_video_likes_by_reaction_type.REACTION_LOVE'] + df['post_video_likes_by_reaction_type.REACTION_LIKE']
-	)
 
-	# Drop the original columns
-	df.drop(['post_video_likes_by_reaction_type.REACTION_LOVE', 'post_video_likes_by_reaction_type.REACTION_LIKE'], axis=1, inplace=True)
+def clean_facebook_post_df(df):
+	# Make a deep copy of the DataFrame to ensure operations are done on a new DataFrame
+	df = df.copy()
+
+	# Merge reaction columns if they exist
+	if 'post_video_likes_by_reaction_type.REACTION_LOVE' in df.columns and 'post_video_likes_by_reaction_type.REACTION_LIKE' in df.columns:
+		index_of_second_column = df.columns.get_loc('post_video_likes_by_reaction_type.REACTION_LIKE')
+		df.insert(
+			index_of_second_column,
+			'post_video_likes_and_loves',
+			df['post_video_likes_by_reaction_type.REACTION_LOVE'] + df['post_video_likes_by_reaction_type.REACTION_LIKE']
+		)
+		df.drop(['post_video_likes_by_reaction_type.REACTION_LOVE', 'post_video_likes_by_reaction_type.REACTION_LIKE'], axis=1, inplace=True)
+
+	# Convert time from ms to s for relevant columns
+	if 'post_video_avg_time_watched' in df.columns:
+		df['avg_time_watched_s'] = df['post_video_avg_time_watched'] / 1000
+		df.drop('post_video_avg_time_watched', axis=1, inplace=True)
+
+	if 'post_video_view_time' in df.columns:
+		df['total_view_time_s'] = df['post_video_view_time'] / 1000
+		df.drop('post_video_view_time', axis=1, inplace=True)
+
+	# Drop rows with all NaN values except the date column
+	date_column = 'created_time'
+	cols_to_check = df.columns.difference([date_column])
+	df = df.dropna(subset=cols_to_check, how='all')
+
+	# Fill remaining NaN values with '0'
+	df.fillna('0', inplace=True)
+
+	# Trim and debug captions
+	caption_column = 'message' if 'message' in df.columns else 'description' if 'description' in df.columns else None
+	if caption_column:
+		original_captions = df[caption_column].copy()  # Copy original messages for debugging
+		df[caption_column] = df[caption_column].apply(lambda x: trim_caption(x))
+
+		# Debugging output
+		for original, trimmed in zip(original_captions, df[caption_column]):
+			if '\n' in original:
+				print(f"Original: {original!r}")
+				print(f"Trimmed: {trimmed!r}")
 
 	return df
+
+def trim_caption(caption):
+	if pd.notna(caption):
+		# Strip to remove leading/trailing whitespace and split on newline
+		trimmed = caption.strip().split('\n', 1)[0]
+		return trimmed
+	return caption
+
+def trim_caption(caption):
+	if pd.notna(caption):
+		# Strip to remove leading/trailing whitespace and split on newline
+		trimmed = caption.strip().split('\n', 1)[0]
+		return trimmed
+	return caption
 
 def clean_insta_video_df(insta_df):
 	"""
