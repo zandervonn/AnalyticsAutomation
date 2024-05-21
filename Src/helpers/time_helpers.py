@@ -1,26 +1,30 @@
-from datetime import datetime, timedelta, timezone
 
+import pytz
 from Src.helpers.file_helpers import find_path_upwards
+from datetime import datetime, timedelta, timezone
 
 LAST_RUN_FILE_PATH = find_path_upwards(r"config\config.txt")
 
-from datetime import datetime, timedelta
-
+# todo clean up
 def get_dates(from_date, time_span, num):
+	# Set the timezone to New Zealand
+	tz = pytz.timezone('Pacific/Auckland')
+
 	# Determine the base date
 	if from_date == 'today':
-		base_date = datetime.now()
+		base_date = datetime.now(tz)
 	elif from_date == 'sunday':
-		now = datetime.now()
-		if now.weekday() == 6:  # If today is Sunday (weekday() returns 6 for Sunday)
-			base_date = now  # Use the current time
+		now = datetime.now(tz)
+		if now.weekday() == 6:  # If today is Sunday
+			base_date = now
 		else:
 			# Adjust base_date to the most recent past Sunday
-			days_behind = (now.weekday() + 1) % 7  # Calculate days since last Sunday
+			days_behind = (now.weekday() + 1) % 7
 			base_date = now - timedelta(days=days_behind)
-			base_date = base_date.replace(hour=23, minute=59, second=0, microsecond=0)  # Set to 11:59 PM
+		base_date = base_date.replace(hour=23, minute=59, second=59, microsecond=0)  # Set to 23:59:59 on Sunday
 	else:
 		base_date = datetime.strptime(from_date, '%Y-%m-%dT%H:%M:%S')
+		base_date = tz.localize(base_date)
 
 	# Define the time delta based on time_span
 	if time_span == 'weeks':
@@ -34,8 +38,11 @@ def get_dates(from_date, time_span, num):
 		delta = timedelta(days=num)
 
 	# Calculate the 'since' date
-	since = (base_date - delta).strftime('%Y-%m-%dT%H:%M:%S')
 	until = base_date.strftime('%Y-%m-%dT%H:%M:%S')
+	since = base_date - delta
+	# Set the 'since' to 00:00 on the Monday just before the past Sunday
+	since = since.replace(hour=0, minute=0, second=0, microsecond=0)
+	since = (since + timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S')  # Adjust for the Monday start
 
 	return since, until
 

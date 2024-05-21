@@ -58,7 +58,7 @@ def csv_sheets_to_excel(csv_files, excel_file):
 	- None
 	"""
 
-	with pd.ExcelWriter(excel_file) as writer:
+	with pd.ExcelWriter(excel_file, engine='openpyxl', datetime_format='YYYY-MM-DD') as writer:
 		for csv_file in csv_files:
 			try:
 				df = pd.read_csv(csv_file)
@@ -123,7 +123,7 @@ def save_df_to_excel(df_or_dict, filename):
 	Returns:
 	- None
 	"""
-	with pd.ExcelWriter(filename, engine='openpyxl') as writer:
+	with pd.ExcelWriter(filename, engine='openpyxl', datetime_format='YYYY-MM-DD') as writer:
 		if isinstance(df_or_dict, pd.DataFrame):
 			# If a single DataFrame is provided, save it to the first sheet
 			if not df_or_dict.empty:

@@ -1,5 +1,5 @@
 from Src.cin7.UI.cin7_ui_automation import cin7_get_ui_aged_report
-from Src.helpers.clean_csv_helpers import clean_df, clean_dfs, sort_by_date_column, sort_by_value_column
+from Src.helpers.clean_csv_helpers import clean_df, clean_dfs
 from Src.starshipit.UI.starshipit_ui_automation import *
 from Src.starshipit.starshipit_api import *
 from Src.cin7.Cin7_api import *
@@ -148,21 +148,21 @@ def excel_update():
 	files_to_excel(meta_files, path_gen('facebook'))
 
 def main():
-	# build_report_cin7_ui() #needs 2fa
-	# build_report_shopify_ui()
-	# build_report_starshipit_ui(testing=True)
-	# build_report_cin7()
+	build_report_cin7_ui() #needs 2fa
+	build_report_shopify_ui()
+	build_report_starshipit_ui(testing=True)
+	build_report_cin7()
 	# build_report_instagram()
 	# build_report_instagram_images()
 	# build_report_instagram_videos()
-	build_report_facebook_videos()
-	build_report_facebook_posts()
+	# build_report_facebook_videos()
+	# build_report_facebook_posts()
 	#
 	# build_report_facebook()
 	# build_report_google()
-	#
+
 	# excel_update()
-	#
+
 	# update_template_files(template_folder_path(), output_folder_path(), final_output_path())
 
 if __name__ == '__main__':

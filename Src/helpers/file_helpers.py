@@ -5,6 +5,8 @@ import os
 
 from bs4 import BeautifulSoup
 from datetime import datetime
+from dateutil.parser import parse, ParserError
+from openpyxl.styles import NamedStyle
 
 def path_gen(*args):
 
@@ -112,15 +114,29 @@ def read_and_clean_data(file_path):
 		return None
 
 def save_data_to_excel(df, writer, sheet_name):
-	if df is not None:
-		df.to_excel(writer, sheet_name=sheet_name, index=False)
+	# Write the DataFrame to the ExcelWriter
+	df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+	# Get the workbook and worksheet for formatting
+	workbook = writer.book
+	worksheet = writer.sheets[sheet_name]
+
+	# Define a date style format using openpyxl
+	date_style = NamedStyle(name='custom_date_style', number_format='YYYY-MM-DD')
+
+	# Apply the style to each cell in the date columns
+	date_columns = [col for col in df.columns if df[col].dtype in ['datetime64[ns]', 'datetime64[ns, tz]']]
+	for col in date_columns:
+		column_letter = openpyxl.utils.get_column_letter(df.columns.get_loc(col) + 1)  # get_loc is zero indexed, openpyxl is 1 indexed
+		for row in range(2, len(df) + 2):  # Start at 2 to skip the header row
+			worksheet[f'{column_letter}{row}'].style = date_style
 
 def create_date_saved_df(all_data_columns):
 	date_saved = 'Date Saved: ' + datetime.now().strftime('%Y-%m-%d')
 	return pd.DataFrame([[date_saved] + [''] * (all_data_columns - 1)])
 
 def files_to_excel(file_paths, output_excel_path):
-	with pd.ExcelWriter(output_excel_path, engine='openpyxl') as writer:
+	with pd.ExcelWriter(output_excel_path, engine='openpyxl', datetime_format='YYYY-MM-DD') as writer:
 		for file_path in file_paths:
 			df = read_and_clean_data(file_path)
 			if df is not None:
@@ -128,6 +144,96 @@ def files_to_excel(file_paths, output_excel_path):
 				save_data_to_excel(df, writer, sheet_name)
 
 	print(f"Files saved to {output_excel_path}")
+
+def update_worksheet_data(ws, col, df, column, update_header, file, sheet):
+	"""
+	Updates data or headers in a worksheet based on the specified column information,
+	including date formatting if applicable.
+
+	Parameters:
+	- ws: The worksheet to update.
+	- col: The column index to start from.
+	- df: DataFrame containing the data.
+	- column: Specific column name or 'all' to update.
+	- update_header: Boolean to determine if headers should be updated.
+	- file: File name used in messaging.
+	- sheet: Sheet name used in messaging.
+	"""
+	# Apply date formatting based on column headers in the worksheet
+	df = format_date_columns(df)
+
+	if column == "all":
+		replace_entire_sheet(ws, df, col, update_header)
+	elif column in df.columns:
+		replace_column_data(ws, col, df[column], update_header)
+	else:
+		print(f"Column '{column}' not found in data for key: '{file}.{sheet}'")
+		print(f"Available columns in '{sheet}' of '{file}': {list(df.columns)}")
+
+def format_date_columns(df):
+	"""
+	Format columns in the DataFrame by checking if the second cell in each column is a date.
+	Only formats columns where the second cell can be parsed as a date, and ensures that the cell exists.
+	Ensures that formatted dates do not include a time component.
+
+	Parameters:
+	- df (pd.DataFrame): DataFrame to format.
+
+	Returns:
+	- pd.DataFrame: DataFrame with date columns formatted where applicable.
+	"""
+	for col in df.columns:
+		# Check if there is at least one data row beyond the header
+		if len(df[col]) > 1 and pd.notna(df[col].iloc[1]):  # Use iloc to safely access the second row
+			try:
+				# Attempt to parse the second row (first row after the header)
+				parsed_date = parse(df[col].iloc[1], fuzzy=False)
+				# If parse is successful, format the whole column without time component
+				df[col] = pd.to_datetime(df[col], errors='coerce').dt.strftime('%Y-%m-%d').fillna(df[col])
+			except (ParserError, ValueError, TypeError):
+				# If parsing fails, do not treat as a date column
+				continue
+	return df
+
+def is_convertible_to_date(value):
+	"""
+	Helper function to check if a value can be parsed as a date.
+
+	Parameters:
+	- value: The value to check.
+
+	Returns:
+	- bool: True if the value can be parsed as a date, False otherwise.
+	"""
+	try:
+		parse(value, fuzzy=False)
+		return True
+	except (ParserError, ValueError):
+		return False
+
+def is_date_format(number_format):
+	# Define a list of date formats you expect to consider as date columns
+	date_formats = ["yy-mm-dd", "yyyy-mm-dd", "dd-mm-yy", "dd-mm-yyyy", "m/d/yy", "m/d/yyyy", "d-mmm-yy"]
+	# Print what is being matched against for troubleshooting
+	print(f"Checking formats in: {date_formats}")
+	return any(fmt in number_format for fmt in date_formats)
+
+def safe_assign_to_excel(ws, row, col, value):
+	"""
+	Safely assign a value to an Excel cell, ensuring that the value is compatible with Excel.
+	"""
+	try:
+		ws.cell(row=row, column=col).value = value
+	except ValueError:
+		ws.cell(row=row, column=col).value = str(value)  # Convert to string if not directly assignable
+
+def replace_column_data(ws, col, data, update_header):
+	data_start_row = 2 if update_header else 3
+	for i, value in enumerate(data, start=data_start_row):
+		safe_assign_to_excel(ws, i, col, value)
+
+	if update_header:
+		ws.cell(row=1, column=col).value = data.name.capitalize()
 
 
 def update_template_files(template_folder, data_folder, output_folder):
@@ -213,26 +319,6 @@ def replace_entire_sheet(ws, df, start_col, update_header):
 		headers = capitalize_headers(list(df.columns))
 		for i, header in enumerate(headers, start=start_col):
 			ws.cell(row=1, column=i).value = header
-
-def replace_column_data(ws, col, data, update_header):
-	""" Replace data in a specific column and optionally update its header """
-	data_start_row = 2 if update_header else 3
-	for i, value in enumerate(data, start=data_start_row):
-		ws.cell(row=i, column=col).value = value
-
-	if update_header:
-		header = data.name.capitalize()  # Capitalize the header name
-		ws.cell(row=1, column=col).value = header
-
-def update_worksheet_data(ws, col, df, column, update_header, file, sheet):
-	""" Updates data or headers in a worksheet based on the specified column information """
-	if column == "all":
-		replace_entire_sheet(ws, df, col, update_header)
-	elif column in df.columns:
-		replace_column_data(ws, col, df[column], update_header)
-	else:
-		print(f"Column '{column}' not found in data for key: '{file}.{sheet}'")
-		print(f"Available columns in '{sheet}' of '{file}': {list(df.columns)}")
 
 def indicate_missing(ws, row, col, file, sheet, column=None):
 	if column:

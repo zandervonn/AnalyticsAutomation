@@ -352,23 +352,9 @@ def clean_facebook_post_df(df):
 	# Trim and debug captions
 	caption_column = 'message' if 'message' in df.columns else 'description' if 'description' in df.columns else None
 	if caption_column:
-		original_captions = df[caption_column].copy()  # Copy original messages for debugging
 		df[caption_column] = df[caption_column].apply(lambda x: trim_caption(x))
 
-		# Debugging output
-		for original, trimmed in zip(original_captions, df[caption_column]):
-			if '\n' in original:
-				print(f"Original: {original!r}")
-				print(f"Trimmed: {trimmed!r}")
-
 	return df
-
-def trim_caption(caption):
-	if pd.notna(caption):
-		# Strip to remove leading/trailing whitespace and split on newline
-		trimmed = caption.strip().split('\n', 1)[0]
-		return trimmed
-	return caption
 
 def trim_caption(caption):
 	if pd.notna(caption):

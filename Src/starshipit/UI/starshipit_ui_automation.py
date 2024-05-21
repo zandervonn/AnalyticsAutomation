@@ -74,10 +74,15 @@ def process_starshipit_ui_report(df):
 
 #if this fails testing is turned on and new report is not the expected report
 def process_handeling_dates(df):
+	df['Order Date'] = pd.to_datetime(df['Order Date']).dt.strftime('%Y-%m-%d')
+	df['Printed Date'] = pd.to_datetime(df['Printed Date']).dt.strftime('%Y-%m-%d')
+	df['Delivered Date'] = pd.to_datetime(df['Delivered Date']).dt.strftime('%Y-%m-%d')
+
 	df['Processing Time'] = df.apply(lambda row: calculate_days_between(row['Order Date'], row['Printed Date']), axis=1)
 	df['Delivery Time'] = df.apply(lambda row: calculate_days_between(row['Printed Date'], row['Delivered Date']), axis=1)
 	df['Handling Time'] = df.apply(lambda row: calculate_days_between(row['Order Date'], row['Delivered Date']), axis=1)
 	df['Package Status'] = df.apply(status_label, axis=1)
+
 	return df[['Order Date', 'Printed Date', 'Delivered Date', 'Processing Time', 'Delivery Time', 'Handling Time', 'Package Status']]
 
 def process_handeling_dates_average(df):
