@@ -76,13 +76,13 @@ def excel_update():
 	files_to_excel(csv_files, path_gen('cin7', branch=branch))
 
 def main():
-	build_report_cin7_ui() #needs 2fa
-	build_report_shopify_ui()
-	build_report_starshipit_ui(testing=True)
-	build_report_cin7()
-
+	# build_report_cin7_ui() #needs 2fa
+	# build_report_shopify_ui()
+	# build_report_starshipit_ui(testing=True)
+	# build_report_cin7()
+	#
 	excel_update() #todo remove need for this, pull from raw
-	update_template_files(template_folder_path(), output_folder_path() + "\\" + branch, final_output_path())
+	update_template_files(template_folder_path_AUS(), output_folder_path() + "\\" + branch, final_output_path())
 
 if __name__ == '__main__':
 	main()

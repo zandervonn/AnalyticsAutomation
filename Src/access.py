@@ -17,8 +17,11 @@ secrets = load_properties(find_path_upwards(r'config\secrets.txt'))
 def output_folder_path() -> str:
 	return secrets['output_folder_path']
 
-def template_folder_path() -> str:
-	return secrets['template_folder_path']
+def template_folder_path_NZ() -> str:
+	return secrets['template_folder_path_NZ']
+
+def template_folder_path_AUS() -> str:
+	return secrets['template_folder_path_AUS']
 
 def final_output_path() -> str:
 	return secrets['final_output_path']

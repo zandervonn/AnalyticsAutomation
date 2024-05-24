@@ -241,7 +241,6 @@ def update_template_files(template_folder, data_folder, output_folder):
 	# Load data from the specified folder and print available keys
 	data_files = get_excel_csv_files(data_folder)
 	data_dict = load_files_into_dict(data_files)
-	print("Data dictionary keys:", list(data_dict.keys()))
 
 	# Load template files
 	template_files = get_excel_csv_files(template_folder)
@@ -415,3 +414,41 @@ def load_data(file_path, sheet_name=None):
 		return pd.read_csv(file_path)
 	else:
 		raise ValueError(f"Unsupported file extension: {ext}")
+
+
+def get_latest_marketing_file(folder_path, branch, input_date):
+	"""
+	Retrieve the marketing file for the given branch with the latest date preceding or equal to the input date.
+
+	Parameters:
+	- folder_path (str): The path to the folder containing the files.
+	- branch (str): The branch name to include in the filename.
+	- input_date (str): The input date in 'YYYY-MM-DD' format.
+
+	Returns:
+	- pd.DataFrame: The DataFrame of the extracted marketing file containing the sheet with 'current' in its name.
+	"""
+	# Parse input_date and strip time component if present
+	input_date = parse(input_date).date()
+	files = get_excel_csv_files(folder_path)
+
+	marketing_files = []
+	for file in files:
+		match = re.search(r'marketing department ' + re.escape(branch) + r'_(\d{4}-\d{2}-\d{2})', file, re.IGNORECASE)
+		if match:
+			file_date = datetime.strptime(match.group(1), '%Y-%m-%d').date()
+			if file_date <= input_date:
+				marketing_files.append((file_date, file))
+
+	if not marketing_files:
+		raise FileNotFoundError("No marketing files found preceding or on the input date.")
+
+	latest_file = max(marketing_files, key=lambda x: x[0])[1]
+	print(f"Latest file selected: {latest_file}")
+
+	# Load the file and extract the sheet containing 'current' in its name
+	with pd.ExcelFile(latest_file) as xls:
+		for sheet_name in xls.sheet_names:
+			if 'current' in sheet_name.lower():
+				return pd.read_excel(xls, sheet_name=sheet_name)
+		raise ValueError("No sheet containing 'current' found in the file.")

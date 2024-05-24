@@ -187,6 +187,10 @@ def clean_shopify_ui_dfs(dfs):
 	if 'Top_10_Discount_Codes' in dfs:
 		dfs['Top_10_Discount_Codes'] = clean_numeric_columns(dfs['Top_10_Discount_Codes'], abs_values=True)
 
+	# Ensure 'Top Discount Codes' DataFrame exists and make all values positive
+	if 'Top_Discount_Codes' in dfs:
+		dfs['Top_Discount_Codes'] = clean_numeric_columns(dfs['Top_Discount_Codes'], abs_values=True)
+
 	# Sort 'Orders Over Time' by most recent date if it exists
 	if 'Orders_over_time' in dfs:
 		dfs['Orders_over_time'] = dfs['Orders_over_time'].sort_values(by='Day', ascending=True)
