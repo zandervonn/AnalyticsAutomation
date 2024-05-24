@@ -3,8 +3,7 @@ from datetime import datetime
 from Src.helpers.file_helpers import load_mapping
 from Src.helpers.ui_helpers import *
 from Src.starshipit.UI.starshipit_locators import *
-from Src.access import starshipit_username, starshipit_password, employee_mapping_path, sending_address
-
+from Src.access import *
 
 def login(driver, username, password):
 	driver.find_element(By.XPATH, LOGIN_USERNAME).send_keys(username)
@@ -13,11 +12,22 @@ def login(driver, username, password):
 	time.sleep(1)
 	wait_for_element(driver, GENERATE_BUTTON)
 
-def starshipit_get_ui_report(since, until, testing):
+def starshipit_get_ui_report(since, until, branch, testing):
 	driver = setup_webdriver()
+
+	if branch == AUS:
+		username = starshipit_username_AUS()
+		password = starshipit_password_AUS()
+	elif branch == NZ:
+		username = starshipit_username_NZ()
+		password = starshipit_password_NZ()
+	else:
+		username = ''
+		password = ''
+		print("branch unrecognised")
 	try:
 		open_page(driver, STARSHIPIT_URL)
-		login(driver, starshipit_username(), starshipit_password())
+		login(driver, username, password)
 		return get_report(driver, since, until, testing)
 	finally:
 		close(driver)
@@ -67,6 +77,29 @@ def process_starshipit_ui_report(df):
 		'SummaryPage': page2,
 		'AccountsOrders': accounts_orders,
 		'AccountsItems': accounts_items,
+		'FullAddresses': full_address_df
+	}
+
+	return dfs
+
+def process_starshipit_ui_report_AUS(df):
+	rawData = process_handeling_dates(df.copy())
+
+	dateAverages = process_handeling_dates_average(rawData.copy()).reset_index(drop=True)
+	postage_info = calculate_postage(df).reset_index(drop=True)
+	postage_types = calculate_postage_type(df).reset_index(drop=True)
+	package_types = calculate_package_type(df).reset_index(drop=True)
+	status_info = calculate_status(rawData.copy()).reset_index(drop=True)
+	orders_items_info = calculate_orders_packed_items_picked(df).reset_index(drop=True)
+
+	full_address_df = create_full_address_df(df).reset_index(drop=True)
+
+	page2 = pd.concat([dateAverages, postage_info, postage_types, package_types, status_info, orders_items_info], axis=1)
+
+	# Create a dictionary with each DataFrame
+	dfs = {
+		'RawData': rawData,
+		'SummaryPage': page2,
 		'FullAddresses': full_address_df
 	}
 

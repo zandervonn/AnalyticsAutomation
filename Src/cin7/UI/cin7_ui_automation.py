@@ -1,3 +1,4 @@
+from Src import access
 from Src.access import cin7_username, cin7_password
 from Src.helpers.file_helpers import get_header_list
 from Src.helpers.ui_helpers import *
@@ -11,10 +12,18 @@ def login(driver, username, password):
 	wait_for_user_input()
 	wait_for_element(driver, SEARCH_BUTTON)
 
-def cin7_get_ui_aged_report():
+def cin7_get_ui_aged_report(branch):
 	driver = setup_webdriver()
+	if branch == access.AUS:
+		url = CIN7_AGED_INVENTORY_URL_AUS
+	elif branch == access.NZ:
+		url = CIN7_AGED_INVENTORY_URL_NZ
+	else:
+		url = ''
+		print("branch unrecognised")
+
 	try:
-		open_page(driver, CIN7_AGED_INVENTORY_URL)
+		open_page(driver, url)
 		login(driver, cin7_username(), cin7_password())
 		return get_aged_report(driver)
 	finally:

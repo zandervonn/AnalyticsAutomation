@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from Src import access
 from Src.helpers.file_helpers import load_mapping
 from Src.helpers.ui_helpers import *
 from Src.helpers.clean_csv_helpers import clean_keep_first_row, clean_numeric_columns
@@ -16,8 +17,8 @@ def login(driver, username, password):
 	click_and_wait(driver, LOGIN_PASSWORD_SUBMIT)
 	wait_for_element(driver, ANALYTICS)
 
-def get_report(driver, report_name, since, until):
-	url = f_string(SHOPIFY_REPORTS_URL_TEMPLATE, report_name, since, until)
+def get_report(driver, base_url, report_name, since, until):
+	url = f_string(base_url + SHOPIFY_REPORTS_URL_TEMPLATE, report_name, since, until)
 	print(url)
 	open_page(driver, url)
 	wait_for_table_data(driver, TABLE_CELL)
@@ -29,13 +30,13 @@ def get_report(driver, report_name, since, until):
 
 	return output_file, data
 
-def get_customers(driver, query_tuples):
+def get_customers(driver, base_url, query_tuples):
 	data = []
 	total_customers = 0
 	new_customers = 0
 
 	for query_name, query in query_tuples:
-		url = f_string(SHOPIFY_CUSTOMERS_URL_TEMPLATE, query)
+		url = f_string(base_url + SHOPIFY_CUSTOMERS_URL_TEMPLATE, query)
 		print(url)
 		open_page(driver, url)
 		wait_for_element(driver, CUSTOMER_COUNT_NUM)
@@ -83,37 +84,48 @@ def set_report_and_timeframe(driver, date_range):
 	click_and_wait(driver, f_string(REPORT_TIME_CONTROLLER_TEMPLATE, date_range))
 	click_and_wait(driver, APPLY_BUTTON)
 
-def handle_customer_count(driver):
+def handle_customer_count(driver, base_url):
 	query_tuples = [
 		("Active", "last_order_date%20%3E%3D%20-12m"),
 		("Australian", "customer_countries%20CONTAINS%20%27AU%27"),
 		("New", "customer_added_date%20>%3D%20-7d%20"),
 		("Total", "")  # For total customers
 	]
-	name, df = get_customers(driver, query_tuples)
+	name, df = get_customers(driver, base_url, query_tuples)
 	return name, df
 
-def get_ui_analytics(reports, since, until):
+def get_ui_analytics(reports, since, until, branch):
 	driver = setup_webdriver()
 	dfs = {}  # Initialize a dictionary to store the dataframes
+
+	if branch == access.AUS:
+		base_url = SHOPIFY_URL_AUS
+	elif branch == access.NZ:
+		base_url = SHOPIFY_URL_NZ
+	else:
+		base_url = ''
+		print("branch unrecognised")
+
 	try:
-		open_page(driver, SHOPIFY_URL)
+		open_page(driver, base_url + r"/dashboards")
 		login(driver, shopify_ui_username(), shopify_ui_password())
 		for report in reports:
 			if report == 'customer_count':
-				name, df = handle_customer_count(driver)
+				name, df = handle_customer_count(driver, base_url)
 				dfs[name] = df
 			elif report == 2792653102:
+				if branch == access.AUS:
+					report = 2694938871
 				date = datetime.today().strftime('%Y-%m-%d')
-				name, df = get_report(driver, report, "2000-01-01", date)
+				name, df = get_report(driver, base_url, report, "2000-01-01", date)
 				dfs[name] = df
 			elif report == "shipping":
-				name, df = get_report(driver, "sales_over_time", "-30d", "-1d")
+				name, df = get_report(driver, base_url, "sales_over_time", "-30d", "-1d")
 				df['Shipping'] = df['Shipping'].replace('[\$,]', '', regex=True).astype(float)
 				total_shipping = df['Shipping'].sum()
 				dfs['shipping_total'] = pd.DataFrame({'Shipping': [total_shipping]})
 			else:
-				name, df = get_report(driver, report, since, until)
+				name, df = get_report(driver, base_url, report, since, until)
 				dfs[name] = df
 	finally:
 		close(driver)

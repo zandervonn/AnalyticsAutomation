@@ -14,6 +14,7 @@ from Src.access import output_folder_path
 
 
 def open_page(driver, url):
+	print(url)
 	driver.get(url)
 
 def click_and_wait(driver, xpath, wait_time=10, use_js=False):

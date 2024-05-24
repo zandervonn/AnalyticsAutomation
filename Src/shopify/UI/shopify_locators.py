@@ -1,9 +1,10 @@
 def f_string(template, *args):
 	return template.format(*args)
 
-SHOPIFY_URL = 'https://admin.shopify.com/store/gelous/dashboards'
-SHOPIFY_REPORTS_URL_TEMPLATE = 'https://admin.shopify.com/store/gelous/reports/{0}?since={1}&until={2}&over=day'
-SHOPIFY_CUSTOMERS_URL_TEMPLATE = 'https://admin.shopify.com/store/gelous/customers?segment_query={0}'
+SHOPIFY_URL_NZ = 'https://admin.shopify.com/store/gelous'
+SHOPIFY_URL_AUS = 'https://admin.shopify.com/store/gelous-australia'
+SHOPIFY_REPORTS_URL_TEMPLATE = '/reports/{0}?since={1}&until={2}&over=day'
+SHOPIFY_CUSTOMERS_URL_TEMPLATE = '/customers?segment_query={0}'
 
 LOGIN_USERNAME = "//input[@id='account_email']"
 LOGIN_USERNAME_SUBMIT = "//button[@type='submit']"

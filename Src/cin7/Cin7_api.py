@@ -136,7 +136,7 @@ def get_open_purchase_orders(purchase_orders):
 
 def match_sales_with_products(sales_data, products):
 	# Create a dictionary mapping product IDs to their categories
-	product_categories = {product['id']: product['category'].strip() for product in products}
+	product_categories = {product['id']: (product['category'].strip() if product['category'] else 'Unknown') for product in products}
 
 	matched_data = []
 	for order in sales_data:

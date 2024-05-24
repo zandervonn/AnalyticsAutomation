@@ -8,16 +8,17 @@ from datetime import datetime
 from dateutil.parser import parse, ParserError
 from openpyxl.styles import NamedStyle
 
-def path_gen(*args):
+def path_gen(*args, branch=None):
 
 	# Lazy import of output_folder_path
 	from Src.access import output_folder_path
+	import os
 
 	if len(args) == 3:
 		platform, data_type, file_format = args
 
 		# Create the subfolder path based on the platform and data type
-		subfolder_path = os.path.join(output_folder_path(), platform, data_type)
+		subfolder_path = os.path.join(output_folder_path(), branch, platform, data_type)
 
 		file_name = f"{platform}_{data_type}.{file_format}"
 
@@ -25,7 +26,7 @@ def path_gen(*args):
 		platform, = args
 
 		# Create the subfolder path based on the platform
-		subfolder_path = os.path.join(output_folder_path(), 'output', platform)
+		subfolder_path = os.path.join(output_folder_path(), branch, 'output', platform)
 
 		# Construct the file name
 		file_name = f"{platform}_output.xlsx"

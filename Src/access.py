@@ -1,5 +1,8 @@
 from Src.helpers.file_helpers import find_path_upwards
 
+AUS = "AUS"
+NZ = "NZ"
+
 def load_properties(file_path: str) -> dict:
 	properties = {}
 	with open(file_path, 'r') as file:
@@ -58,11 +61,17 @@ def starshipit_api_key() -> str:
 def starshipit_subscription_key() -> str:
 	return secrets['starshipit_subscription_key']
 
-def starshipit_username() -> str:
-	return secrets['starshipit_username']
+def starshipit_username_AUS() -> str:
+	return secrets['starshipit_username_AUS']
 
-def starshipit_password() -> str:
-	return secrets['starshipit_password']
+def starshipit_password_AUS() -> str:
+	return secrets['starshipit_password_AUS']
+
+def starshipit_username_NZ() -> str:
+	return secrets['starshipit_username_NZ']
+
+def starshipit_password_NZ() -> str:
+	return secrets['starshipit_password_NZ']
 
 # Cin7
 def cin7_api_key_AUS() -> str:

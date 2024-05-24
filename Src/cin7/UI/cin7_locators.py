@@ -1,7 +1,8 @@
 def f_string(template, *args):
 	return template.format(*args)
 
-CIN7_AGED_INVENTORY_URL = 'https://insights.cin7.com/Reports/Default?idCustomerAppsLink=936717&strKey=1#/'
+CIN7_AGED_INVENTORY_URL_NZ = 'https://insights.cin7.com/Reports/Default?idCustomerAppsLink=936717&strKey=1#/'
+CIN7_AGED_INVENTORY_URL_AUS = 'https://insights.cin7.com/Reports/Default?idCustomerAppsLink=1137753&strKey=1#/'
 
 LOGIN_USERNAME = "//input[contains(@id,'username')]"
 LOGIN_PASSWORD = "//input[contains(@id,'password')]"
