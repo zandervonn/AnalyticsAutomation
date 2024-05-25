@@ -182,7 +182,7 @@ def clean_session_sources(df):
 		df[col] = pd.to_numeric(df[col], errors='coerce')
 
 	# Load common variations mapping from a file
-	common_mappings = load_mapping_from_file(r"C:\Users\Zander\IdeaProjects\Automation-Gel\config\google\googleSessionsMapping")
+	common_mappings = load_mapping_from_file(r"/Users/Zander/Downloads/Automation-Gel 2/config/google/googleSessionsMapping")
 
 	# Replace session sources using the loaded mapping
 	df['sessionSource'] = df['sessionSource'].replace(common_mappings)
@@ -217,10 +217,10 @@ def aggregate_session_source_data(df):
 		'returnOnAdSpend': ('advertiserAdCost', safe_weighted_average)
 	}
 
-	# Apply custom aggregations only if the column exists in the DataFrame
-	for key, (weight_col, func) in custom_aggregations.items():
-		if key in aggregation_rules and weight_col in df.columns:
-			aggregation_rules[key] = lambda x, func=func, weight_col=weight_col: func(x, df.loc[x.index, weight_col])
+	# # Apply custom aggregations only if the column exists in the DataFrame
+	# for key, (weight_col, func) in custom_aggregations.items():
+	# 	if key in aggregation_rules and weight_col in df.columns:
+	# 		aggregation_rules[key] = lambda x, func=func, weight_col=weight_col: func(x, df.loc[x.index, weight_col])
 
 	# Aggregate the DataFrame
 	aggregated_df = df.groupby('sessionSource').agg(aggregation_rules).reset_index()

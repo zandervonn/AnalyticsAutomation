@@ -1,5 +1,6 @@
 import os
 import time
+import tkinter
 
 import pandas as pd
 from selenium import webdriver
@@ -8,7 +9,6 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import tkinter as tk
 
 from Src.access import output_folder_path
 
@@ -83,7 +83,7 @@ def setup_webdriver():
 
 	# Set the download directory to the one returned by output_folder_path()
 	prefs = {
-		"download.default_directory": output_folder_path().replace('/', '\\')+"downloads",
+		"download.default_directory": output_folder_path()+"downloads",
 		"download.prompt_for_download": False,
 		"download.directory_upgrade": True,
 		"safebrowsing.enabled": True
@@ -167,7 +167,7 @@ def wait_and_rename_downloaded_file(download_dir, new_filename, timeout=300):
 def wait_for_user_input():
 	from Src.GUI.tkinter_app import CustomDialog
 	print("waiting for user input")
-	root = tk.Tk()
+	root = tkinter.Tk()
 	root.withdraw()  # Hide the root window
 	dialog = CustomDialog(root, "Input")
 	user_input = dialog.result

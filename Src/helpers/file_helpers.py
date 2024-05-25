@@ -44,12 +44,12 @@ def path_gen(*args, branch=None):
 
 def find_path_upwards(target_relative_path, start_path=None):
 	"""
-	Searches for a target relative path upwards from the start path until the root is reached.
+    Searches for a target relative path upwards from the start path until the root is reached.
 
-	:param target_relative_path: The relative path to search for.
-	:param start_path: The starting directory for the search. If None, uses the directory of the current file.
-	:return: The absolute path to the target if found, None otherwise.
-	"""
+    :param target_relative_path: The relative path to search for.
+    :param start_path: The starting directory for the search. If None, uses the directory of the current file.
+    :return: The absolute path to the target if found, None otherwise.
+    """
 	if start_path is None:
 		start_path = os.path.dirname(__file__)
 
@@ -65,7 +65,7 @@ def find_path_upwards(target_relative_path, start_path=None):
 	return None
 
 def get_header_list(list_name):
-	excel_file_path = find_path_upwards(r'config\headers.xlsx')
+	excel_file_path = find_path_upwards(r'config/headers.xlsx')
 	wb = openpyxl.load_workbook(excel_file_path)
 
 	# Get the formatting sheet and the ignore format
