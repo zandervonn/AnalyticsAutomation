@@ -1,7 +1,6 @@
-from Src.helpers.file_helpers import find_path_upwards
-
 AUS = "AUS"
 NZ = "NZ"
+secrets = []
 
 def load_properties(file_path: str) -> dict:
 	properties = {}
@@ -11,8 +10,6 @@ def load_properties(file_path: str) -> dict:
 				key, value = map(str.strip, line.split('=', 1))
 				properties[key] = value
 	return properties
-
-secrets = load_properties(find_path_upwards(r'config/secrets.txt'))
 
 def output_folder_path() -> str:
 	return secrets['output_folder_path']

@@ -7,23 +7,28 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from dateutil.parser import parse, ParserError
 from openpyxl.styles import NamedStyle
+from Src.access import output_folder_path, final_output_path
 
-def path_gen(*args, branch=None):
 
-	# Lazy import of output_folder_path
-	from Src.access import output_folder_path
-	import os
-
-	if len(args) == 3:
-		platform, data_type, file_format = args
+def path_gen(*args):
+	if len(args) == 4:
+		branch, platform, data_type, file_format = args
 
 		# Create the subfolder path based on the platform and data type
 		subfolder_path = os.path.join(output_folder_path(), branch, platform, data_type)
 
 		file_name = f"{platform}_{data_type}.{file_format}"
 
-	elif len(args) == 1:
-		platform, = args
+	elif len(args) == 3:
+		platform, data_type, file_format = args
+
+		# Create the subfolder path based on the platform and data type
+		subfolder_path = os.path.join(output_folder_path(), platform, data_type)
+
+		file_name = f"{platform}_{data_type}.{file_format}"
+
+	elif len(args) == 2:
+		branch, platform = args
 
 		# Create the subfolder path based on the platform
 		subfolder_path = os.path.join(output_folder_path(), branch, 'output', platform)
@@ -32,7 +37,7 @@ def path_gen(*args, branch=None):
 		file_name = f"{platform}_output.xlsx"
 
 	else:
-		raise ValueError("Invalid number of arguments. Expected 1 or 3.")
+		raise ValueError("Invalid number of arguments. Expected 1, 3, or 4.")
 
 	# Ensure the subfolder exists
 	os.makedirs(subfolder_path, exist_ok=True)
@@ -102,14 +107,15 @@ def read_and_clean_data(file_path):
 		file_extension = os.path.splitext(file_path)[1].lower()
 		if file_extension == '.csv':
 			df = pd.read_csv(file_path)
+			df = df.applymap(lambda x: remove_html_tags(x) if isinstance(x, str) else x)
+			return {'Sheet1': df}
 		elif file_extension in ['.xls', '.xlsx']:
-			df = pd.read_excel(file_path)
+			xls = pd.ExcelFile(file_path)
+			dfs = {sheet_name: xls.parse(sheet_name).applymap(lambda x: remove_html_tags(x) if isinstance(x, str) else x) for sheet_name in xls.sheet_names}
+			return dfs
 		else:
 			print(f"Unsupported file type: {file_path}")
 			return None
-		# Remove HTML tags from string columns
-		df = df.applymap(lambda x: remove_html_tags(x) if isinstance(x, str) else x)
-		return df
 	except Exception as e:
 		print(f"Error processing {file_path}: {e}")
 		return None
@@ -139,12 +145,22 @@ def create_date_saved_df(all_data_columns):
 def files_to_excel(file_paths, output_excel_path):
 	with pd.ExcelWriter(output_excel_path, engine='openpyxl', datetime_format='YYYY-MM-DD') as writer:
 		for file_path in file_paths:
-			df = read_and_clean_data(file_path)
-			if df is not None:
-				sheet_name = os.path.basename(file_path).split('.')[0][:31]  # Excel sheet name limit
-				save_data_to_excel(df, writer, sheet_name)
+			dfs = read_and_clean_data(file_path)
+			if dfs:
+				if len(dfs) == 1:
+					# Single sheet or CSV case, use the base file name as the sheet name
+					df = list(dfs.values())[0]
+					sheet_name = os.path.basename(file_path).split('.')[0][:31]
+					save_data_to_excel(df, writer, sheet_name)
+				else:
+					# Multiple sheets case, append sheet names
+					for sheet_name, df in dfs.items():
+						safe_sheet_name = (os.path.basename(file_path).split('.')[0] + '_' + sheet_name)[:31]
+						save_data_to_excel(df, writer, safe_sheet_name)
 
 	print(f"Files saved to {output_excel_path}")
+
+
 
 def update_worksheet_data(ws, col, df, column, update_header, file, sheet):
 	"""
@@ -245,14 +261,16 @@ def update_template_files(template_folder, data_folder, output_folder):
 	# Load template files
 	template_files = get_excel_csv_files(template_folder)
 
-	# Create a subfolder in the output directory for today's date
-	today = datetime.now().strftime("%Y-%m-%d")
-	date_output_folder = os.path.join(output_folder, today)
-	os.makedirs(date_output_folder, exist_ok=True)
-
 	# Process each template file
 	for template_file in template_files:
-		process_template_file(template_file, data_dict, date_output_folder)
+		process_template_file(template_file, data_dict, output_folder)
+
+def todays_output_folder():
+	# Create a subfolder in the output directory for today's date
+	today = datetime.now().strftime("%Y-%m-%d")
+	date_output_folder = os.path.join(final_output_path(), today)
+	os.makedirs(date_output_folder, exist_ok=True)
+	return date_output_folder
 
 def process_template_file(template_file, data_dict, output_folder):
 	wb = openpyxl.load_workbook(template_file)
