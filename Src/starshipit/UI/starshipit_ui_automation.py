@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from Src import access
 from Src.helpers.file_helpers import load_mapping
 from Src.helpers.ui_helpers import *
 from Src.starshipit.UI.starshipit_locators import *
@@ -18,13 +19,10 @@ def starshipit_get_ui_report(since, until, branch, testing):
 	if branch == AUS:
 		username = starshipit_username_AUS()
 		password = starshipit_password_AUS()
-	elif branch == NZ:
+	else: # branch == NZ:
 		username = starshipit_username_NZ()
 		password = starshipit_password_NZ()
-	else:
-		username = ''
-		password = ''
-		print("branch unrecognised")
+
 	try:
 		open_page(driver, STARSHIPIT_URL)
 		login(driver, username, password)
@@ -43,14 +41,14 @@ def get_report(driver, since, until, testing=False):
 	driver.find_element(By.XPATH, CHILD_ORDER_CHECKBOX).click()
 	if not testing:
 		click_and_wait(driver, GENERATE_BUTTON)
-		time.sleep(1)
+		time.sleep(2)
 		refresh_until_visible(driver, REPORT_STATUS_READY)
 		driver.find_element(By.XPATH, REPORT_DOWLOAD_CSV).click()
 	else:
 		wait_for_user_input()
 	return wait_and_rename_downloaded_file(output_folder_path()+"downloads", "starshipit_package_report")
 
-def process_starshipit_ui_report(df):
+def process_starshipit_ui_report(df, branch):
 	rawData = process_handeling_dates(df.copy())
 
 	dateAverages = process_handeling_dates_average(rawData.copy()).reset_index(drop=True)
@@ -60,48 +58,25 @@ def process_starshipit_ui_report(df):
 	status_info = calculate_status(rawData.copy()).reset_index(drop=True)
 	orders_items_info = calculate_orders_packed_items_picked(df).reset_index(drop=True)
 
-	accounts_orders = pivot_orders_picked_by_day(df).reset_index(drop=True)
-	accounts_items = pivot_items_picked_by_day(df).reset_index(drop=True)
-
-	name_mapping = load_mapping(employee_mapping_path())
-	accounts_orders = rename_and_aggregate_columns(accounts_orders, name_mapping)
-	accounts_items = rename_and_aggregate_columns(accounts_items, name_mapping)
-
-	full_address_df = create_full_address_df(df).reset_index(drop=True)
-
 	page2 = pd.concat([dateAverages, postage_info, postage_types, package_types, status_info, orders_items_info], axis=1)
 
 	# Create a dictionary with each DataFrame
 	dfs = {
 		'RawData': rawData,
 		'SummaryPage': page2,
-		'AccountsOrders': accounts_orders,
-		'AccountsItems': accounts_items,
-		'FullAddresses': full_address_df
+		'FullAddresses': create_full_address_df(branch, df).reset_index(drop=True)
 	}
 
-	return dfs
+	if branch == "NZ":
+		accounts_orders = pivot_orders_picked_by_day(df).reset_index(drop=True)
+		accounts_items = pivot_items_picked_by_day(df).reset_index(drop=True)
 
-def process_starshipit_ui_report_AUS(df):
-	rawData = process_handeling_dates(df.copy())
+		name_mapping = load_mapping(employee_mapping_path())
+		accounts_orders = rename_and_aggregate_columns(accounts_orders, name_mapping)
+		accounts_items = rename_and_aggregate_columns(accounts_items, name_mapping)
 
-	dateAverages = process_handeling_dates_average(rawData.copy()).reset_index(drop=True)
-	postage_info = calculate_postage(df).reset_index(drop=True)
-	postage_types = calculate_postage_type(df).reset_index(drop=True)
-	package_types = calculate_package_type(df).reset_index(drop=True)
-	status_info = calculate_status(rawData.copy()).reset_index(drop=True)
-	orders_items_info = calculate_orders_packed_items_picked(df).reset_index(drop=True)
-
-	full_address_df = create_full_address_df(df).reset_index(drop=True)
-
-	page2 = pd.concat([dateAverages, postage_info, postage_types, package_types, status_info, orders_items_info], axis=1)
-
-	# Create a dictionary with each DataFrame
-	dfs = {
-		'RawData': rawData,
-		'SummaryPage': page2,
-		'FullAddresses': full_address_df
-	}
+		dfs['AccountsOrders'] = accounts_orders
+		dfs['AccountsItems'] = accounts_items
 
 	return dfs
 
@@ -213,14 +188,25 @@ def calculate_orders_packed_items_picked(df):
 
 	return result
 
-def create_full_address_df(df):
-	# Concatenate the address components into a full address
-	df['Full Address'] = df[['Street', 'Suburb', 'State', 'Postcode', 'Country']].apply(
-		lambda row: ', '.join(str(val) if not pd.isna(val) else '' for val in row),
-		axis=1
-	)
+def create_full_address_df(branch, df):
+	if branch == access.AUS:
+		# Concatenate the address components into a full address
+		df['Full Address'] = df[['Street', 'Suburb',   'State', 'Postcode', 'Country']].apply(
+			lambda row: ', '.join(str(val) if not pd.isna(val) else '' for val in row),
+			axis=1
+		)
 
-	df['Sending Address'] = sending_address()  # assuming sending_address() returns a string
+		df['Sending Address'] = sending_address_AUS()
+
+
+	else:  # branch == access.NZ
+		# Concatenate the address components into a full address
+		df['Full Address'] = df[['Street', 'Suburb', 'Postcode', 'State', 'Country']].apply(
+			lambda row: ', '.join(str(val) if not pd.isna(val) else '' for val in row),
+			axis=1
+		)
+
+		df['Sending Address'] = sending_address_NZ()
 
 	# Select only the relevant columns
 	address_df = df[['Street', 'Suburb', 'State', 'Postcode', 'Country', 'Full Address', 'Sending Address']]

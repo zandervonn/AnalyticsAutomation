@@ -10,9 +10,6 @@ from google.analytics.data_v1beta.types import RunReportRequest, Dimension, Metr
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 from Src.helpers.clean_csv_helpers import clean_and_convert_date_column
-from Src.helpers.csv_helpers import save_df_to_csv
-from Src.helpers.file_helpers import path_gen
-
 
 def get_credentials(client_secret_path, token_path):
 	creds = None
@@ -182,7 +179,8 @@ def clean_session_sources(df):
 		df[col] = pd.to_numeric(df[col], errors='coerce')
 
 	# Load common variations mapping from a file
-	common_mappings = load_mapping_from_file(r"/Users/Zander/Downloads/Automation-Gel 2/config/google/googleSessionsMapping")
+	# common_mappings = load_mapping_from_file(r"/Users/Zander/Downloads/Automation-Gel 2/config/google/googleSessionsMapping")
+	common_mappings = load_mapping_from_file(r"C:\Users\Zander\IdeaProjects\Automation-Gel\config\google\googleSessionsMapping")
 
 	# Replace session sources using the loaded mapping
 	df['sessionSource'] = df['sessionSource'].replace(common_mappings)

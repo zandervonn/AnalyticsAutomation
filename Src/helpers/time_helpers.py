@@ -5,23 +5,33 @@ from datetime import datetime, timedelta, timezone
 
 LAST_RUN_FILE_PATH = find_path_upwards(r"config\config.txt")
 
-# todo clean up
-def get_dates(from_date, time_span, num):
-	# Set the timezone to New Zealand
-	tz = pytz.timezone('Pacific/Auckland')
+def get_dates(from_date, time_span, num, timezone='Pacific/Auckland'):
+	"""
+	Calculates the start ('since') and end ('until') dates based on input parameters.
+
+	Parameters:
+		from_date (str): Specifies the base date; can be 'today', 'sunday', or an ISO format string.
+		time_span (str): Specifies the unit of time to calculate the delta ('weeks', 'days', 'months').
+		num (int): Number of time units to include in the calculation.
+		timezone (str): Timezone for the dates; default is 'Pacific/Auckland'.
+
+	Returns:
+		tuple: A tuple containing two strings ('since', 'until') representing the start and end dates in ISO format.
+	"""
+	# Set the timezone
+	tz = pytz.timezone(timezone)
 
 	# Determine the base date
 	if from_date == 'today':
 		base_date = datetime.now(tz)
 	elif from_date == 'sunday':
 		now = datetime.now(tz)
-		if now.weekday() == 6:  # If today is Sunday
+		if now.weekday() == 6:  # Sunday
 			base_date = now
 		else:
-			# Adjust base_date to the most recent past Sunday
 			days_behind = (now.weekday() + 1) % 7
 			base_date = now - timedelta(days=days_behind)
-		base_date = base_date.replace(hour=23, minute=59, second=59, microsecond=0)  # Set to 23:59:59 on Sunday
+		base_date = base_date.replace(hour=23, minute=59, second=59, microsecond=0)
 	else:
 		base_date = datetime.strptime(from_date, '%Y-%m-%dT%H:%M:%S')
 		base_date = tz.localize(base_date)
@@ -31,18 +41,16 @@ def get_dates(from_date, time_span, num):
 		delta = timedelta(weeks=num)
 	elif time_span == 'days':
 		delta = timedelta(days=num)
-	elif time_span == 'months':  # Approximate month as 30 days
+	elif time_span == 'months':
 		delta = timedelta(days=30 * num)
 	else:
-		print("Time span cannot be decoded, calculating by days")
-		delta = timedelta(days=num)
+		raise ValueError("Unsupported time span provided. Use 'days', 'weeks', or 'months'.")
 
-	# Calculate the 'since' date
+	# Calculate 'since' and 'until'
 	until = base_date.strftime('%Y-%m-%dT%H:%M:%S')
 	since = base_date - delta
-	# Set the 'since' to 00:00 on the Monday just before the past Sunday
 	since = since.replace(hour=0, minute=0, second=0, microsecond=0)
-	since = (since + timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S')  # Adjust for the Monday start
+	since = (since + timedelta(days=1)).strftime('%Y-%m-%dT%H:%M:%S')  # Adjust to start from Monday
 
 	return since, until
 

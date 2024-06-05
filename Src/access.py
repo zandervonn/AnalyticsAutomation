@@ -32,8 +32,11 @@ def employee_mapping_path() -> str:
 def discount_mapping_path() -> str:
 	return secrets['discount_mapping_path']
 
-def sending_address() -> str:
-	return secrets['sending_address']
+def sending_address_AUS() -> str:
+	return secrets['sending_address_AUS']
+
+def sending_address_NZ() -> str:
+	return secrets['sending_address_NZ']
 
 # Shopify
 def shopify_url() -> str:

@@ -132,20 +132,22 @@ def wait_and_rename_downloaded_file(download_dir, new_filename, timeout=300):
 	Assumes there's only one file being downloaded at the time.
 	Handles both CSV and Excel files.
 	"""
+	downloaded_file_path = ''
 	start_time = time.time()
+	initial_temp_count = len([f for f in os.listdir(download_dir) if f.endswith('.crdownload')])
 	download_complete = False
-	downloaded_file_path = None
 
-	# Wait for the download to complete
 	while not download_complete and (time.time() - start_time) < timeout:
-		time.sleep(1)  # Check every second
-		files = [os.path.join(download_dir, f) for f in os.listdir(download_dir) if not f.endswith('.crdownload')]
-		if files:
-			# Find the most recently modified file
-			downloaded_file_path = max(files, key=os.path.getmtime)
+		temp_files = [f for f in os.listdir(download_dir) if f.endswith('.crdownload')]
+		other_files = [os.path.join(download_dir, f) for f in os.listdir(download_dir) if not f.endswith('.crdownload')]
+		if len(temp_files) > initial_temp_count:
+			initial_temp_count = len(temp_files)
+		if len(temp_files) < initial_temp_count and other_files:
+			downloaded_file_path = max(other_files, key=os.path.getmtime)
 			download_complete = True
+		time.sleep(1)
 
-	if downloaded_file_path:
+	if download_complete:
 		# Identify the file extension
 		file_extension = os.path.splitext(downloaded_file_path)[1]
 		new_file_path = os.path.join(download_dir, new_filename + file_extension)

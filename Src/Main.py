@@ -13,7 +13,7 @@ from Src.access import *
 
 since, until = get_dates("sunday", "weeks", 1)
 print(since, until)
-testing = True #todo not working on false
+testing = True
 
 def build_report_shopify_ui(branch):
 	_since, _until = convert_dates_to_offsets(since, until)
@@ -35,7 +35,7 @@ def build_report_starshipit_ui(branch, testing=False):
 	_since, _until = get_dates("sunday", "months", 1)
 	df = starshipit_get_ui_report(_since, _until, branch, testing)
 	cleaned_df = clean_df(df, get_header_list("starshipit_ui"))
-	processed_df = process_starshipit_ui_report(cleaned_df)
+	processed_df = process_starshipit_ui_report(cleaned_df, branch)
 
 	open_orders = get_open_orders_count(shopify_api_key(), shopify_password(), shopify_url())
 	processed_df = add_open_orders_to_starshipit(processed_df, open_orders)
@@ -113,12 +113,18 @@ def build_report_cin7_ui(branch):
 	save_df_to_csv(aged_report, path_gen('cin7', 'aged', 'csv', branch=branch), True)
 
 def build_report_cin7(branch):
+
+	if branch == access.AUS:
+		API_key = cin7_api_key_AUS()
+	else:  #branch == access.NZ:
+		API_key = cin7_api_key_NZ()
+
 	print("Getting Cin7 Products")
-	products = get_all_products(cin7_api_key_NZ())
+	products = get_all_products(API_key)
 
 	print("Getting Cin7 Sales")
-	sales_data = get_cin7_sales_data(cin7_api_key_NZ(), since, until)
-	if branch == NZ:
+	sales_data = get_cin7_sales_data(API_key, since, until)
+	if branch == access.NZ:
 		sales_data = filter_out_australia(sales_data)
 
 	print("Getting Cin7 Purchase Orders")
@@ -136,7 +142,7 @@ def build_report_cin7(branch):
 	save_df_to_csv(top_selling, path_gen('cin7', 'Top_Selling', 'csv', branch=branch), True)
 
 	print("Getting Cin7 Stock Values")
-	stock_values = calculate_inventory_values(products, purchases_nz, purchases_aus)
+	stock_values = calculate_inventory_values(branch, products, purchases_nz, purchases_aus)
 	stock_values = clean_numeric_columns(stock_values)
 	save_df_to_csv(stock_values, path_gen('cin7', 'stock_values', 'csv', branch=branch), True)
 
@@ -149,35 +155,36 @@ def main_NZ():
 	branch = NZ
 
 	# build_report_cin7_ui(branch) #needs 2fa
-	# build_report_shopify_ui(branch)
-	# build_previous_report(branch)
-	# build_report_starshipit_ui(branch, testing=testing)
-	# build_report_cin7(branch)
-	# build_report_instagram()
-	# build_report_instagram_images()
-	# build_report_instagram_videos()
-	# build_report_facebook_videos()
-	# build_report_facebook_posts()
+	build_report_starshipit_ui(branch, testing=testing)
+	build_report_shopify_ui(branch)
+	build_previous_report(branch)
+	build_report_cin7(branch)
+	build_report_instagram()
+	build_report_instagram_images()
+	build_report_instagram_videos()
+	build_report_facebook_videos()
+	build_report_facebook_posts()
 
 	build_report_facebook()
 	build_report_google()
 
-	# update_template_files(template_folder_path_NZ(), output_folder_path() + "/" + branch, final_output_path())
+	update_template_files(template_folder_path_NZ(), output_folder_path() + "/" + branch, final_output_path())
 
 def main_AUS():
 	branch = AUS
 
 	# build_report_cin7_ui(branch) #needs 2fa
-	# build_report_shopify_ui(branch)
-	# build_report_starshipit_ui(branch, testing=testing)
-	# build_report_cin7(branch)
+	build_report_starshipit_ui(branch, testing=testing)
+	build_report_shopify_ui(branch)
+	build_previous_report(branch)
+	build_report_cin7(branch)
 
-	# update_template_files(template_folder_path_AUS(), output_folder_path() + "/" + branch, final_output_path())
+	update_template_files(template_folder_path_AUS(), output_folder_path() + "/" + branch, final_output_path())
 
 
 def main():
 	main_NZ()
-	# main_AUS()
+	main_AUS()
 
 if __name__ == '__main__':
 	main()

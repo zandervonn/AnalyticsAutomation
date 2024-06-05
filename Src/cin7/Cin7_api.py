@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 import pandas as pd
 import requests
 
+from Src import access
+from Src.helpers.file_helpers import get_header_list
+
 def get_all_products(api_key):
 	base_url = 'https://api.cin7.com/api/v1/'
 	endpoint = "Products"
@@ -180,6 +183,9 @@ def aggregate_sales_by_category(sales_data):
 	return result_df
 
 def aggregate_sales_by_product_id(sales_data, products):
+	# Retrieve the filter list from your method and convert it to lowercase for case-insensitive comparison
+	filter_names = [name.lower() for name in get_header_list('cin7_fiter_names')]
+
 	# Create a dictionary mapping product IDs to their names
 	product_names = {product['id']: product['name'] for product in products}
 
@@ -202,13 +208,13 @@ def aggregate_sales_by_product_id(sales_data, products):
 	# Extract the top performers where total sales > 10
 	top_performers = [product for product in aggregated_list if product['Total Sales'] >= 10]
 
-	# Find bottom performers (products with 0 sales, marked as 'Public', not 'Discontinued', not in category 'Packaging', and have stock on hand)
+	# Find bottom performers (filter out products using filter_names list)
 	bottom_performers = [{'Product Name': product['name'], 'Total Sales': 0}
 	                     for product in products if product['id'] not in aggregated_data and
 	                     product.get('status', '') == 'Public' and
-	                     # product.get('subCategory', '') != 'Discontinued' and some discontinued they still want to track
 	                     product.get('category', '') != 'PACKAGING' and
-	                     any(option.get('stockOnHand', 0) > 0 for option in product.get('productOptions', []))]
+	                     any(option.get('stockOnHand', 0) > 0 for option in product.get('productOptions', [])) and
+	                     not any(filter_name in product['name'].lower() for filter_name in filter_names)]
 
 	# Calculate the maximum length to standardize DataFrame creation
 	max_length = max(len(top_performers), len(bottom_performers))
@@ -223,17 +229,24 @@ def aggregate_sales_by_product_id(sales_data, products):
 
 	return df
 
-def calculate_inventory_values(products, purchases_nz, purchases_aus):
+def calculate_inventory_values(branch, products, purchases_nz, purchases_aus):
 	total_retail_value = 0
 	total_cost_value = 0
 	total_unit_count = 0
+
+	if branch == access.AUS:
+		retail_currency = "retailAUD"
+		cost_currency = "costAUD"
+	else:  # branch == access.NZ
+		retail_currency = "retailNZD"
+		cost_currency = "costNZD"
 
 	for product in products:
 		for option in product.get('productOptions', []):
 			# Extract relevant values from product option
 			stock_on_hand = option.get('stockOnHand', 0) or 0
-			retail_price = option.get('priceColumns', {}).get('retailNZD', 0) or 0
-			cost_price = option.get('priceColumns', {}).get('costNZD', 0) or 0
+			retail_price = option.get('priceColumns', {}).get(retail_currency, 0) or 0
+			cost_price = option.get('priceColumns', {}).get(cost_currency, 0) or 0
 
 			# Ignore negative stock on hand
 			if stock_on_hand < 0:
