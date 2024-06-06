@@ -125,7 +125,7 @@ def refresh_until_visible(driver, xpath, timeout=120):
 			raise Exception(f"Timeout reached while waiting for element {xpath}")
 		time.sleep(3)  # Wait for 5 seconds before refreshing again to reduce load
 
-def wait_and_rename_downloaded_file(download_dir, new_filename, timeout=300):
+def wait_and_rename_downloaded_file(download_dir, new_filename, before_download_time, timeout=300):
 	"""
 	Waits for a download to complete in 'download_dir', renames the newest file, overwrites if necessary,
 	and returns the file as a pandas DataFrame.
@@ -134,16 +134,13 @@ def wait_and_rename_downloaded_file(download_dir, new_filename, timeout=300):
 	"""
 	downloaded_file_path = ''
 	start_time = time.time()
-	initial_temp_count = len([f for f in os.listdir(download_dir) if f.endswith('.crdownload')])
 	download_complete = False
 
 	while not download_complete and (time.time() - start_time) < timeout:
-		temp_files = [f for f in os.listdir(download_dir) if f.endswith('.crdownload')]
 		other_files = [os.path.join(download_dir, f) for f in os.listdir(download_dir) if not f.endswith('.crdownload')]
-		if len(temp_files) > initial_temp_count:
-			initial_temp_count = len(temp_files)
-		if len(temp_files) < initial_temp_count and other_files:
-			downloaded_file_path = max(other_files, key=os.path.getmtime)
+		new_files = [f for f in other_files if os.path.getmtime(f) > before_download_time]
+		if new_files:
+			downloaded_file_path = max(new_files, key=os.path.getmtime)
 			download_complete = True
 		time.sleep(1)
 

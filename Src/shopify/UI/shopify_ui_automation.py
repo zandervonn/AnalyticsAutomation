@@ -19,7 +19,6 @@ def login(driver, username, password):
 
 def get_report(driver, base_url, report_name, since, until):
 	url = f_string(base_url + SHOPIFY_REPORTS_URL_TEMPLATE, report_name, since, until)
-	print(url)
 	open_page(driver, url)
 	wait_for_table_data(driver, TABLE_CELL)
 	data = extract_table_data(driver, TABLE)
@@ -193,12 +192,16 @@ def clean_shopify_ui_dfs(dfs):
 
 	# Sort 'Orders Over Time' by most recent date if it exists
 	if 'Orders_over_time' in dfs:
-		dfs['Orders_over_time'] = dfs['Orders_over_time'].sort_values(by='Day', ascending=True)
+		dfs['Orders_over_time']['Temp_Day'] = pd.to_datetime(dfs['Orders_over_time']['Day'], format='%b %d, %Y')
+		dfs['Orders_over_time'] = dfs['Orders_over_time'].sort_values(by='Temp_Day', ascending=True)
+		dfs['Orders_over_time'] = dfs['Orders_over_time'].drop(columns=['Temp_Day'])
 		dfs['Orders_over_time'] = clean_numeric_columns(dfs['Orders_over_time'], abs_values=True)
 
 	# Sort 'Conversions Over Time' by most recent date if it exists
 	if 'conversions_over_time' in dfs:
-		dfs['conversions_over_time'] = dfs['conversions_over_time'].sort_values(by='Day', ascending=True)
+		dfs['conversions_over_time']['Temp_Day'] = pd.to_datetime(dfs['conversions_over_time']['Day'], format='%b %d, %Y')
+		dfs['conversions_over_time'] = dfs['conversions_over_time'].sort_values(by='Temp_Day', ascending=True)
+		dfs['conversions_over_time'] = dfs['conversions_over_time'].drop(columns=['Temp_Day'])
 		dfs['conversions_over_time'] = clean_numeric_columns(dfs['conversions_over_time'], abs_values=True)
 
 	# Sort 'Conversions Over Time' by most recent date if it exists

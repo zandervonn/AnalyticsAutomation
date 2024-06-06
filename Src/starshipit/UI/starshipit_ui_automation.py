@@ -39,6 +39,7 @@ def get_report(driver, since, until, testing=False):
 	clear_and_send_keys(driver, START_DATE_FIELD, since)
 	clear_and_send_keys(driver, END_DATE_FIELD, until)
 	driver.find_element(By.XPATH, CHILD_ORDER_CHECKBOX).click()
+	before_download_time = time.time()
 	if not testing:
 		click_and_wait(driver, GENERATE_BUTTON)
 		time.sleep(2)
@@ -46,14 +47,17 @@ def get_report(driver, since, until, testing=False):
 		driver.find_element(By.XPATH, REPORT_DOWLOAD_CSV).click()
 	else:
 		wait_for_user_input()
-	return wait_and_rename_downloaded_file(output_folder_path()+"downloads", "starshipit_package_report")
+	return wait_and_rename_downloaded_file(output_folder_path()+"downloads", "starshipit_package_report", before_download_time)
 
 def process_starshipit_ui_report(df, branch):
 	rawData = process_handeling_dates(df.copy())
 
 	dateAverages = process_handeling_dates_average(rawData.copy()).reset_index(drop=True)
 	postage_info = calculate_postage(df).reset_index(drop=True)
-	postage_types = calculate_postage_type(df).reset_index(drop=True)
+	if branch == AUS:
+		postage_types = calculate_postage_type_AUS(df).reset_index(drop=True)
+	else: # branch == NZ
+		postage_types = calculate_postage_type_NZ(df).reset_index(drop=True)
 	package_types = calculate_package_type(df).reset_index(drop=True)
 	status_info = calculate_status(rawData.copy()).reset_index(drop=True)
 	orders_items_info = calculate_orders_packed_items_picked(df).reset_index(drop=True)
@@ -115,8 +119,17 @@ def calculate_postage(df):
 
 	return df_sorted[['Postage Cost', 'Postage Recovered']]
 
-def calculate_postage_type(df):
+def calculate_postage_type_NZ(df):
 	postage_type_count = df['Carrier'].value_counts().reset_index()
+	postage_type_count.columns = ['Postage Type', 'Postage Type #']
+	return postage_type_count
+
+def calculate_postage_type_AUS(df):
+	# Trim '+ SIGNATURE' if it exists and format the names
+	df['Product Name'] = df['Product Name'].str.replace(' + SIGNATURE', '', regex=False).str.lower().str.title()
+
+	# Calculate postage type count
+	postage_type_count = df['Product Name'].value_counts().reset_index()
 	postage_type_count.columns = ['Postage Type', 'Postage Type #']
 	return postage_type_count
 

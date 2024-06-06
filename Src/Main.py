@@ -18,9 +18,8 @@ testing = True
 
 
 def build_report_shopify_ui(branch):
+	print("Getting Shopify UI")
 	_since, _until = convert_dates_to_offsets(since, until)
-	_since = "-7d"
-	print(_since, until)
 	shopify_ui_dfs = get_ui_analytics(get_header_list('shopify_ui'), _since, _until, branch)
 	shopify_ui_dfs = combine_shopify_reports(shopify_ui_dfs)
 	shopify_ui_dfs = clean_shopify_ui_dfs(shopify_ui_dfs, )
@@ -195,16 +194,16 @@ def main_AUS():
 
 	# build_report_cin7_ui(branch)  # needs 2fa
 	# build_report_starshipit_ui(branch, testing=testing)
-	build_report_shopify_ui(branch)
-	build_previous_report(branch)
+	# build_report_shopify_ui(branch)
+	# build_previous_report(branch)
 	build_report_cin7(branch)
 
 	update_template_files(template_folder_path_AUS(), output_folder_path() + "/" + branch, todays_output_folder())
 
 
 def main():
-	main_NZ()
-	# main_AUS()
+	# main_NZ()
+	main_AUS()
 
 
 if __name__ == '__main__':
