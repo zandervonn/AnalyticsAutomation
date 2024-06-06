@@ -141,6 +141,8 @@ def get_instagram_post_metrics(meta_token, post_id, metrics):
 
 	response = requests.get(url, params=params)
 	data = response.json()
+	print("metrics",metrics)
+	print(data)
 	return data
 
 def get_instagram_post_headers(meta_token, post_id, metrics):
@@ -154,6 +156,8 @@ def get_instagram_post_headers(meta_token, post_id, metrics):
 
 	response = requests.get(url, params=params)
 	data = response.json()
+	print("headers", metrics)
+	print(data)
 	return data
 
 def get_facebook_posts_and_insights(meta_token, page_id, metrics, since, until):
@@ -257,11 +261,11 @@ def get_insta_image_insights(meta_token, page_id, since, until):
 	media_details = {
 		'CAROUSEL_ALBUM': {
 			'header_metrics': ['timestamp', 'id', 'media_type', 'caption', 'like_count', 'comments'],
-			'post_metrics': ['impressions', 'reach', 'engagement', 'saved', 'total_interactions']
+			'post_metrics': ['impressions', 'reach', 'saved', 'total_interactions']
 		},
 		'IMAGE': {
 			'header_metrics': ['timestamp', 'id', 'media_type', 'caption'],
-			'post_metrics': ['impressions', 'reach', 'engagement', 'saved', 'likes', 'comments', 'shares', 'total_interactions']
+			'post_metrics': ['impressions', 'reach', 'saved', 'likes', 'comments', 'shares', 'total_interactions']
 		}
 	}
 

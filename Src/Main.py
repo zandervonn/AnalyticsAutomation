@@ -80,7 +80,6 @@ def build_report_facebook():
 	today = datetime.now().strftime("%Y-%m-%d")
 	path = todays_output_folder() + "\Facebook New Zealand " + today + ".xlsx"
 	files_to_excel(meta_files, path)
-	# todo not keeping other facebook data sheets
 
 
 def build_report_facebook_posts():
@@ -180,10 +179,10 @@ def main_NZ():
 	# build_previous_report(branch)
 	# build_report_cin7(branch)
 	# build_report_instagram()
-	# build_report_instagram_images()
-	# build_report_instagram_videos()
-	# build_report_facebook_videos()
-	# build_report_facebook_posts()
+	build_report_instagram_images()
+	build_report_instagram_videos()
+	build_report_facebook_videos()
+	build_report_facebook_posts()
 
 	build_report_facebook()
 	build_report_google()

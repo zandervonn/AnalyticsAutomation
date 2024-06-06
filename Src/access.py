@@ -1,6 +1,6 @@
 AUS = "AUS"
 NZ = "NZ"
-secrets = []
+secrets = {}
 
 def load_properties(file_path: str) -> dict:
 	properties = {}
@@ -12,22 +12,22 @@ def load_properties(file_path: str) -> dict:
 	return properties
 
 def output_folder_path() -> str:
-	return secrets['output_folder_path']
+	return secrets['base_path'] + secrets['output_folder_path']
 
 def template_folder_path_NZ() -> str:
-	return secrets['template_folder_path_NZ']
+	return secrets['base_path'] + secrets['template_folder_path_NZ']
 
 def template_folder_path_AUS() -> str:
-	return secrets['template_folder_path_AUS']
+	return secrets['base_path'] + secrets['template_folder_path_AUS']
 
 def final_output_path() -> str:
-	return secrets['final_output_path']
+	return secrets['base_path'] + secrets['final_output_path']
 
 def employee_mapping_path() -> str:
-	return secrets['employee_mapping_path']
+	return secrets['base_path'] + secrets['employee_mapping_path']
 
 def discount_mapping_path() -> str:
-	return secrets['discount_mapping_path']
+	return secrets['base_path'] + secrets['discount_mapping_path']
 
 def sending_address_AUS() -> str:
 	return secrets['sending_address_AUS']
@@ -107,10 +107,10 @@ def meta_insta_id() -> str:
 
 # Google
 def google_credentials_path() -> str:
-	return secrets['google_credentials_path']
+	return secrets['base_path'] + secrets['google_credentials_path']
 
 def google_token_path() -> str:
-	return secrets['google_token_path']
+	return secrets['base_path'] + secrets['google_token_path']
 
 def google_property_id() -> str:
 	return secrets['google_property_id']
