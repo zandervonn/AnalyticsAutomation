@@ -259,14 +259,18 @@ def calculate_inventory_values(branch, products, purchases_nz, purchases_aus):
 
 	open_purchases_nz = get_open_purchase_orders(purchases_nz)
 	open_purchases_aus = get_open_purchase_orders(purchases_aus)
-	total = open_purchases_nz - open_purchases_aus
+
+	if branch == access.AUS:
+		total_open_purchases = open_purchases_aus
+	else:  # branch == access.NZ
+		total_open_purchases = open_purchases_nz - open_purchases_aus
 
 	# Create a DataFrame with the totals
 	df = pd.DataFrame({
 		'SOH Retail Value': [f"${total_retail_value:,.2f}"],
 		'SOH Stock Value': [f"${total_cost_value:,.2f}"],
 		'SOH': [total_unit_count],
-		'Open Purchase Orders': [total]
+		'Open Purchase Orders': [total_open_purchases]
 	})
 
 	return df
