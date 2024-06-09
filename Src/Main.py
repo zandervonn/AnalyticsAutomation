@@ -1,4 +1,4 @@
-from Src.cin7.UI.cin7_ui_automation import cin7_get_ui_aged_report
+from Src.cin7.UI.cin7_ui_automation import cin7_get_ui_reports
 from Src.helpers.clean_csv_helpers import clean_df, clean_dfs
 from Src.starshipit.UI.starshipit_ui_automation import *
 from Src.starshipit.starshipit_api import *
@@ -125,8 +125,9 @@ def build_report_instagram():
 
 
 def build_report_cin7_ui(branch):
-	aged_report = cin7_get_ui_aged_report(branch)
-	save_df_to_csv(aged_report, path_gen(branch, 'cin7', 'aged', 'csv'), True)
+	print("Getting Cin7 Aged Report")
+	cin7_ui_reports = cin7_get_ui_reports(branch)
+	save_df_to_excel(cin7_ui_reports, path_gen(branch, 'cin7', 'data', 'xlsx'))
 
 
 def build_report_cin7(branch):
@@ -143,10 +144,6 @@ def build_report_cin7(branch):
 	if branch == access.NZ:
 		sales_data = filter_out_australia(sales_data)
 
-	print("Getting Cin7 Purchase Orders")
-	purchases_nz = get_cin7_purchase_orders(cin7_api_key_NZ())
-	purchases_aus = get_cin7_purchase_orders(cin7_api_key_AUS())
-
 	print("Getting Cin7 Sales by Product Categories")
 	matched_data = match_sales_with_products(sales_data, products)
 	category_data_df = aggregate_sales_by_category(matched_data)
@@ -157,10 +154,14 @@ def build_report_cin7(branch):
 	top_selling = aggregate_sales_by_product_id(matched_data, products)
 	save_df_to_csv(top_selling, path_gen(branch, 'cin7', 'Top_Selling', 'csv'), True)
 
-	print("Getting Cin7 Stock Values")
-	stock_values = calculate_inventory_values(branch, products, purchases_nz, purchases_aus)
-	stock_values = clean_numeric_columns(stock_values)
-	save_df_to_csv(stock_values, path_gen(branch, 'cin7', 'stock_values', 'csv'), True)
+	# print("Getting Cin7 Purchase Orders")
+	# purchases_nz = get_cin7_purchase_orders(cin7_api_key_NZ())
+	# purchases_aus = get_cin7_purchase_orders(cin7_api_key_AUS())
+
+	# print("Getting Cin7 Stock Values")
+	# stock_values = calculate_inventory_values(branch, products, purchases_nz, purchases_aus)
+	# stock_values = clean_numeric_columns(stock_values)
+	# save_df_to_csv(stock_values, path_gen(branch, 'cin7', 'stock_values', 'csv'), True)
 
 
 # todo keep a years worth of data
@@ -172,19 +173,19 @@ def build_previous_report(branch):
 def main_NZ():
 	branch = NZ
 
-	# build_report_cin7_ui(branch)  # needs 2fa
+	build_report_cin7_ui(branch)  # needs 2fa
 	# build_report_starshipit_ui(branch, testing=testing)
 	# build_report_shopify_ui(branch)
 	# build_previous_report(branch)
 	# build_report_cin7(branch)
 	# build_report_instagram()
-	build_report_instagram_images()
-	build_report_instagram_videos()
-	build_report_facebook_videos()
-	build_report_facebook_posts()
-
-	build_report_facebook()
-	build_report_google()
+	# build_report_instagram_images()
+	# build_report_instagram_videos()
+	# build_report_facebook_videos()
+	# build_report_facebook_posts()
+	#
+	# build_report_facebook()
+	# build_report_google()
 
 	update_template_files(template_folder_path_NZ(), output_folder_path() + "/" + branch, todays_output_folder())
 
@@ -196,14 +197,14 @@ def main_AUS():
 	# build_report_starshipit_ui(branch, testing=testing)
 	# build_report_shopify_ui(branch)
 	# build_previous_report(branch)
-	build_report_cin7(branch)
+	# build_report_cin7(branch)
 
 	update_template_files(template_folder_path_AUS(), output_folder_path() + "/" + branch, todays_output_folder())
 
 
 def main():
-	# main_NZ()
-	main_AUS()
+	main_NZ()
+	# main_AUS()
 
 
 if __name__ == '__main__':

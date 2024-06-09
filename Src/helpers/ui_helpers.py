@@ -125,13 +125,7 @@ def refresh_until_visible(driver, xpath, timeout=120):
 			raise Exception(f"Timeout reached while waiting for element {xpath}")
 		time.sleep(3)  # Wait for 5 seconds before refreshing again to reduce load
 
-def wait_and_rename_downloaded_file(download_dir, new_filename, before_download_time, timeout=300):
-	"""
-	Waits for a download to complete in 'download_dir', renames the newest file, overwrites if necessary,
-	and returns the file as a pandas DataFrame.
-	Assumes there's only one file being downloaded at the time.
-	Handles both CSV and Excel files.
-	"""
+def wait_and_rename_downloaded_file(download_dir, new_filename, before_download_time, timeout=300, retry_interval=5, max_retries=5):
 	downloaded_file_path = ''
 	start_time = time.time()
 	download_complete = False
@@ -142,10 +136,16 @@ def wait_and_rename_downloaded_file(download_dir, new_filename, before_download_
 		if new_files:
 			downloaded_file_path = max(new_files, key=os.path.getmtime)
 			download_complete = True
-		time.sleep(1)
+		time.sleep(retry_interval)
 
 	if download_complete:
-		# Identify the file extension
+		# Ensure we get the final file after download completes by refreshing the file list
+		time.sleep(1)  # Slight delay to ensure the file is completely written
+		final_files = [os.path.join(download_dir, f) for f in os.listdir(download_dir) if not f.endswith('.crdownload')]
+		final_new_files = [f for f in final_files if os.path.getmtime(f) > before_download_time]
+		if final_new_files:
+			downloaded_file_path = max(final_new_files, key=os.path.getmtime)
+
 		file_extension = os.path.splitext(downloaded_file_path)[1]
 		new_file_path = os.path.join(download_dir, new_filename + file_extension)
 		os.replace(downloaded_file_path, new_file_path)  # This replaces the file if it exists
@@ -175,3 +175,19 @@ def wait_for_user_input():
 
 def navigate_to(driver, url):
 	driver.get(url)
+
+def get_element_list(driver, xpath):
+	"""
+	Finds and returns a list of elements located by the given XPath.
+	"""
+	try:
+		elements = WebDriverWait(driver, 10).until(
+			EC.presence_of_all_elements_located((By.XPATH, xpath))
+		)
+		return elements
+	except TimeoutException:
+		print("Elements not found at the path provided: {}".format(xpath))
+		return []
+	except Exception as e:
+		print("Error finding elements: {}".format(e))
+		return []
