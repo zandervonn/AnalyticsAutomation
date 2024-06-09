@@ -106,6 +106,9 @@ def meta_insta_id() -> str:
 	return secrets['meta_insta_id']
 
 # Google
+def google_chrome_data_path() -> str:
+	return secrets['base_path'] + secrets['google_chrome_data_path']
+
 def google_credentials_path() -> str:
 	return secrets['base_path'] + secrets['google_credentials_path']
 
@@ -114,3 +117,6 @@ def google_token_path() -> str:
 
 def google_property_id() -> str:
 	return secrets['google_property_id']
+
+
+

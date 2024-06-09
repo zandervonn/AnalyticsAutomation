@@ -1,3 +1,4 @@
+import json
 import os
 import time
 import tkinter
@@ -10,7 +11,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from Src.access import output_folder_path
+from Src.access import output_folder_path, google_chrome_data_path
 
 
 def open_page(driver, url):
@@ -41,6 +42,26 @@ def wait_for_element(driver, xpath, wait_time=30):
 
 def get_element_text(driver, xpath):
 	return driver.find_element(By.XPATH, xpath).text
+
+def is_element_visible(driver, xpath, timeout=5):
+	"""
+	Checks if an element is visible within the given timeout.
+
+	:param driver: The Selenium WebDriver instance.
+	:param xpath: The XPath of the element to check.
+	:param timeout: The maximum time to wait before giving up, in seconds.
+	:return: True if the element is found within the timeout period, False otherwise.
+	"""
+	try:
+		WebDriverWait(driver, timeout).until(
+			EC.visibility_of_element_located((By.XPATH, xpath))
+		)
+		return True
+	except TimeoutException:
+		return False
+	except Exception as e:
+		print("Error while checking element visibility: {}".format(e))
+		return False
 
 def wait_for_table_data(driver, table, timeout=30):
 	data_locator = (By.XPATH, table)
@@ -80,6 +101,16 @@ def extract_table_data(driver, table_xpath):
 
 def setup_webdriver():
 	options = Options()
+
+	# Path to the user data directory
+	user_data_dir = google_chrome_data_path()
+
+	# Ensure the directory exists
+	if not os.path.exists(user_data_dir):
+		os.makedirs(user_data_dir)
+
+	# Specify the user data directory
+	options.add_argument(f"user-data-dir={user_data_dir}")
 
 	# Set the download directory to the one returned by output_folder_path()
 	prefs = {

@@ -29,7 +29,8 @@ def cin7_get_ui_reports(branch):
 
 	try:
 		open_page(driver, dashboard_url)
-		login(driver, cin7_username(), cin7_password())
+		if not is_element_visible(driver, LOGO):
+			login(driver, cin7_username(), cin7_password())
 		dfs['dashboard_report'] = get_dashboard_report(driver, dashboard_url)
 		dfs['aged_report'] = get_aged_report(driver, aged_url)
 		dfs['stock_report'] = get_stock_report(driver, stock_url)
@@ -42,9 +43,9 @@ def get_aged_report(driver, url):
 	clear_and_send_keys(driver, START_DATE_FIELD, "01-01-2000")
 	click_and_wait(driver, SEARCH_BUTTON, use_js=True)
 	wait_for_element(driver, AGE_REPORT_DATE_2000)
+	time.sleep(3) #todo with dynamic wait
 	before_download_time = time.time()
 	click_and_wait(driver, REPORT_DOWLOAD_CSV)
-	time.sleep(1) #todo with dynamic wait
 	df = wait_and_rename_downloaded_file(output_folder_path()+"downloads", "cin7_aged_report", before_download_time)
 	df = trim_aged_report(df, get_header_list('cin7_aged_trim'))
 	return df
