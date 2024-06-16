@@ -4,7 +4,7 @@ def f_string(template, *args):
 CIN7_AGED_INVENTORY_URL_NZ = 'https://insights.cin7.com/Reports/Default?idCustomerAppsLink=936717&strKey=1#/'
 CIN7_AGED_INVENTORY_URL_AUS = 'https://insights.cin7.com/Reports/Default?idCustomerAppsLink=1137753&strKey=1#/'
 CIN7_STOCK_REPORT_URL_NZ = "https://insights.cin7.com/Reports/PivotGrid?idCustomerAppsLink=936717&strKey=17#/"
-CIN7_STOCK_REPORT_URL_AUS = "https://insights.cin7.com/Reports/PivotGrid?idCustomerAppsLink=1137777&strKey=8#/"
+CIN7_STOCK_REPORT_URL_AUS = "https://insights.cin7.com/Reports/PivotGrid?idCustomerAppsLink=1137777&strKey=7#/"
 CIN7_DASHBOARD_URL_NZ = "https://go.cin7.com/Cloud/Dashboard/HomePageDashboard.aspx"
 CIN7_DASHBOARD_URL_AUS = "https://go.cin7.com/Cloud/Dashboard/HomePageDashboard.aspx"
 

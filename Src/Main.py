@@ -19,8 +19,8 @@ testing = True
 
 def build_report_shopify_ui(branch):
 	print("Getting Shopify UI")
-	_since, _until = convert_dates_to_offsets(since, until)
-	shopify_ui_dfs = get_ui_analytics(get_header_list('shopify_ui'), _since, _until, branch)
+	# _since, _until = convert_dates_to_offsets(since, until)
+	shopify_ui_dfs = get_ui_analytics(get_header_list('shopify_ui'), since, until, branch)
 	shopify_ui_dfs = combine_shopify_reports(shopify_ui_dfs)
 	shopify_ui_dfs = clean_shopify_ui_dfs(shopify_ui_dfs, )
 	save_df_to_excel(shopify_ui_dfs, path_gen(branch, 'shopify', 'data', 'xlsx'))
@@ -174,18 +174,18 @@ def main_NZ():
 	branch = NZ
 
 	build_report_cin7_ui(branch)  # needs 2fa
-	# build_report_starshipit_ui(branch, testing=testing)
-	# build_report_shopify_ui(branch)
-	# build_previous_report(branch)
-	# build_report_cin7(branch)
-	# build_report_instagram()
-	# build_report_instagram_images()
-	# build_report_instagram_videos()
-	# build_report_facebook_videos()
-	# build_report_facebook_posts()
-	#
-	# build_report_facebook()
-	# build_report_google()
+	build_report_starshipit_ui(branch, testing=testing)
+	build_report_shopify_ui(branch)
+	build_previous_report(branch)
+	build_report_cin7(branch)
+	build_report_instagram()
+	build_report_instagram_images()
+	build_report_instagram_videos()
+	build_report_facebook_videos()
+	build_report_facebook_posts()
+
+	build_report_facebook()
+	build_report_google()
 
 	update_template_files(template_folder_path_NZ(), output_folder_path() + "/" + branch, todays_output_folder())
 
@@ -193,18 +193,18 @@ def main_NZ():
 def main_AUS():
 	branch = AUS
 
-	# build_report_cin7_ui(branch)  # needs 2fa
-	# build_report_starshipit_ui(branch, testing=testing)
-	# build_report_shopify_ui(branch)
-	# build_previous_report(branch)
-	# build_report_cin7(branch)
+	build_report_cin7_ui(branch)  # needs 2fa
+	build_report_starshipit_ui(branch, testing=testing)
+	build_report_shopify_ui(branch)
+	build_previous_report(branch)
+	build_report_cin7(branch)
 
 	update_template_files(template_folder_path_AUS(), output_folder_path() + "/" + branch, todays_output_folder())
 
 
 def main():
 	main_NZ()
-	# main_AUS()
+	main_AUS()
 
 
 if __name__ == '__main__':

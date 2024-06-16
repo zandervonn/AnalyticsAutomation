@@ -20,8 +20,8 @@ def cin7_get_ui_reports(branch):
 	driver = setup_webdriver()
 	if branch == access.AUS:
 		aged_url = CIN7_AGED_INVENTORY_URL_AUS
-		stock_url = CIN7_STOCK_REPORT_URL_NZ
-		dashboard_url = CIN7_DASHBOARD_URL_NZ
+		stock_url = CIN7_STOCK_REPORT_URL_AUS
+		dashboard_url = CIN7_DASHBOARD_URL_AUS
 	else:  # branch == access.NZ:
 		aged_url = CIN7_AGED_INVENTORY_URL_NZ
 		stock_url = CIN7_STOCK_REPORT_URL_NZ

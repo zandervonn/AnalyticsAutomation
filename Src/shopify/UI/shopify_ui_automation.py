@@ -19,6 +19,7 @@ def login(driver, username, password):
 
 def get_report(driver, base_url, report_name, since, until):
 	url = f_string(base_url + SHOPIFY_REPORTS_URL_TEMPLATE, report_name, since, until)
+	print("shop: ", since, "  ", until)
 	open_page(driver, url)
 	wait_for_table_data(driver, TABLE_CELL)
 	data = extract_table_data(driver, TABLE)
