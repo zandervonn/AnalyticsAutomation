@@ -1,10 +1,12 @@
+import logging
 import os
 import time
 import tkinter
 
 import pandas as pd
+import psutil
 from selenium import webdriver
-from selenium.common import TimeoutException
+from selenium.common import TimeoutException, SessionNotCreatedException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -98,34 +100,77 @@ def extract_table_data(driver, table_xpath):
 	df = pd.DataFrame(data[1:], columns=data[0])
 	return df
 
+MAX_RETRIES = 3
+RETRY_DELAY = 1
+
 def setup_webdriver():
-	options = Options()
+	retries = 0
+	while retries < MAX_RETRIES:
+		try:
+			options = Options()
 
-	# Path to the user data directory
-	user_data_dir = google_chrome_data_path()
+			# Path to the user data directory
+			user_data_dir = google_chrome_data_path()
 
-	# Ensure the directory exists
-	if not os.path.exists(user_data_dir):
-		os.makedirs(user_data_dir)
+			# Ensure the directory exists
+			if not os.path.exists(user_data_dir):
+				os.makedirs(user_data_dir)
 
-	# Specify the user data directory
-	options.add_argument(f"user-data-dir={user_data_dir}")
+			# Specify the user data directory
+			options.add_argument(f"user-data-dir={user_data_dir}")
 
-	# Set the download directory to the one returned by output_folder_path()
-	prefs = {
-		"download.default_directory": os.path.join(output_folder_path(), "downloads"),
-		"download.prompt_for_download": False,
-		"download.directory_upgrade": True,
-		"safebrowsing.enabled": True
-	}
-	options.add_experimental_option("prefs", prefs)
+			# Set the download directory to the one returned by output_folder_path()
+			prefs = {
+				"download.default_directory": os.path.join(output_folder_path(), "downloads"),
+				"download.prompt_for_download": False,
+				"download.directory_upgrade": True,
+				"safebrowsing.enabled": True
+			}
+			options.add_experimental_option("prefs", prefs)
 
-	# Set other capabilities as needed
-	options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+			# Set other capabilities as needed
+			options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
 
-	# Initialize the Chrome WebDriver with the configured options
-	driver = webdriver.Chrome(options=options)
-	return driver
+			# Initialize the Chrome WebDriver with the configured options
+			driver = webdriver.Chrome(options=options)
+			return driver
+
+		except SessionNotCreatedException as e:
+			logging.error("SessionNotCreatedException: %s", e)
+			logging.error("Failed to create a new session. Checking for locking process...")
+			if find_and_kill_locking_process(user_data_dir):
+				retries += 1
+				logging.info("Retrying to create WebDriver session... (%d/%d)", retries, MAX_RETRIES)
+				time.sleep(RETRY_DELAY)
+			else:
+				logging.error("No locking process found or could not kill the process.")
+				raise
+		except Exception as e:
+			logging.error("Exception: %s", e)
+			raise
+
+def find_and_kill_locking_process(path):
+	"""Find and kill the process that is locking a given directory."""
+	for proc in psutil.process_iter(['pid', 'name', 'open_files']):
+		try:
+			proc_info = proc.as_dict(attrs=['pid', 'name', 'open_files'])
+			open_files = proc_info.get('open_files') or []
+			if any(path in str(file.path) for file in open_files):
+				logging.error("Process locking the path: PID: %s, Name: %s. Attempting to kill it.", proc_info['pid'], proc_info['name'])
+				psutil.Process(proc_info['pid']).terminate()
+				time.sleep(1)  # Give some time for the process to terminate
+				if not psutil.pid_exists(proc_info['pid']):
+					logging.info("Successfully terminated the process: PID: %s, Name: %s", proc_info['pid'], proc_info['name'])
+					return True
+				else:
+					logging.error("Failed to terminate the process: PID: %s, Name: %s", proc_info['pid'], proc_info['name'])
+		except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess) as ex:
+			logging.error("Exception while trying to kill process: %s", ex)
+	return False
+
+
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def clear_and_send_keys(driver, xpath, text):
 	"""
