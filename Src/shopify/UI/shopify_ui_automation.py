@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from selenium.common import NoSuchElementException
+
 from Src import access
 from Src.helpers.file_helpers import load_mapping
 from Src.helpers.ui_helpers import *
@@ -10,12 +12,20 @@ from Src.access import shopify_ui_username, shopify_ui_password, discount_mappin
 
 
 def login(driver, username, password):
-	driver.find_element(By.XPATH, LOGIN_USERNAME).send_keys(username)
-	click_and_wait(driver, LOGIN_USERNAME_SUBMIT)
-	wait_for_element(driver, LOGIN_PASSWORD)
-	driver.find_element(By.XPATH, LOGIN_PASSWORD).send_keys(password)
-	click_and_wait(driver, LOGIN_PASSWORD_SUBMIT)
-	wait_for_element(driver, ANALYTICS)
+	try:
+		wait_for_element(driver, LOGIN_USERNAME)
+		driver.find_element(By.XPATH, LOGIN_USERNAME).send_keys(username)
+		click_and_wait(driver, LOGIN_USERNAME_SUBMIT)
+		wait_for_element(driver, LOGIN_PASSWORD)
+		driver.find_element(By.XPATH, LOGIN_PASSWORD).send_keys(password)
+		click_and_wait(driver, LOGIN_PASSWORD_SUBMIT)
+		wait_for_element(driver, ANALYTICS)
+	except NoSuchElementException as e:
+		print(f"Login failed: {e}")
+		raise
+	except TimeoutException as e:
+		print(f"Timeout waiting for element during login: {e}")
+		raise
 
 def get_report(driver, base_url, report_name, since, until):
 	url = f_string(base_url + SHOPIFY_REPORTS_URL_TEMPLATE, report_name, since, until)
@@ -108,7 +118,8 @@ def get_ui_analytics(reports, since, until, branch):
 
 	try:
 		open_page(driver, base_url + r"/dashboards")
-		login(driver, shopify_ui_username(), shopify_ui_password())
+		if not is_element_visible(driver, ANALYTICS):
+			login(driver, shopify_ui_username(), shopify_ui_password())
 		for report in reports:
 			if report == 'customer_count':
 				name, df = handle_customer_count(driver, base_url)

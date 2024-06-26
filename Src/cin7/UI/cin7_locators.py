@@ -13,6 +13,10 @@ LOGIN_PASSWORD = "//input[contains(@id,'password')]"
 LOGIN_PASSWORD_SUBMIT = "//input[contains(@type,'submit')]"
 LOGO = "//img[contains(@class,'logo-short')]"
 
+SWITCH_USERS_URL = "https://go.cin7.com/Cloud/Account/UserCompanyList.aspx"
+SWITCH_BUTTON_NZ = "//tr[td/span[contains(text(), 'Username: SymetNZ')]]//a[contains(@id, 'SelectButton')]"
+SWITCH_BUTTON_AUS = "//tr[td/span[contains(text(), 'Username: SymetAustraliaAU')]]//a[contains(@id, 'SelectButton')]"
+
 SEARCH_BUTTON = "//input[contains(@type,'submit')]"
 START_DATE_FIELD = "//input[contains(@id,'StartDate')]"
 END_DATE_FIELD = "//input[contains(@id,'EndDate')]"

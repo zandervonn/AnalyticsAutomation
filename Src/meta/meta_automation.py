@@ -14,8 +14,6 @@ def get_meta_insights(meta_token, id_number, metrics, since, until):
 	since_date = datetime.strptime(since, '%Y-%m-%dT%H:%M:%S')
 	until_date = datetime.strptime(until, '%Y-%m-%dT%H:%M:%S')
 
-	print(metrics)
-
 	# Split the time range into one-week intervals
 	while since_date < until_date:
 		week_until_date = min(since_date + timedelta(days=7), until_date)
@@ -141,8 +139,6 @@ def get_instagram_post_metrics(meta_token, post_id, metrics):
 
 	response = requests.get(url, params=params)
 	data = response.json()
-	print("metrics",metrics)
-	print(data)
 	return data
 
 def get_instagram_post_headers(meta_token, post_id, metrics):
@@ -156,8 +152,6 @@ def get_instagram_post_headers(meta_token, post_id, metrics):
 
 	response = requests.get(url, params=params)
 	data = response.json()
-	print("headers", metrics)
-	print(data)
 	return data
 
 def get_facebook_posts_and_insights(meta_token, page_id, metrics, since, until):

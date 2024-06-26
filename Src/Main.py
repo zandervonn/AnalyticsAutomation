@@ -14,7 +14,7 @@ from Src.access import *
 access.secrets = load_properties(find_path_upwards(r'config/secrets.txt'))
 
 since, until = get_dates("sunday", "weeks", 1)
-testing = True
+
 
 
 def build_report_shopify_ui(branch):
@@ -154,68 +154,58 @@ def build_report_cin7(branch):
 	top_selling = aggregate_sales_by_product_id(matched_data, products)
 	save_df_to_csv(top_selling, path_gen(branch, 'cin7', 'Top_Selling', 'csv'), True)
 
-	# print("Getting Cin7 Purchase Orders")
-	# purchases_nz = get_cin7_purchase_orders(cin7_api_key_NZ())
-	# purchases_aus = get_cin7_purchase_orders(cin7_api_key_AUS())
-
-	# print("Getting Cin7 Stock Values")
-	# stock_values = calculate_inventory_values(branch, products, purchases_nz, purchases_aus)
-	# stock_values = clean_numeric_columns(stock_values)
-	# save_df_to_csv(stock_values, path_gen(branch, 'cin7', 'stock_values', 'csv'), True)
-
 
 # todo keep a years worth of data
 def build_previous_report(branch):
 	previous_marketing = get_latest_marketing_file(final_output_path(), "New Zealand", since)
 	save_df_to_csv(previous_marketing, path_gen(branch, 'previous', 'marketing', 'csv'), True)
 
+def build_warehouse_report(branch, testing):
+	build_report_starshipit_ui(branch, testing=testing)
 
-def main_NZ():
+def build_product_report(branch):
+	build_report_cin7_ui(branch)
+	build_report_cin7(branch)
+
+def build_marketing_report(branch):
+	build_report_shopify_ui(branch)
+	build_previous_report(branch)
+
+def build_social_report():
+	build_report_instagram()
+	build_report_instagram_images()
+	build_report_instagram_videos()
+	build_report_facebook_videos()
+	build_report_facebook_posts()
+	build_report_facebook()
+	build_report_google()
+
+def main_NZ(testing):
 	branch = NZ
 
-	# #product
-	# build_report_cin7_ui(branch)  # needs 2fa
-	# build_report_cin7(branch)
-	#
-	# #warehouse
-	# build_report_starshipit_ui(branch, testing=testing)
-	#
-	# #marketing
-	# build_report_shopify_ui(branch)
-	# build_previous_report(branch)
-	#
-	# #social
-	# build_report_instagram()
-	# build_report_instagram_images()
-	# build_report_instagram_videos()
-	# build_report_facebook_videos()
-	# build_report_facebook_posts()
-	# build_report_facebook()
-	# build_report_google()
+	build_product_report(branch)
+	build_warehouse_report(branch, testing)
+	build_marketing_report(branch)
+	build_social_report()
 
 	update_template_files(template_folder_path_NZ(), output_folder_path() + "/" + branch, todays_output_folder())
 
 
-def main_AUS():
+def main_AUS(testing):
 	branch = AUS
 
-	#product
-	# build_report_cin7_ui(branch)  # needs 2fa
-	# build_report_cin7(branch)
-
-	# #warehouse
-	# build_report_starshipit_ui(branch, testing=testing)
-	#
-	# #marketing
-	# build_report_shopify_ui(branch)
-	# build_previous_report(branch)
+	build_product_report(branch)
+	build_warehouse_report(branch, testing)
+	build_marketing_report(branch)
 
 	update_template_files(template_folder_path_AUS(), output_folder_path() + "/" + branch, todays_output_folder())
 
 
 def main():
-	main_NZ()
-	main_AUS()
+	testing = 1
+
+	main_NZ(testing)
+	main_AUS(testing)
 
 
 if __name__ == '__main__':

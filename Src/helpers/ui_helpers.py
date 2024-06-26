@@ -1,4 +1,3 @@
-import json
 import os
 import time
 import tkinter
@@ -103,18 +102,18 @@ def setup_webdriver():
 	options = Options()
 
 	# Path to the user data directory
-	# user_data_dir = google_chrome_data_path()
+	user_data_dir = google_chrome_data_path()
 
 	# Ensure the directory exists
-	# if not os.path.exists(user_data_dir):
-	# 	os.makedirs(user_data_dir)
+	if not os.path.exists(user_data_dir):
+		os.makedirs(user_data_dir)
 
 	# Specify the user data directory
-	# options.add_argument(f"user-data-dir={user_data_dir}")
+	options.add_argument(f"user-data-dir={user_data_dir}")
 
 	# Set the download directory to the one returned by output_folder_path()
 	prefs = {
-		"download.default_directory": output_folder_path()+"downloads",
+		"download.default_directory": os.path.join(output_folder_path(), "downloads"),
 		"download.prompt_for_download": False,
 		"download.directory_upgrade": True,
 		"safebrowsing.enabled": True
@@ -122,7 +121,7 @@ def setup_webdriver():
 	options.add_experimental_option("prefs", prefs)
 
 	# Set other capabilities as needed
-	# options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+	options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
 
 	# Initialize the Chrome WebDriver with the configured options
 	driver = webdriver.Chrome(options=options)
@@ -138,7 +137,7 @@ def clear_and_send_keys(driver, xpath, text):
 	element.clear()
 	element.send_keys(text)
 
-def refresh_until_visible(driver, xpath, timeout=120):
+def refresh_until_visible(driver, xpath, timeout=240):
 	"""
 	Continuously refreshes the page until the specified element is visible.
 	:param timeout: Maximum time to wait before giving up, in seconds.

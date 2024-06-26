@@ -31,12 +31,23 @@ def cin7_get_ui_reports(branch):
 		open_page(driver, dashboard_url)
 		if not is_element_visible(driver, LOGO):
 			login(driver, cin7_username(), cin7_password())
+		set_user(driver, branch)
 		dfs['dashboard_report'] = get_dashboard_report(driver, dashboard_url)
 		dfs['aged_report'] = get_aged_report(driver, aged_url)
 		dfs['stock_report'] = get_stock_report(driver, stock_url)
 		return dfs
 	finally:
 		close(driver)
+
+def set_user(driver, branch):
+	open_page(driver, SWITCH_USERS_URL)
+	if branch == access.AUS:
+		if is_element_visible(driver, SWITCH_BUTTON_AUS):
+			click_and_wait(driver, SWITCH_BUTTON_AUS)
+	else: # 	branch == access.NZ
+		if is_element_visible(driver, SWITCH_BUTTON_NZ):
+			click_and_wait(driver, SWITCH_BUTTON_NZ)
+
 
 def get_aged_report(driver, url):
 	open_page(driver, url)
