@@ -3,6 +3,7 @@ import pandas as pd
 import re
 import os
 
+import pytz
 from bs4 import BeautifulSoup
 from datetime import datetime
 from dateutil.parser import parse, ParserError
@@ -160,8 +161,6 @@ def files_to_excel(file_paths, output_excel_path):
 
 	print(f"Files saved to {output_excel_path}")
 
-
-
 def update_worksheet_data(ws, col, df, column, update_header, file, sheet):
 	"""
 	Updates data or headers in a worksheet based on the specified column information,
@@ -228,12 +227,12 @@ def is_convertible_to_date(value):
 	except (ParserError, ValueError):
 		return False
 
-def is_date_format(number_format):
-	# Define a list of date formats you expect to consider as date columns
-	date_formats = ["yy-mm-dd", "yyyy-mm-dd", "dd-mm-yy", "dd-mm-yyyy", "m/d/yy", "m/d/yyyy", "d-mmm-yy"]
-	# Print what is being matched against for troubleshooting
-	print(f"Checking formats in: {date_formats}")
-	return any(fmt in number_format for fmt in date_formats)
+# def is_date_format(number_format):
+# 	# Define a list of date formats you expect to consider as date columns
+# 	date_formats = ["yy-mm-dd", "yyyy-mm-dd", "dd-mm-yy", "dd-mm-yyyy", "m/d/yy", "m/d/yyyy", "d-mmm-yy", "yyyy-mm-dd h:mm:ss"]
+# 	# Print what is being matched against for troubleshooting
+# 	print(f"Checking formats in: {date_formats}")
+# 	return any(fmt in number_format for fmt in date_formats)
 
 def safe_assign_to_excel(ws, row, col, value):
 	"""
@@ -252,6 +251,27 @@ def replace_column_data(ws, col, data, update_header):
 	if update_header:
 		ws.cell(row=1, column=col).value = data.name.capitalize()
 
+def todays_output_folder(timezone='Pacific/Auckland'):
+	# Create a subfolder in the output directory for today's date
+	# Set the timezone
+	tz = pytz.timezone(timezone)
+	today = datetime.now(tz).strftime("%Y-%m-%d")
+	date_output_folder = os.path.join(final_output_path(), today)
+	os.makedirs(date_output_folder, exist_ok=True)
+	return date_output_folder
+
+def copy_template_num_formatting(template_ws, output_ws):
+	for col in range(1, template_ws.max_column + 1):
+		# Get the numeric format from the template column's first data cell
+		template_format = template_ws.cell(row=2, column=col).number_format
+
+		# Check if the format is a date type
+		if 'd' in template_format.lower() and 'm' in template_format.lower() and 'y' in template_format.lower():
+			template_format = 'yyyy-mm-dd'
+
+		# Apply the numeric format to the entire output column
+		for row in range(2, output_ws.max_row + 1):
+			output_ws.cell(row=row, column=col).number_format = template_format
 
 def update_template_files(template_folder, data_folder, output_folder):
 	# Load data from the specified folder and print available keys
@@ -265,28 +285,24 @@ def update_template_files(template_folder, data_folder, output_folder):
 	for template_file in template_files:
 		process_template_file(template_file, data_dict, output_folder)
 
-def todays_output_folder():
-	# Create a subfolder in the output directory for today's date
-	today = datetime.now().strftime("%Y-%m-%d")
-	date_output_folder = os.path.join(final_output_path(), today)
-	os.makedirs(date_output_folder, exist_ok=True)
-	return date_output_folder
-
 def process_template_file(template_file, data_dict, output_folder):
 	wb = openpyxl.load_workbook(template_file)
 	for sheet_name in wb.sheetnames:
-		process_sheet(wb[sheet_name], data_dict)
+		process_sheet(wb[sheet_name], data_dict, wb[sheet_name])
 
 	# Save the workbook to the specified output folder with a dated filename
 	save_workbook(wb, template_file, output_folder)
 
-def process_sheet(ws, data_dict):
-	header = ws[2]  # Assuming second row contains references
+def process_sheet(template_ws, data_dict, output_ws):
+	header = template_ws[2]  # Assuming second row contains references
 	for col, cell in enumerate(header, start=1):
-		update_cell(ws, col, cell, data_dict)
-	ws.delete_rows(2)  # Remove the reference row after updates
+		update_cell(output_ws, col, cell, data_dict)
+	output_ws.delete_rows(2)  # Remove the reference row after updates
 
-def update_cell(ws, col, cell, data_dict):
+	# Copy numeric formatting from template to output
+	copy_template_num_formatting(template_ws, output_ws)
+
+def update_cell(output_ws, col, cell, data_dict):
 	ref = str(cell.value).strip().lower() if cell.value else ""
 	if not ref or '.' not in ref:
 		return  # Skip cells without proper references
@@ -305,9 +321,17 @@ def update_cell(ws, col, cell, data_dict):
 		return
 
 	df = data_dict[key]
-	update_worksheet_data(ws, col, df, column, update_header, file, sheet)
+	update_worksheet_data(output_ws, col, df, column, update_header, file, sheet)
 
 def save_workbook(wb, template_file, output_folder):
+	# Set the focused cell to the top-left cell on all sheets
+	for sheet in wb.worksheets:
+		sheet.sheet_view.selection[0].activeCell = 'A1'
+		sheet.sheet_view.selection[0].sqref = 'A1'
+
+	# Set the focused sheet to the first sheet
+	wb.active = 0
+
 	today = datetime.now().strftime("%Y-%m-%d")
 	file_name, file_extension = os.path.splitext(os.path.basename(template_file))
 	output_path = os.path.join(output_folder, f"{file_name}_{today}{file_extension}")
