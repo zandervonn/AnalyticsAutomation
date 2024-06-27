@@ -15,8 +15,6 @@ access.secrets = load_properties(find_path_upwards(r'config/secrets.txt'))
 
 since, until = get_dates("sunday", "weeks", 1)
 
-
-
 def build_report_shopify_ui(branch):
 	print("Getting Shopify UI")
 	# _since, _until = convert_dates_to_offsets(since, until)
